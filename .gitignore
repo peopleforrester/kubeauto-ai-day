@@ -1,0 +1,66 @@
+# Claude Code
+.claude/
+claude_output/
+*.claude-session
+
+# Docs (spec and internal documentation)
+docs/
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+*.key
+kubeconfig
+kubeconfig.*
+*credentials*
+*secret*
+!policies/kyverno/require-labels.yaml
+
+# Terraform
+infrastructure/terraform/.terraform/
+infrastructure/terraform/*.tfstate
+infrastructure/terraform/*.tfstate.*
+infrastructure/terraform/*.tfvars
+infrastructure/terraform/crash.log
+infrastructure/terraform/.terraform.lock.hcl
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+*.egg
+
+# Node (Backstage)
+node_modules/
+.next/
+backstage/dist/
+backstage/.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Recording artifacts (large files)
+recordings/*.mp4
+recordings/*.mkv
+recordings/*.mov
+recordings/*.avi
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
