@@ -18,9 +18,9 @@ See `scorecard/methodology.md` (created in Phase 8) for full methodology.
 | ArgoCD Install + Config | 8 | 1 | 8 min | 40 min | No | Helm chart version mapping (9.x not 7.x) needed correction from skill file; ArgoCD 3.2.6 installed cleanly; RBAC + values correct first try |
 | App-of-Apps Pattern | 9 | 1 | 5 min | 20 min | No | Root app + namespace child app correct; needed repo secret for private GitHub access |
 | Sync Waves + Ordering | 8 | 1 | 3 min | 15 min | No | Wave -10 for namespaces works; drift detection test needed fix (annotation tracking only monitors managed fields, not new labels) |
-| Kyverno Install | | | | | | |
-| Kyverno Policies (individual) | | | | | | |
-| Kyverno Policy Interactions | | | | | | |
+| Kyverno Install | 6 | 3 | 15 min | 35 min | Partial | Skill file webhook config was wrong (list vs map for chart 3.7.0); CRD annotation too large required ServerSideApply; clean reinstall after stale sync; 3 correction cycles total |
+| Kyverno Policies (6 policies) | 8 | 0 | 5 min | 25 min | No | All 6 ClusterPolicies correct first try; enforce in apps namespace only; audit mode for NetworkPolicy check |
+| Kyverno Policy Interactions | 9 | 0 | 2 min | 15 min | No | Pod rejection tested via dry-run; 5 policies fire correctly on non-compliant pod; no false positives in system namespaces |
 | Falco Install | | | | | | |
 | Falco Custom Rules | | | | | | |
 | ESO + Secrets Manager | | | | | | |
