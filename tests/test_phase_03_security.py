@@ -215,7 +215,7 @@ def test_eso_secret_synced(k8s_custom: CustomObjectsApi) -> None:
     """ExternalSecret shows SecretSynced condition."""
     es = k8s_custom.get_namespaced_custom_object(
         group="external-secrets.io",
-        version="v1beta1",
+        version="v1",
         namespace=APPS_NS,
         plural="externalsecrets",
         name="test-secret",

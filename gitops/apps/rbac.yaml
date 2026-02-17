@@ -1,0 +1,23 @@
+# ABOUTME: ArgoCD Application for platform RBAC configuration.
+# ABOUTME: Deploys ClusterRoles and RoleBindings from security/rbac/.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rbac
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-4"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/peopleforrester/kubeauto-ai-day.git
+    targetRevision: staging
+    path: security/rbac
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

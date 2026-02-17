@@ -1,0 +1,36 @@
+# ABOUTME: RoleBindings scoping ClusterRoles to appropriate namespaces.
+# ABOUTME: app-developer and app-viewer are bound only in apps namespace.
+---
+# app-developer role bound to apps namespace only
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-developer-binding
+  namespace: apps
+  labels:
+    app.kubernetes.io/part-of: kubeauto-idp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: app-developer
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: app-developers
+---
+# app-viewer role bound to apps namespace only
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-viewer-binding
+  namespace: apps
+  labels:
+    app.kubernetes.io/part-of: kubeauto-idp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: app-viewer
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: app-viewers
