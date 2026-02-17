@@ -1,0 +1,166 @@
+# ABOUTME: ArgoCD Application for Falco runtime security DaemonSet.
+# ABOUTME: Deploys Falco with modern_ebpf driver and custom rules to security namespace.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: falco
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    chart: falco
+    repoURL: https://falcosecurity.github.io/charts
+    targetRevision: "7.2.1"
+    helm:
+      valuesObject:
+        driver:
+          kind: modern_ebpf
+        tty: true
+        falco:
+          grpc:
+            enabled: true
+          grpc_output:
+            enabled: true
+          json_output: true
+          log_stderr: true
+          log_syslog: false
+          priority: notice
+          rules_files:
+            - /etc/falco/falco_rules.yaml
+            - /etc/falco/falco_rules.local.yaml
+            - /etc/falco/rules.d
+        # Custom rules loaded via ConfigMap
+        customRules:
+          custom-rules.yaml: |
+            # Custom Falco rules for KubeAuto Day IDP
+            # Detects exec-into-pod, sensitive file access, unexpected outbound connections
+
+            - list: allowed_outbound_ports
+              items: [53, 443, 6443, 8080, 8443, 9090, 4317, 4318]
+
+            - list: sensitive_file_paths
+              items:
+                - /etc/shadow
+                - /etc/kubernetes/pki
+                - /var/run/secrets/kubernetes.io/serviceaccount/token
+                - /root/.kube/config
+                - /root/.aws/credentials
+
+            - macro: in_apps_namespace
+              condition: k8s.ns.name = "apps"
+
+            - rule: Exec Into Pod Detected
+              desc: >
+                Detect when someone runs kubectl exec or equivalent to get a shell
+                in a running container.
+              condition: >
+                spawned_process and
+                container and
+                k8s.ns.name != "" and
+                proc.pname in (runc:[2:INIT], cri-o, containerd-shim) and
+                proc.name in (bash, sh, dash, zsh, csh, fish, tcsh)
+              output: >
+                Shell spawned in container
+                (user=%user.name pod=%k8s.pod.name ns=%k8s.ns.name
+                 container=%container.name shell=%proc.name parent=%proc.pname
+                 cmdline=%proc.cmdline image=%container.image.repository)
+              priority: WARNING
+              tags: [container, shell, mitre_execution]
+              source: syscall
+
+            - rule: Sensitive File Read in Container
+              desc: >
+                Detect when a process inside a container reads sensitive files
+                such as service account tokens, shadow files, or cloud credentials.
+              condition: >
+                open_read and
+                container and
+                fd.name pmatch (sensitive_file_paths) and
+                not proc.name in (kubelet, kube-proxy, coredns)
+              output: >
+                Sensitive file read in container
+                (user=%user.name file=%fd.name pod=%k8s.pod.name ns=%k8s.ns.name
+                 container=%container.name image=%container.image.repository
+                 cmdline=%proc.cmdline)
+              priority: CRITICAL
+              tags: [container, filesystem, mitre_credential_access]
+              source: syscall
+
+            - rule: Unexpected Outbound Connection from Apps
+              desc: >
+                Detect outbound network connections from the apps namespace to
+                ports not in the allowed list.
+              condition: >
+                outbound and
+                container and
+                in_apps_namespace and
+                not fd.sport in (allowed_outbound_ports)
+              output: >
+                Unexpected outbound connection from apps namespace
+                (pod=%k8s.pod.name ns=%k8s.ns.name container=%container.name
+                 image=%container.image.repository connection=%fd.name
+                 dest_port=%fd.sport cmdline=%proc.cmdline)
+              priority: WARNING
+              tags: [container, network, mitre_exfiltration]
+              source: syscall
+
+          eks-aware-rules.yaml: |
+            # Falco rules specific to EKS runtime environment
+            # Covers EC2 metadata access and config tampering
+
+            - rule: Container Accessing EC2 Metadata
+              desc: >
+                Detect when a container tries to reach the EC2 instance metadata
+                service (169.254.169.254). On EKS with Pod Identity, containers
+                should not need direct IMDS access.
+              condition: >
+                outbound and
+                container and
+                fd.sip = "169.254.169.254"
+              output: >
+                Container accessing EC2 metadata service (IMDS)
+                (pod=%k8s.pod.name ns=%k8s.ns.name container=%container.name
+                 image=%container.image.repository cmdline=%proc.cmdline)
+              priority: CRITICAL
+              tags: [container, network, aws, mitre_credential_access]
+              source: syscall
+
+            - rule: Write Below Etc in Container
+              desc: >
+                Detect file writes under /etc inside a container. Legitimate
+                containers rarely modify /etc.
+              condition: >
+                write_etc_common and
+                container and
+                not proc.name in (sed, tee) and
+                not k8s.ns.name in (kube-system, kyverno, argocd, monitoring, security)
+              output: >
+                Write below /etc in container
+                (user=%user.name file=%fd.name pod=%k8s.pod.name ns=%k8s.ns.name
+                 container=%container.name image=%container.image.repository)
+              priority: WARNING
+              tags: [container, filesystem, mitre_persistence]
+              source: syscall
+        tolerations:
+          - effect: NoSchedule
+            operator: Exists
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: security
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

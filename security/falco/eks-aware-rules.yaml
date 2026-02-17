@@ -1,0 +1,36 @@
+# ABOUTME: Falco rules specific to EKS runtime environment.
+# ABOUTME: Covers EC2 metadata access and config tampering in containers.
+
+- rule: Container Accessing EC2 Metadata
+  desc: >
+    Detect when a container tries to reach the EC2 instance metadata
+    service (169.254.169.254). On EKS with Pod Identity, containers
+    should not need direct IMDS access.
+  condition: >
+    outbound and
+    container and
+    fd.sip = "169.254.169.254"
+  output: >
+    Container accessing EC2 metadata service (IMDS)
+    (pod=%k8s.pod.name ns=%k8s.ns.name container=%container.name
+     image=%container.image.repository cmdline=%proc.cmdline)
+  priority: CRITICAL
+  tags: [container, network, aws, mitre_credential_access]
+  source: syscall
+
+- rule: Write Below Etc in Container
+  desc: >
+    Detect file writes under /etc inside a container. Legitimate
+    containers rarely modify /etc.
+  condition: >
+    write_etc_common and
+    container and
+    not proc.name in (sed, tee) and
+    not k8s.ns.name in (kube-system, kyverno, argocd, monitoring, security)
+  output: >
+    Write below /etc in container
+    (user=%user.name file=%fd.name pod=%k8s.pod.name ns=%k8s.ns.name
+     container=%container.name image=%container.image.repository)
+  priority: WARNING
+  tags: [container, filesystem, mitre_persistence]
+  source: syscall
