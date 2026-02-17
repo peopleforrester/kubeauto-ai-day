@@ -1,0 +1,49 @@
+# ABOUTME: Helm values for ArgoCD 3.2+ installation via argo-cd chart 9.x.
+# ABOUTME: Configures annotation-based tracking, 30s demo reconciliation, self-heal.
+
+# ArgoCD server configuration
+server:
+  extraArgs:
+    - --insecure  # TLS terminated at ALB in Phase 7
+
+# Configuration parameters
+configs:
+  params:
+    # 30-second reconciliation for demo (default 180s)
+    timeout.reconciliation: "30s"
+    # Server runs insecure (TLS at ingress level)
+    server.insecure: "true"
+
+  cm:
+    # Annotation-based tracking is default in 3.x — explicit for clarity
+    application.resourceTrackingMethod: "annotation"
+    # Admin user enabled for initial setup
+    admin.enabled: "true"
+
+  rbac:
+    policy.csv: |
+      # Admin role for platform team
+      p, role:platform-admin, applications, *, */*, allow
+      p, role:platform-admin, clusters, *, *, allow
+      p, role:platform-admin, repositories, *, *, allow
+      p, role:platform-admin, projects, *, *, allow
+      p, role:platform-admin, logs, *, *, allow
+      p, role:platform-admin, exec, *, */*, allow
+
+      # Read-only role for observers
+      p, role:readonly, applications, get, */*, allow
+      p, role:readonly, applications, list, */*, allow
+      p, role:readonly, projects, get, *, allow
+      p, role:readonly, projects, list, *, allow
+
+      # Default: admin for local admin user
+      g, admin, role:platform-admin
+    policy.default: role:readonly
+
+# Disable Dex (no SSO in initial install, added in Phase 7)
+dex:
+  enabled: false
+
+# Redis HA not needed for demo
+redis:
+  enabled: true
