@@ -24,6 +24,7 @@ kubeconfig
 kubeconfig.*
 *credentials*
 *secret*
+!infrastructure/terraform/secrets.tf
 !policies/kyverno/require-labels.yaml
 
 # Terraform
