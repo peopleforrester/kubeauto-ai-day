@@ -1,0 +1,29 @@
+# ABOUTME: ArgoCD Application for ESO custom resources (SecretStore + ExternalSecrets).
+# ABOUTME: Deploys after ESO CRDs are available via sync wave ordering.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eso-resources
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/peopleforrester/kubeauto-ai-day.git
+    targetRevision: staging
+    path: security/eso
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

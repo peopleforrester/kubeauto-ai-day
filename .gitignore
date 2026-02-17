@@ -25,6 +25,9 @@ kubeconfig.*
 *credentials*
 *secret*
 !infrastructure/terraform/secrets.tf
+!gitops/apps/external-secrets.yaml
+!security/eso/*secret*
+!docs/adr/ADR-004*
 !policies/kyverno/require-labels.yaml
 
 # Terraform
