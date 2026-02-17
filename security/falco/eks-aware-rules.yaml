@@ -23,7 +23,8 @@
     Detect file writes under /etc inside a container. Legitimate
     containers rarely modify /etc.
   condition: >
-    write_etc_common and
+    evt.dir = < and
+    fd.name startswith /etc/ and
     container and
     not proc.name in (sed, tee) and
     not k8s.ns.name in (kube-system, kyverno, argocd, monitoring, security)
