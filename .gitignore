@@ -1,10 +1,19 @@
-# Claude Code
-.claude/
+# Claude Code (internal state)
+.claude/*
+!.claude/commands/
+!.claude/hooks/
+!.claude/skills/
 claude_output/
 *.claude-session
 
-# Docs (spec and internal documentation)
-docs/
+# Docs (spec, PRD, plan are local-only; ADRs are committed)
+docs/*
+!docs/adr/
+!docs/SECURITY.md
+!docs/COST.md
+!docs/ARCHITECTURE.md
+!docs/SETUP.md
+!docs/TEARDOWN.md
 
 # Environment and secrets
 .env
@@ -59,6 +68,11 @@ recordings/*.mp4
 recordings/*.mkv
 recordings/*.mov
 recordings/*.avi
+recordings/*.cast
+recordings/*.log
+recordings/*-timing.log
+recordings/*-time.dat
+!recordings/README.md
 
 # Temporary files
 *.tmp
