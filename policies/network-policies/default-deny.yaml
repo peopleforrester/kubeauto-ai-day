@@ -1,0 +1,14 @@
+# ABOUTME: Default deny-all NetworkPolicy for apps namespace.
+# ABOUTME: Blocks all ingress and egress unless explicitly allowed by other policies.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: apps
+  labels:
+    app.kubernetes.io/part-of: kubeauto-idp
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
