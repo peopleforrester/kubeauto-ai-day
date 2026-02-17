@@ -15,9 +15,9 @@ See `scorecard/methodology.md` (created in Phase 8) for full methodology.
 | EKS Cluster | 6 | 3 | 25 min | 45 min | Partial | Module v21.15 variable renames caused 2 correction cycles; AWS provider 6.x dependency; addon bootstrap chicken-and-egg required manual intervention |
 | IAM Roles + Pod Identity | 7 | 1 | 5 min | 25 min | No | IRSA roles for EBS CSI + LB Controller correct; Helm release for LB Controller wired properly |
 | Namespace Structure | 9 | 0 | 2 min | 10 min | No | PSS labels on apps namespace correct first try; clean YAML |
-| ArgoCD Install + Config | | | | | | |
-| App-of-Apps Pattern | | | | | | |
-| Sync Waves + Ordering | | | | | | |
+| ArgoCD Install + Config | 8 | 1 | 8 min | 40 min | No | Helm chart version mapping (9.x not 7.x) needed correction from skill file; ArgoCD 3.2.6 installed cleanly; RBAC + values correct first try |
+| App-of-Apps Pattern | 9 | 1 | 5 min | 20 min | No | Root app + namespace child app correct; needed repo secret for private GitHub access |
+| Sync Waves + Ordering | 8 | 1 | 3 min | 15 min | No | Wave -10 for namespaces works; drift detection test needed fix (annotation tracking only monitors managed fields, not new labels) |
 | Kyverno Install | | | | | | |
 | Kyverno Policies (individual) | | | | | | |
 | Kyverno Policy Interactions | | | | | | |
