@@ -17,18 +17,18 @@ spec:
     targetRevision: "3.7.0"
     helm:
       valuesObject:
-        # Exclude Kyverno's own namespace from webhooks to prevent deadlock
+        # Kyverno namespace excluded by default (excludeKyvernoNamespace: true)
+        # Extend webhook exclusions to include additional system namespaces
         config:
           webhooks:
-            - namespaceSelector:
-                matchExpressions:
-                  - key: kubernetes.io/metadata.name
-                    operator: NotIn
-                    values:
-                      - kyverno
-                      - kube-system
-                      - kube-public
-                      - kube-node-lease
+            namespaceSelector:
+              matchExpressions:
+                - key: kubernetes.io/metadata.name
+                  operator: NotIn
+                  values:
+                    - kube-system
+                    - kube-public
+                    - kube-node-lease
         # Resource limits for Kyverno admission controller
         admissionController:
           replicas: 1
