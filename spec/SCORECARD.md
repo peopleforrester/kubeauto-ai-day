@@ -21,8 +21,8 @@ See `scorecard/methodology.md` (created in Phase 8) for full methodology.
 | Kyverno Install | 6 | 3 | 15 min | 35 min | Partial | Skill file webhook config was wrong (list vs map for chart 3.7.0); CRD annotation too large required ServerSideApply; clean reinstall after stale sync; 3 correction cycles total |
 | Kyverno Policies (6 policies) | 8 | 0 | 5 min | 25 min | No | All 6 ClusterPolicies correct first try; enforce in apps namespace only; audit mode for NetworkPolicy check |
 | Kyverno Policy Interactions | 9 | 0 | 2 min | 15 min | No | Pod rejection tested via dry-run; 5 policies fire correctly on non-compliant pod; no false positives in system namespaces |
-| Falco Install | | | | | | |
-| Falco Custom Rules | | | | | | |
+| Falco Install | 7 | 2 | 10 min | 30 min | Partial | Skill file had wrong chart version (4.x vs 7.x); write_etc_common macro removed in 0.42.x; DaemonSet + eBPF correct first try |
+| Falco Custom Rules | 8 | 1 | 5 min | 20 min | No | 5 custom rules (3 general + 2 EKS-aware) correct; one macro fix needed; Falcosidekick with Prometheus metrics working |
 | ESO + Secrets Manager | | | | | | |
 | RBAC | | | | | | |
 | NetworkPolicies | | | | | | |
