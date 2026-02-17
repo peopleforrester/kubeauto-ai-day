@@ -1,0 +1,33 @@
+# ABOUTME: Kyverno policy requiring CPU and memory limits on all containers.
+# ABOUTME: Enforced only in apps namespace to prevent blocking platform components.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resource-limits
+  annotations:
+    policies.kyverno.io/title: Require Resource Limits
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Require all pods in the apps namespace to have CPU and memory limits set.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-limits
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - apps
+      validate:
+        message: "CPU and memory limits are required for all containers in apps namespace."
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  limits:
+                    memory: "?*"
+                    cpu: "?*"

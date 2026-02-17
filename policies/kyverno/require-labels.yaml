@@ -1,0 +1,44 @@
+# ABOUTME: Kyverno policy requiring app and version labels on pods.
+# ABOUTME: Enforced only in apps namespace to support service discovery and tracing.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-labels
+  annotations:
+    policies.kyverno.io/title: Require Labels
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Require all pods in the apps namespace to have app and version labels.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-app-label
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - apps
+      validate:
+        message: "The label 'app' is required on pods in apps namespace."
+        pattern:
+          metadata:
+            labels:
+              app: "?*"
+    - name: require-version-label
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - apps
+      validate:
+        message: "The label 'version' is required on pods in apps namespace."
+        pattern:
+          metadata:
+            labels:
+              version: "?*"

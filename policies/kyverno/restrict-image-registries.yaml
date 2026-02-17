@@ -1,0 +1,32 @@
+# ABOUTME: Kyverno policy restricting container images to trusted registries.
+# ABOUTME: Enforced only in apps namespace; allows ghcr.io, docker.io/library, ECR.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-image-registries
+  annotations:
+    policies.kyverno.io/title: Restrict Image Registries
+    policies.kyverno.io/category: Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Only allow images from trusted registries in the apps namespace.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: validate-registries
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - apps
+      validate:
+        message: >-
+          Images must come from allowed registries:
+          ghcr.io, docker.io/library, registry.k8s.io, or ECR.
+        pattern:
+          spec:
+            containers:
+              - image: "ghcr.io/* | docker.io/library/* | registry.k8s.io/* | *.dkr.ecr.*.amazonaws.com/* | docker.io/library/*:*"

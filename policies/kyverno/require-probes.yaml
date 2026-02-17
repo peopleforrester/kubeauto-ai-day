@@ -1,0 +1,44 @@
+# ABOUTME: Kyverno policy requiring readiness and liveness probes.
+# ABOUTME: Enforced only in apps namespace for production-ready workloads.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-probes
+  annotations:
+    policies.kyverno.io/title: Require Probes
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Require readiness and liveness probes on all containers in apps namespace.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-readiness-probe
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - apps
+      validate:
+        message: "A readinessProbe is required for all containers in apps namespace."
+        pattern:
+          spec:
+            containers:
+              - readinessProbe: {}
+    - name: require-liveness-probe
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - apps
+      validate:
+        message: "A livenessProbe is required for all containers in apps namespace."
+        pattern:
+          spec:
+            containers:
+              - livenessProbe: {}

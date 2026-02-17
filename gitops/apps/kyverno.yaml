@@ -1,0 +1,77 @@
+# ABOUTME: ArgoCD Application for Kyverno policy engine installation.
+# ABOUTME: Deploys Kyverno 1.17+ to kyverno namespace with webhook exclusions.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kyverno
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    chart: kyverno
+    repoURL: https://kyverno.github.io/kyverno
+    targetRevision: "3.7.0"
+    helm:
+      valuesObject:
+        # Exclude Kyverno's own namespace from webhooks to prevent deadlock
+        config:
+          webhooks:
+            - namespaceSelector:
+                matchExpressions:
+                  - key: kubernetes.io/metadata.name
+                    operator: NotIn
+                    values:
+                      - kyverno
+                      - kube-system
+                      - kube-public
+                      - kube-node-lease
+        # Resource limits for Kyverno admission controller
+        admissionController:
+          replicas: 1
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: 500m
+            requests:
+              memory: 256Mi
+              cpu: 100m
+        # Background controller for policy reports
+        backgroundController:
+          resources:
+            limits:
+              memory: 256Mi
+              cpu: 200m
+            requests:
+              memory: 128Mi
+              cpu: 50m
+        # Cleanup controller
+        cleanupController:
+          resources:
+            limits:
+              memory: 256Mi
+              cpu: 200m
+            requests:
+              memory: 128Mi
+              cpu: 50m
+        # Reports controller
+        reportsController:
+          resources:
+            limits:
+              memory: 256Mi
+              cpu: 200m
+            requests:
+              memory: 128Mi
+              cpu: 50m
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kyverno
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

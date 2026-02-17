@@ -1,0 +1,30 @@
+# ABOUTME: Kyverno policy auditing NetworkPolicy existence for deployments.
+# ABOUTME: Audit mode only (not enforce) — informational check in apps namespace.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-networkpolicy
+  annotations:
+    policies.kyverno.io/title: Require NetworkPolicy
+    policies.kyverno.io/category: Networking
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Audit whether deployments in apps namespace have associated NetworkPolicies.
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: require-netpol
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+              namespaces:
+                - apps
+      validate:
+        message: "A NetworkPolicy should exist for this application."
+        pattern:
+          metadata:
+            labels:
+              app: "?*"
