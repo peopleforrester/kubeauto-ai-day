@@ -11,10 +11,10 @@ See `scorecard/methodology.md` (created in Phase 8) for full methodology.
 
 | Component | Toil Reduced (1-10) | Correction Cycles | AI Time | Est. Manual Time | Toil Shifted? | Notes |
 |---|---|---|---|---|---|---|
-| VPC + Networking | | | | | | |
-| EKS Cluster | | | | | | |
-| IAM Roles + Pod Identity | | | | | | |
-| Namespace Structure | | | | | | |
+| VPC + Networking | 7 | 1 | 5 min | 30 min | No | VPC module config straightforward; NAT gateway + subnet tagging correct first try |
+| EKS Cluster | 6 | 3 | 25 min | 45 min | Partial | Module v21.15 variable renames caused 2 correction cycles; AWS provider 6.x dependency; addon bootstrap chicken-and-egg required manual intervention |
+| IAM Roles + Pod Identity | 7 | 1 | 5 min | 25 min | No | IRSA roles for EBS CSI + LB Controller correct; Helm release for LB Controller wired properly |
+| Namespace Structure | 9 | 0 | 2 min | 10 min | No | PSS labels on apps namespace correct first try; clean YAML |
 | ArgoCD Install + Config | | | | | | |
 | App-of-Apps Pattern | | | | | | |
 | Sync Waves + Ordering | | | | | | |
