@@ -23,9 +23,9 @@ See `scorecard/methodology.md` (created in Phase 8) for full methodology.
 | Kyverno Policy Interactions | 9 | 0 | 2 min | 15 min | No | Pod rejection tested via dry-run; 5 policies fire correctly on non-compliant pod; no false positives in system namespaces |
 | Falco Install | 7 | 2 | 10 min | 30 min | Partial | Skill file had wrong chart version (4.x vs 7.x); write_etc_common macro removed in 0.42.x; DaemonSet + eBPF correct first try |
 | Falco Custom Rules | 8 | 1 | 5 min | 20 min | No | 5 custom rules (3 general + 2 EKS-aware) correct; one macro fix needed; Falcosidekick with Prometheus metrics working |
-| ESO + Secrets Manager | | | | | | |
-| RBAC | | | | | | |
-| NetworkPolicies | | | | | | |
+| ESO + Secrets Manager | 7 | 2 | 12 min | 40 min | Partial | ESO 1.3.2 API version v1 (not v1beta1); ArgoCD sync cache stale after API fix; IRSA + ClusterSecretStore correct; secret synced successfully |
+| RBAC | 9 | 0 | 3 min | 10 min | No | ClusterRoles + namespace-scoped RoleBindings correct first try; cross-namespace denial verified |
+| NetworkPolicies | 9 | 0 | 3 min | 15 min | No | Default deny + DNS allow + ingress allow correct first try; pod-selector matching verified |
 | Prometheus + Grafana | | | | | | |
 | OTel Collector Config | | | | | | |
 | Grafana Dashboards | | | | | | |
