@@ -82,6 +82,9 @@ spec:
                   - resource
                 exporters:
                   - debug
+        service:
+          enabled: true
+          type: ClusterIP
         resources:
           requests:
             cpu: 100m
