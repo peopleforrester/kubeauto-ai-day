@@ -17,6 +17,8 @@ spec:
     targetRevision: "0.145.0"
     helm:
       valuesObject:
+        image:
+          repository: "otel/opentelemetry-collector-contrib"
         mode: daemonset
         presets:
           kubernetesAttributes:
