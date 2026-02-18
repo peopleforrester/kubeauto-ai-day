@@ -20,6 +20,9 @@ spec:
         driver:
           kind: modern_ebpf
         tty: true
+        falcosidekick:
+          enabled: false
+          fullfqdn: falcosidekick.security.svc.cluster.local
         falco:
           http_output:
             enabled: true
