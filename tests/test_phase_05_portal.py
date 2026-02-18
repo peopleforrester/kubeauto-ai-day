@@ -186,6 +186,10 @@ def test_templated_service_kyverno_compliant() -> None:
                             "httpGet": {"path": "/", "port": 8080},
                             "initialDelaySeconds": 5,
                         },
+                        "livenessProbe": {
+                            "httpGet": {"path": "/", "port": 8080},
+                            "initialDelaySeconds": 10,
+                        },
                         "securityContext": {
                             "allowPrivilegeEscalation": False,
                             "capabilities": {"drop": ["ALL"]},

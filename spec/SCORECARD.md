@@ -30,9 +30,9 @@ See `scorecard/methodology.md` (created in Phase 8) for full methodology.
 | OTel Collector Config | 6 | 3 | 15 min | 35 min | Partial | Chart 0.145.0 requires explicit image.repository (breaking change from 0.89+); k8s image lacks prometheusremotewrite exporter, needed contrib; DaemonSet mode disables service by default |
 | Grafana Dashboards | 9 | 0 | 3 min | 20 min | No | Platform Overview dashboard with 8 panels correct first try; ConfigMap sidecar provisioning worked immediately |
 | Alert Rules | 9 | 0 | 2 min | 15 min | No | 4 custom PrometheusRules (NodeNotReady, PodCrashLoop, ArgoCDAppDegraded, FalcoCriticalAlert) correct first try via additionalPrometheusRulesMap |
-| Backstage Install | | | | | | |
-| Software Templates | | | | | | |
-| Backstage Plugin Wiring | | | | | | |
+| Backstage Install | 8 | 1 | 10 min | 45 min | No | Helm chart 2.6.3 (image 1.9.1) deployed cleanly; 1 correction for Kyverno livenessProbe in test dry-run; catalog ConfigMap approach for private repo; Synced+Healthy in 40s |
+| Software Templates | 9 | 0 | 5 min | 20 min | No | deploy-service and create-namespace templates correct first try; skeleton produces Kyverno-compliant resources verified by dry-run and live deployment |
+| Backstage Plugin Wiring | 8 | 0 | 3 min | 25 min | No | Static file catalog via ConfigMap mount; 4 catalog entities (System, Component, 2 Templates) loaded; ArgoCD/K8s annotations on sample-app correct |
 | E2E Integration | | | | | | |
 | TLS + cert-manager | | | | | | |
 | OIDC Authentication | | | | | | |
