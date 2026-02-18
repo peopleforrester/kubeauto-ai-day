@@ -23,7 +23,7 @@ spec:
         falco:
           http_output:
             enabled: true
-            url: "http://falco-falcosidekick.security.svc.cluster.local:2801"
+            url: "http://falcosidekick.security.svc.cluster.local:2801"
           json_output: true
           log_stderr: true
           log_syslog: false
