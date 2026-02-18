@@ -34,10 +34,11 @@ See `scorecard/methodology.md` (created in Phase 8) for full methodology.
 | Software Templates | 9 | 0 | 5 min | 20 min | No | deploy-service and create-namespace templates correct first try; skeleton produces Kyverno-compliant resources verified by dry-run and live deployment |
 | Backstage Plugin Wiring | 8 | 0 | 3 min | 25 min | No | Static file catalog via ConfigMap mount; 4 catalog entities (System, Component, 2 Templates) loaded; ArgoCD/K8s annotations on sample-app correct |
 | E2E Integration | 7 | 2 | 12 min | 30 min | No | 7 cross-component tests; 2 fixes needed: NetworkPolicy blocks pod-to-service egress (used localhost), Falco non-interactive exec not logged (switched to /etc write marker); ArgoCD 30s reconciliation for demo |
-| TLS + cert-manager | | | | | | |
-| OIDC Authentication | | | | | | |
-| Documentation | | | | | | |
-| Architecture Decision Records | | | | | | |
+| TLS + cert-manager | 8 | 1 | 5 min | 25 min | No | cert-manager 1.19.1 deployed cleanly; 1 fix for Application YAML in subdirectory (app-of-apps doesn't recurse); HTTP-01 ClusterIssuers Ready; namespace ordering required force refresh |
+| Resource Quotas + PDBs | 9 | 0 | 3 min | 15 min | No | ResourceQuota and 5 PDBs correct first try; ArgoCD Application pattern reused cleanly |
+| OIDC Authentication | - | - | - | - | - | Deferred: requires domain name + GitHub OAuth App setup (manual prerequisite) |
+| Documentation | 9 | 0 | 5 min | 30 min | No | SECURITY.md (8 sections), COST.md, ADR-007 all correct first try; gitleaks allowlist for known test secret |
+| Architecture Decision Records | 9 | 0 | 3 min | 15 min | No | 7 ADRs written across all phases; MADR format consistent; ADR-007 auth strategy completed |
 
 ## Totals
 

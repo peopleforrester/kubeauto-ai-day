@@ -168,9 +168,11 @@ def test_no_root_pods_in_apps(k8s_core: CoreV1Api) -> None:
 
 def test_gitleaks_clean() -> None:
     """gitleaks scan finds no secrets in the git-tracked repository files."""
+    repo_root = "/home/ollama/repos/Business/KodeKloud/Conferences/kubecon-2026-eu/kubeauto-ai-day"
     result = subprocess.run(
         ["gitleaks", "detect",
-         "--source=/home/ollama/repos/Business/KodeKloud/Conferences/kubecon-2026-eu/kubeauto-ai-day",
+         f"--source={repo_root}",
+         f"--config={repo_root}/.gitleaks.toml",
          "--no-banner"],
         capture_output=True, text=True, timeout=60,
     )

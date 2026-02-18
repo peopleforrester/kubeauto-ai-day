@@ -1,0 +1,9 @@
+# ABOUTME: Gitleaks configuration for suppressing known false positives.
+# ABOUTME: Allowlists intentional test secrets used in ESO validation.
+
+title = "KubeAuto IDP gitleaks config"
+
+[allowlist]
+  description = "Known test secrets for ESO validation"
+  commits = ["0dad4b85ea22a99e68d3853e448104931240fe39"]
+  paths = ["infrastructure/terraform/secrets.tf"]
