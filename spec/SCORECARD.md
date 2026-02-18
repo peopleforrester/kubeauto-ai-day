@@ -42,13 +42,17 @@ See `scorecard/methodology.md` (created in Phase 8) for full methodology.
 
 ## Totals
 
-- Total AI-assisted build time: ___ hours
-- Total human correction time: ___ hours
-- Estimated manual build time: ___ hours
-- Net toil reduction: ___%
-- Components where AI genuinely reduced toil: ___/27
-- Components where AI shifted toil without reducing it: ___/27
-- Components where starting from scratch would have been faster: ___/27
+- **Total AI-assisted build time: 3 hours 2 min** (182 min across 26 scored components)
+- **Estimated manual build time: 11 hours 30 min** (690 min)
+- **Net toil reduction: 73.6%** (508 min saved)
+- **Total correction cycles: 24** (avg 0.92 per component)
+- **Average toil-reduced score: 8.0/10**
+- Components where AI genuinely reduced toil (No shift): **21/26**
+- Components where AI partially shifted toil: **5/26** (EKS, Kyverno Install, Falco Install, ESO, OTel)
+- Components where AI fully shifted toil: **0/26**
+- Components where starting from scratch would have been faster: **0/26**
+- Components with zero corrections: **13/26** (50%)
+- Components deferred: **1/27** (OIDC — manual prerequisite)
 
 ## Scoring Key
 

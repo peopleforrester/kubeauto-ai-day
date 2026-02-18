@@ -36,6 +36,7 @@ infrastructure/terraform/*.tfstate
 infrastructure/terraform/*.tfstate.*
 infrastructure/terraform/*.tfvars
 infrastructure/terraform/crash.log
+infrastructure/terraform/*.out
 infrastructure/terraform/.terraform.lock.hcl
 
 # Python

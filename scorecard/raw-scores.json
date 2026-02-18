@@ -1,0 +1,307 @@
+{
+  "metadata": {
+    "project": "KubeAuto Day IDP",
+    "date": "2026-02-18",
+    "ai_tool": "Claude Code (Opus)",
+    "platform": "EKS 1.34 on AWS",
+    "total_components_planned": 27,
+    "total_components_scored": 26,
+    "components_deferred": 1
+  },
+  "components": [
+    {
+      "name": "VPC + Networking",
+      "phase": 1,
+      "toil_reduced": 7,
+      "correction_cycles": 1,
+      "ai_time_min": 5,
+      "manual_time_min": 30,
+      "toil_shifted": "no",
+      "notes": "VPC module config straightforward; NAT gateway + subnet tagging correct first try"
+    },
+    {
+      "name": "EKS Cluster",
+      "phase": 1,
+      "toil_reduced": 6,
+      "correction_cycles": 3,
+      "ai_time_min": 25,
+      "manual_time_min": 45,
+      "toil_shifted": "partial",
+      "notes": "Module v21.15 variable renames caused 2 correction cycles; AWS provider 6.x dependency; addon bootstrap chicken-and-egg required manual intervention"
+    },
+    {
+      "name": "IAM Roles + Pod Identity",
+      "phase": 1,
+      "toil_reduced": 7,
+      "correction_cycles": 1,
+      "ai_time_min": 5,
+      "manual_time_min": 25,
+      "toil_shifted": "no",
+      "notes": "IRSA roles for EBS CSI + LB Controller correct; Helm release for LB Controller wired properly"
+    },
+    {
+      "name": "Namespace Structure",
+      "phase": 1,
+      "toil_reduced": 9,
+      "correction_cycles": 0,
+      "ai_time_min": 2,
+      "manual_time_min": 10,
+      "toil_shifted": "no",
+      "notes": "PSS labels on apps namespace correct first try; clean YAML"
+    },
+    {
+      "name": "ArgoCD Install + Config",
+      "phase": 2,
+      "toil_reduced": 8,
+      "correction_cycles": 1,
+      "ai_time_min": 8,
+      "manual_time_min": 40,
+      "toil_shifted": "no",
+      "notes": "Helm chart version mapping (9.x not 7.x) needed correction from skill file; ArgoCD 3.2.6 installed cleanly; RBAC + values correct first try"
+    },
+    {
+      "name": "App-of-Apps Pattern",
+      "phase": 2,
+      "toil_reduced": 9,
+      "correction_cycles": 1,
+      "ai_time_min": 5,
+      "manual_time_min": 20,
+      "toil_shifted": "no",
+      "notes": "Root app + namespace child app correct; needed repo secret for private GitHub access"
+    },
+    {
+      "name": "Sync Waves + Ordering",
+      "phase": 2,
+      "toil_reduced": 8,
+      "correction_cycles": 1,
+      "ai_time_min": 3,
+      "manual_time_min": 15,
+      "toil_shifted": "no",
+      "notes": "Wave -10 for namespaces works; drift detection test needed fix (annotation tracking only monitors managed fields)"
+    },
+    {
+      "name": "Kyverno Install",
+      "phase": 3,
+      "toil_reduced": 6,
+      "correction_cycles": 3,
+      "ai_time_min": 15,
+      "manual_time_min": 35,
+      "toil_shifted": "partial",
+      "notes": "Skill file webhook config was wrong (list vs map for chart 3.7.0); CRD annotation too large required ServerSideApply; clean reinstall after stale sync"
+    },
+    {
+      "name": "Kyverno Policies (6 policies)",
+      "phase": 3,
+      "toil_reduced": 8,
+      "correction_cycles": 0,
+      "ai_time_min": 5,
+      "manual_time_min": 25,
+      "toil_shifted": "no",
+      "notes": "All 6 ClusterPolicies correct first try; enforce in apps namespace only; audit mode for NetworkPolicy check"
+    },
+    {
+      "name": "Kyverno Policy Interactions",
+      "phase": 3,
+      "toil_reduced": 9,
+      "correction_cycles": 0,
+      "ai_time_min": 2,
+      "manual_time_min": 15,
+      "toil_shifted": "no",
+      "notes": "Pod rejection tested via dry-run; 5 policies fire correctly on non-compliant pod; no false positives in system namespaces"
+    },
+    {
+      "name": "Falco Install",
+      "phase": 3,
+      "toil_reduced": 7,
+      "correction_cycles": 2,
+      "ai_time_min": 10,
+      "manual_time_min": 30,
+      "toil_shifted": "partial",
+      "notes": "Skill file had wrong chart version (4.x vs 7.x); write_etc_common macro removed in 0.42.x; DaemonSet + eBPF correct first try"
+    },
+    {
+      "name": "Falco Custom Rules",
+      "phase": 3,
+      "toil_reduced": 8,
+      "correction_cycles": 1,
+      "ai_time_min": 5,
+      "manual_time_min": 20,
+      "toil_shifted": "no",
+      "notes": "5 custom rules (3 general + 2 EKS-aware) correct; one macro fix needed; Falcosidekick with Prometheus metrics working"
+    },
+    {
+      "name": "ESO + Secrets Manager",
+      "phase": 3,
+      "toil_reduced": 7,
+      "correction_cycles": 2,
+      "ai_time_min": 12,
+      "manual_time_min": 40,
+      "toil_shifted": "partial",
+      "notes": "ESO 1.3.2 API version v1 (not v1beta1); ArgoCD sync cache stale after API fix; IRSA + ClusterSecretStore correct; secret synced"
+    },
+    {
+      "name": "RBAC",
+      "phase": 3,
+      "toil_reduced": 9,
+      "correction_cycles": 0,
+      "ai_time_min": 3,
+      "manual_time_min": 10,
+      "toil_shifted": "no",
+      "notes": "ClusterRoles + namespace-scoped RoleBindings correct first try; cross-namespace denial verified"
+    },
+    {
+      "name": "NetworkPolicies",
+      "phase": 3,
+      "toil_reduced": 9,
+      "correction_cycles": 0,
+      "ai_time_min": 3,
+      "manual_time_min": 15,
+      "toil_shifted": "no",
+      "notes": "Default deny + DNS allow + ingress allow correct first try; pod-selector matching verified"
+    },
+    {
+      "name": "Prometheus + Grafana",
+      "phase": 4,
+      "toil_reduced": 8,
+      "correction_cycles": 1,
+      "ai_time_min": 8,
+      "manual_time_min": 40,
+      "toil_shifted": "no",
+      "notes": "kube-prometheus-stack 82.1.0 deployed cleanly; remote write receiver enabled; 1 correction for kubectl run stdout noise in tests"
+    },
+    {
+      "name": "OTel Collector Config",
+      "phase": 4,
+      "toil_reduced": 6,
+      "correction_cycles": 3,
+      "ai_time_min": 15,
+      "manual_time_min": 35,
+      "toil_shifted": "partial",
+      "notes": "Chart 0.145.0 requires explicit image.repository (breaking change from 0.89+); k8s image lacks prometheusremotewrite exporter, needed contrib; DaemonSet mode disables service by default"
+    },
+    {
+      "name": "Grafana Dashboards",
+      "phase": 4,
+      "toil_reduced": 9,
+      "correction_cycles": 0,
+      "ai_time_min": 3,
+      "manual_time_min": 20,
+      "toil_shifted": "no",
+      "notes": "Platform Overview dashboard with 8 panels correct first try; ConfigMap sidecar provisioning worked immediately"
+    },
+    {
+      "name": "Alert Rules",
+      "phase": 4,
+      "toil_reduced": 9,
+      "correction_cycles": 0,
+      "ai_time_min": 2,
+      "manual_time_min": 15,
+      "toil_shifted": "no",
+      "notes": "4 custom PrometheusRules correct first try via additionalPrometheusRulesMap"
+    },
+    {
+      "name": "Backstage Install",
+      "phase": 5,
+      "toil_reduced": 8,
+      "correction_cycles": 1,
+      "ai_time_min": 10,
+      "manual_time_min": 45,
+      "toil_shifted": "no",
+      "notes": "Helm chart 2.6.3 (image 1.9.1) deployed cleanly; 1 correction for Kyverno livenessProbe in test dry-run; catalog ConfigMap approach for private repo"
+    },
+    {
+      "name": "Software Templates",
+      "phase": 5,
+      "toil_reduced": 9,
+      "correction_cycles": 0,
+      "ai_time_min": 5,
+      "manual_time_min": 20,
+      "toil_shifted": "no",
+      "notes": "deploy-service and create-namespace templates correct first try; skeleton produces Kyverno-compliant resources"
+    },
+    {
+      "name": "Backstage Plugin Wiring",
+      "phase": 5,
+      "toil_reduced": 8,
+      "correction_cycles": 0,
+      "ai_time_min": 3,
+      "manual_time_min": 25,
+      "toil_shifted": "no",
+      "notes": "Static file catalog via ConfigMap mount; 4 catalog entities loaded; ArgoCD/K8s annotations correct"
+    },
+    {
+      "name": "E2E Integration",
+      "phase": 6,
+      "toil_reduced": 7,
+      "correction_cycles": 2,
+      "ai_time_min": 12,
+      "manual_time_min": 30,
+      "toil_shifted": "no",
+      "notes": "7 cross-component tests; 2 fixes needed: NetworkPolicy blocks pod-to-service egress (used localhost), Falco non-interactive exec not logged (switched to /etc write marker)"
+    },
+    {
+      "name": "TLS + cert-manager",
+      "phase": 7,
+      "toil_reduced": 8,
+      "correction_cycles": 1,
+      "ai_time_min": 5,
+      "manual_time_min": 25,
+      "toil_shifted": "no",
+      "notes": "cert-manager 1.19.3 deployed cleanly; 1 fix for Application YAML in subdirectory (app-of-apps doesn't recurse); HTTP-01 ClusterIssuers Ready"
+    },
+    {
+      "name": "Resource Quotas + PDBs",
+      "phase": 7,
+      "toil_reduced": 9,
+      "correction_cycles": 0,
+      "ai_time_min": 3,
+      "manual_time_min": 15,
+      "toil_shifted": "no",
+      "notes": "ResourceQuota and 5 PDBs correct first try; ArgoCD Application pattern reused cleanly"
+    },
+    {
+      "name": "Documentation",
+      "phase": 7,
+      "toil_reduced": 9,
+      "correction_cycles": 0,
+      "ai_time_min": 5,
+      "manual_time_min": 30,
+      "toil_shifted": "no",
+      "notes": "SECURITY.md (8 sections), COST.md, ADR-007 all correct first try; gitleaks allowlist for known test secret"
+    },
+    {
+      "name": "Architecture Decision Records",
+      "phase": "all",
+      "toil_reduced": 9,
+      "correction_cycles": 0,
+      "ai_time_min": 3,
+      "manual_time_min": 15,
+      "toil_shifted": "no",
+      "notes": "7 ADRs written across all phases; MADR format consistent"
+    }
+  ],
+  "deferred": [
+    {
+      "name": "OIDC Authentication",
+      "phase": 7,
+      "reason": "Requires domain name + GitHub OAuth App setup (manual prerequisite)"
+    }
+  ],
+  "totals": {
+    "total_ai_time_min": 182,
+    "total_ai_time_hours": 3.03,
+    "total_manual_time_min": 690,
+    "total_manual_time_hours": 11.5,
+    "net_toil_reduction_pct": 73.6,
+    "total_correction_cycles": 24,
+    "average_toil_reduced_score": 8.0,
+    "components_genuinely_reduced": 21,
+    "components_partially_shifted": 5,
+    "components_fully_shifted": 0,
+    "components_faster_from_scratch": 0,
+    "zero_correction_components": 13,
+    "one_correction_components": 8,
+    "two_correction_components": 3,
+    "three_correction_components": 4
+  }
+}

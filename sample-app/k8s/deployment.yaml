@@ -29,7 +29,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: sample-app
-          image: 598274344262.dkr.ecr.us-west-2.amazonaws.com/kubeauto-sample-app:v1.0.0
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.us-west-2.amazonaws.com/kubeauto-sample-app:v1.0.0
           ports:
             - containerPort: 8080
               protocol: TCP
