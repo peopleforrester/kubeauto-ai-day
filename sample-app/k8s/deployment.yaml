@@ -20,6 +20,7 @@ spec:
         app: sample-app
         app.kubernetes.io/name: sample-app
         app.kubernetes.io/part-of: kubeauto-idp
+        version: v1.0.0
     spec:
       securityContext:
         runAsNonRoot: true
