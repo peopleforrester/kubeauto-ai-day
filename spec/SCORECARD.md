@@ -33,7 +33,7 @@ See `scorecard/methodology.md` (created in Phase 8) for full methodology.
 | Backstage Install | 8 | 1 | 10 min | 45 min | No | Helm chart 2.6.3 (image 1.9.1) deployed cleanly; 1 correction for Kyverno livenessProbe in test dry-run; catalog ConfigMap approach for private repo; Synced+Healthy in 40s |
 | Software Templates | 9 | 0 | 5 min | 20 min | No | deploy-service and create-namespace templates correct first try; skeleton produces Kyverno-compliant resources verified by dry-run and live deployment |
 | Backstage Plugin Wiring | 8 | 0 | 3 min | 25 min | No | Static file catalog via ConfigMap mount; 4 catalog entities (System, Component, 2 Templates) loaded; ArgoCD/K8s annotations on sample-app correct |
-| E2E Integration | | | | | | |
+| E2E Integration | 7 | 2 | 12 min | 30 min | No | 7 cross-component tests; 2 fixes needed: NetworkPolicy blocks pod-to-service egress (used localhost), Falco non-interactive exec not logged (switched to /etc write marker); ArgoCD 30s reconciliation for demo |
 | TLS + cert-manager | | | | | | |
 | OIDC Authentication | | | | | | |
 | Documentation | | | | | | |
