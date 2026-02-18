@@ -1,0 +1,126 @@
+# ABOUTME: ArgoCD Application for kube-prometheus-stack (Prometheus + Grafana).
+# ABOUTME: Deploys full monitoring stack with ServiceMonitors, node-exporter, and dashboards.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    chart: kube-prometheus-stack
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: "82.1.0"
+    helm:
+      valuesObject:
+        # Prometheus configuration
+        prometheus:
+          prometheusSpec:
+            # Enable remote write receiver for OTel Collector
+            enableRemoteWriteReceiver: true
+            # Retention for demo
+            retention: 24h
+            # Resource limits
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: 1000m
+                memory: 2Gi
+            # ServiceMonitor selector - match all in cluster
+            serviceMonitorSelectorNilUsesHelmValues: false
+            podMonitorSelectorNilUsesHelmValues: false
+            ruleSelectorNilUsesHelmValues: false
+          # Disable built-in Thanos sidecar for simplicity
+          thanosService:
+            enabled: false
+        # Grafana configuration
+        grafana:
+          adminPassword: "admin"
+          # Sidecar for dashboard provisioning from ConfigMaps
+          sidecar:
+            dashboards:
+              enabled: true
+              label: grafana_dashboard
+              labelValue: "1"
+              searchNamespace: ALL
+            datasources:
+              enabled: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+        # AlertManager
+        alertmanager:
+          alertmanagerSpec:
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+        # Node exporter
+        nodeExporter:
+          enabled: true
+        # Kube-state-metrics
+        kubeStateMetrics:
+          enabled: true
+        # Custom PrometheusRules for IDP-specific alerts
+        additionalPrometheusRulesMap:
+          idp-alerts:
+            groups:
+              - name: idp-node-alerts
+                rules:
+                  - alert: NodeNotReady
+                    expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+                    for: 5m
+                    labels:
+                      severity: critical
+                    annotations:
+                      summary: "Node {{ $labels.node }} is not ready"
+                      description: "Node {{ $labels.node }} has been not ready for 5 minutes."
+                  - alert: PodCrashLoop
+                    expr: increase(kube_pod_container_status_restarts_total[10m]) > 3
+                    for: 0m
+                    labels:
+                      severity: warning
+                    annotations:
+                      summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
+                      description: "Pod {{ $labels.pod }} in {{ $labels.namespace }} has restarted more than 3 times in 10 minutes."
+              - name: idp-app-alerts
+                rules:
+                  - alert: ArgoCDAppDegraded
+                    expr: argocd_app_info{health_status="Degraded"} == 1
+                    for: 5m
+                    labels:
+                      severity: warning
+                    annotations:
+                      summary: "ArgoCD app {{ $labels.name }} is degraded"
+                      description: "ArgoCD application {{ $labels.name }} has been degraded for 5 minutes."
+                  - alert: FalcoCriticalAlert
+                    expr: increase(falco_events{priority="Critical"}[5m]) > 0
+                    for: 0m
+                    labels:
+                      severity: critical
+                    annotations:
+                      summary: "Falco critical alert detected"
+                      description: "Falco detected a critical severity event in the last 5 minutes."
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true
