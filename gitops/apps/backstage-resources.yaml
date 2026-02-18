@@ -1,0 +1,25 @@
+# ABOUTME: ArgoCD Application for Backstage supporting resources.
+# ABOUTME: Deploys catalog ConfigMap and other prerequisites before Backstage itself.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backstage-resources
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/peopleforrester/kubeauto-ai-day.git
+    targetRevision: staging
+    path: backstage/k8s
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

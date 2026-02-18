@@ -1,0 +1,19 @@
+# ABOUTME: Skeleton service template for Backstage scaffolder.
+# ABOUTME: Creates a ClusterIP service for the deployed application.
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${{ values.name }}
+  namespace: apps
+  labels:
+    app: ${{ values.name }}
+    app.kubernetes.io/name: ${{ values.name }}
+spec:
+  type: ClusterIP
+  selector:
+    app: ${{ values.name }}
+  ports:
+    - name: http
+      port: ${{ values.port }}
+      targetPort: ${{ values.port }}
+      protocol: TCP

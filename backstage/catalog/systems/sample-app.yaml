@@ -1,0 +1,20 @@
+# ABOUTME: Backstage catalog entry for the sample Flask app.
+# ABOUTME: Annotations wire ArgoCD and Kubernetes plugins to this component.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: sample-app
+  description: Sample Python Flask application with OTel instrumentation
+  annotations:
+    argocd/app-name: sample-app
+    backstage.io/kubernetes-label-selector: "app=sample-app"
+    backstage.io/kubernetes-namespace: apps
+  tags:
+    - python
+    - flask
+    - otel
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: kubeauto-idp

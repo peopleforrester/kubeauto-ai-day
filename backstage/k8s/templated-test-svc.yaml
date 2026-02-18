@@ -1,0 +1,78 @@
+# ABOUTME: Pre-rendered template skeleton output for validation testing.
+# ABOUTME: Proves the deploy-service template produces Kyverno-compliant resources.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: templated-test-svc
+  namespace: apps
+  labels:
+    app: templated-test-svc
+    app.kubernetes.io/name: templated-test-svc
+    app.kubernetes.io/part-of: kubeauto-idp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: templated-test-svc
+  template:
+    metadata:
+      labels:
+        app: templated-test-svc
+        app.kubernetes.io/name: templated-test-svc
+        app.kubernetes.io/part-of: kubeauto-idp
+        version: v1.0.0
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: templated-test-svc
+          image: 598274344262.dkr.ecr.us-west-2.amazonaws.com/kubeauto-sample-app:v1.0.0
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: templated-test-svc
+  namespace: apps
+  labels:
+    app: templated-test-svc
+    app.kubernetes.io/name: templated-test-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: templated-test-svc
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP

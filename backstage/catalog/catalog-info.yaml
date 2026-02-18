@@ -1,0 +1,15 @@
+# ABOUTME: Root Backstage catalog file for the KubeAuto Day IDP.
+# ABOUTME: Defines the top-level system that all components belong to.
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: kubeauto-idp
+  description: KubeAuto Day Internal Developer Platform
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - kubernetes
+    - eks
+    - platform
+spec:
+  owner: platform-team

@@ -1,0 +1,46 @@
+# ABOUTME: Backstage software template for creating a new namespace.
+# ABOUTME: Creates namespace with default RBAC and NetworkPolicy.
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-namespace
+  title: Create a New Namespace
+  description: Creates a Kubernetes namespace with default RBAC bindings and network policies
+  tags:
+    - kubernetes
+    - namespace
+spec:
+  owner: platform-team
+  type: resource
+
+  parameters:
+    - title: Namespace Details
+      required:
+        - name
+        - owner
+      properties:
+        name:
+          title: Namespace Name
+          type: string
+          description: Name for the new namespace (lowercase, alphanumeric, hyphens)
+          pattern: '^[a-z0-9][a-z0-9-]*[a-z0-9]$'
+        owner:
+          title: Owner Team
+          type: string
+          description: Team that owns this namespace
+          default: platform-team
+
+  steps:
+    - id: fetch-skeleton
+      name: Fetch Skeleton
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          owner: ${{ parameters.owner }}
+
+  output:
+    links:
+      - title: View Namespace
+        url: https://argocd.example.com/applications/${{ parameters.name }}

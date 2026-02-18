@@ -1,0 +1,65 @@
+# ABOUTME: Backstage software template for deploying a new service.
+# ABOUTME: Creates Kyverno-compliant K8s manifests for the apps namespace.
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: deploy-service
+  title: Deploy a New Service
+  description: Creates a Kubernetes deployment with service, compliant with all Kyverno policies in the apps namespace
+  tags:
+    - kubernetes
+    - argocd
+    - recommended
+spec:
+  owner: platform-team
+  type: service
+
+  parameters:
+    - title: Service Details
+      required:
+        - name
+        - owner
+        - image
+      properties:
+        name:
+          title: Service Name
+          type: string
+          description: Unique name for the service (lowercase, alphanumeric, hyphens)
+          pattern: '^[a-z0-9][a-z0-9-]*[a-z0-9]$'
+        owner:
+          title: Owner Team
+          type: string
+          description: Team that owns this service
+          default: platform-team
+        image:
+          title: Container Image
+          type: string
+          description: "Full image reference (e.g., docker.io/library/nginx:1.27)"
+        replicas:
+          title: Replicas
+          type: integer
+          default: 2
+          minimum: 1
+          maximum: 5
+        port:
+          title: Container Port
+          type: integer
+          default: 8080
+
+  steps:
+    - id: fetch-skeleton
+      name: Fetch Skeleton
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          owner: ${{ parameters.owner }}
+          image: ${{ parameters.image }}
+          replicas: ${{ parameters.replicas }}
+          port: ${{ parameters.port }}
+
+  output:
+    links:
+      - title: View in ArgoCD
+        url: https://argocd.example.com/applications/${{ parameters.name }}

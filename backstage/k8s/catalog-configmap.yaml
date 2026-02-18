@@ -1,0 +1,121 @@
+# ABOUTME: ConfigMap containing Backstage catalog entities and templates.
+# ABOUTME: Mounted into Backstage pod for static file catalog locations.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backstage-catalog
+  namespace: backstage
+data:
+  catalog-info.yaml: |
+    apiVersion: backstage.io/v1alpha1
+    kind: System
+    metadata:
+      name: kubeauto-idp
+      description: KubeAuto Day Internal Developer Platform
+      tags:
+        - kubernetes
+        - eks
+        - platform
+    spec:
+      owner: platform-team
+  sample-app.yaml: |
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: sample-app
+      description: Sample Python Flask application with OTel instrumentation
+      annotations:
+        argocd/app-name: sample-app
+        backstage.io/kubernetes-label-selector: "app=sample-app"
+        backstage.io/kubernetes-namespace: apps
+      tags:
+        - python
+        - flask
+        - otel
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+  deploy-service-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: deploy-service
+      title: Deploy a New Service
+      description: Creates a Kubernetes deployment with service, compliant with all Kyverno policies
+      tags:
+        - kubernetes
+        - argocd
+        - recommended
+    spec:
+      owner: platform-team
+      type: service
+      parameters:
+        - title: Service Details
+          required:
+            - name
+            - owner
+            - image
+          properties:
+            name:
+              title: Service Name
+              type: string
+              description: Unique name for the service
+              pattern: '^[a-z0-9][a-z0-9-]*[a-z0-9]$'
+            owner:
+              title: Owner Team
+              type: string
+              default: platform-team
+            image:
+              title: Container Image
+              type: string
+            replicas:
+              title: Replicas
+              type: integer
+              default: 2
+              minimum: 1
+              maximum: 5
+            port:
+              title: Container Port
+              type: integer
+              default: 8080
+      steps:
+        - id: log-inputs
+          name: Log Inputs
+          action: debug:log
+          input:
+            message: "Creating service ${{ parameters.name }} with image ${{ parameters.image }}"
+  create-namespace-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: create-namespace
+      title: Create a New Namespace
+      description: Creates a Kubernetes namespace with default RBAC and network policies
+      tags:
+        - kubernetes
+        - namespace
+    spec:
+      owner: platform-team
+      type: resource
+      parameters:
+        - title: Namespace Details
+          required:
+            - name
+            - owner
+          properties:
+            name:
+              title: Namespace Name
+              type: string
+              pattern: '^[a-z0-9][a-z0-9-]*[a-z0-9]$'
+            owner:
+              title: Owner Team
+              type: string
+              default: platform-team
+      steps:
+        - id: log-inputs
+          name: Log Inputs
+          action: debug:log
+          input:
+            message: "Creating namespace ${{ parameters.name }}"

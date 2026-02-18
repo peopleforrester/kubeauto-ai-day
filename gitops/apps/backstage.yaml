@@ -1,0 +1,84 @@
+# ABOUTME: ArgoCD Application for Backstage developer portal.
+# ABOUTME: Deploys Backstage with static catalog locations and software templates.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backstage
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    chart: backstage
+    repoURL: https://backstage.github.io/charts
+    targetRevision: "2.6.3"
+    helm:
+      valuesObject:
+        backstage:
+          image:
+            registry: ghcr.io
+            repository: backstage/backstage
+            tag: "1.9.1"
+          extraVolumes:
+            - name: catalog
+              configMap:
+                name: backstage-catalog
+          extraVolumeMounts:
+            - name: catalog
+              mountPath: /app/catalog
+          appConfig:
+            app:
+              title: KubeAuto Day IDP
+              baseUrl: http://localhost:7007
+            organization:
+              name: KubeAuto Day
+            backend:
+              baseUrl: http://localhost:7007
+              listen:
+                port: 7007
+              database:
+                client: better-sqlite3
+                connection: ":memory:"
+            catalog:
+              rules:
+                - allow:
+                    - Component
+                    - System
+                    - API
+                    - Resource
+                    - Location
+                    - Template
+              locations:
+                - type: file
+                  target: /app/catalog/catalog-info.yaml
+                - type: file
+                  target: /app/catalog/sample-app.yaml
+                - type: file
+                  target: /app/catalog/deploy-service-template.yaml
+                - type: file
+                  target: /app/catalog/create-namespace-template.yaml
+            techdocs:
+              builder: local
+              generator:
+                runIn: local
+              publisher:
+                type: local
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: backstage
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

@@ -1,0 +1,11 @@
+# ABOUTME: Skeleton namespace template for Backstage scaffolder.
+# ABOUTME: Creates a namespace with standard labels and PSS baseline enforcement.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${{ values.name }}
+  labels:
+    app.kubernetes.io/managed-by: backstage
+    team: ${{ values.owner }}
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/warn: restricted

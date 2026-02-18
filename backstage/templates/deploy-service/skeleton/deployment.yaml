@@ -1,0 +1,60 @@
+# ABOUTME: Skeleton deployment template for Backstage scaffolder.
+# ABOUTME: Pre-compliant with all Kyverno policies (labels, limits, probes, non-root).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${{ values.name }}
+  namespace: apps
+  labels:
+    app: ${{ values.name }}
+    app.kubernetes.io/name: ${{ values.name }}
+    app.kubernetes.io/part-of: kubeauto-idp
+spec:
+  replicas: ${{ values.replicas }}
+  selector:
+    matchLabels:
+      app: ${{ values.name }}
+  template:
+    metadata:
+      labels:
+        app: ${{ values.name }}
+        app.kubernetes.io/name: ${{ values.name }}
+        app.kubernetes.io/part-of: kubeauto-idp
+        version: v1.0.0
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: ${{ values.name }}
+          image: ${{ values.image }}
+          ports:
+            - containerPort: ${{ values.port }}
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: ${{ values.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: ${{ values.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
