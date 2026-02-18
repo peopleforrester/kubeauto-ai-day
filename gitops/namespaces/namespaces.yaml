@@ -46,3 +46,10 @@ metadata:
   name: security
   labels:
     app.kubernetes.io/part-of: kubeauto-idp
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+  labels:
+    app.kubernetes.io/part-of: kubeauto-idp
