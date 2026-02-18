@@ -1,0 +1,8 @@
+# ABOUTME: Python dependencies for the sample Flask app.
+# ABOUTME: Includes Flask and OpenTelemetry auto-instrumentation packages.
+flask>=3.0,<4.0
+gunicorn>=22.0,<23.0
+opentelemetry-distro>=0.50b0
+opentelemetry-exporter-otlp-proto-grpc>=1.29.0
+opentelemetry-instrumentation-flask>=0.50b0
+opentelemetry-instrumentation-requests>=0.50b0

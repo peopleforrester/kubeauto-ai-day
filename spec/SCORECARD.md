@@ -26,10 +26,10 @@ See `scorecard/methodology.md` (created in Phase 8) for full methodology.
 | ESO + Secrets Manager | 7 | 2 | 12 min | 40 min | Partial | ESO 1.3.2 API version v1 (not v1beta1); ArgoCD sync cache stale after API fix; IRSA + ClusterSecretStore correct; secret synced successfully |
 | RBAC | 9 | 0 | 3 min | 10 min | No | ClusterRoles + namespace-scoped RoleBindings correct first try; cross-namespace denial verified |
 | NetworkPolicies | 9 | 0 | 3 min | 15 min | No | Default deny + DNS allow + ingress allow correct first try; pod-selector matching verified |
-| Prometheus + Grafana | | | | | | |
-| OTel Collector Config | | | | | | |
-| Grafana Dashboards | | | | | | |
-| Alert Rules | | | | | | |
+| Prometheus + Grafana | 8 | 1 | 8 min | 40 min | No | kube-prometheus-stack 82.1.0 deployed cleanly; remote write receiver enabled; 1 correction for kubectl run stdout noise in tests (pod deleted message appended to JSON) |
+| OTel Collector Config | 6 | 3 | 15 min | 35 min | Partial | Chart 0.145.0 requires explicit image.repository (breaking change from 0.89+); k8s image lacks prometheusremotewrite exporter, needed contrib; DaemonSet mode disables service by default |
+| Grafana Dashboards | 9 | 0 | 3 min | 20 min | No | Platform Overview dashboard with 8 panels correct first try; ConfigMap sidecar provisioning worked immediately |
+| Alert Rules | 9 | 0 | 2 min | 15 min | No | 4 custom PrometheusRules (NodeNotReady, PodCrashLoop, ArgoCDAppDegraded, FalcoCriticalAlert) correct first try via additionalPrometheusRulesMap |
 | Backstage Install | | | | | | |
 | Software Templates | | | | | | |
 | Backstage Plugin Wiring | | | | | | |

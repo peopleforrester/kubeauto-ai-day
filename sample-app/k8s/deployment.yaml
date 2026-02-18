@@ -1,0 +1,72 @@
+# ABOUTME: Kubernetes Deployment for the sample Flask app.
+# ABOUTME: Runs in apps namespace with OTel auto-instrumentation and Kyverno-compliant settings.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-app
+  namespace: apps
+  labels:
+    app: sample-app
+    app.kubernetes.io/name: sample-app
+    app.kubernetes.io/part-of: kubeauto-idp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-app
+  template:
+    metadata:
+      labels:
+        app: sample-app
+        app.kubernetes.io/name: sample-app
+        app.kubernetes.io/part-of: kubeauto-idp
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: sample-app
+          image: 598274344262.dkr.ecr.us-west-2.amazonaws.com/kubeauto-sample-app:v1.0.0
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector-opentelemetry-collector.monitoring.svc.cluster.local:4317"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "grpc"
+            - name: OTEL_SERVICE_NAME
+              value: "sample-app"
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=apps,deployment.environment=production"
+            - name: OTEL_PROPAGATORS
+              value: "tracecontext,baggage"
+            - name: OTEL_METRIC_EXPORT_INTERVAL
+              value: "10000"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL

@@ -1,0 +1,19 @@
+# ABOUTME: Kubernetes Service for the sample Flask app.
+# ABOUTME: Exposes port 8080 for internal cluster access.
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-app
+  namespace: apps
+  labels:
+    app: sample-app
+    app.kubernetes.io/name: sample-app
+spec:
+  type: ClusterIP
+  selector:
+    app: sample-app
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
