@@ -1,0 +1,218 @@
+# ABOUTME: ConfigMap containing the Platform Overview Grafana dashboard.
+# ABOUTME: Auto-provisioned by Grafana sidecar via grafana_dashboard label.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-overview-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  platform-overview.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "title": "Cluster Node Status",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "count(kube_node_status_condition{condition=\"Ready\",status=\"true\"} == 1)",
+              "legendFormat": "Ready Nodes"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 2 }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Total Running Pods",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "count(kube_pod_status_phase{phase=\"Running\"} == 1)",
+              "legendFormat": "Running Pods"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "ArgoCD App Health",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "count(argocd_app_info{health_status=\"Healthy\"})",
+              "legendFormat": "Healthy Apps"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Falco Critical Events (5m)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(increase(falco_events{priority=\"Critical\"}[5m])) or vector(0)",
+              "legendFormat": "Critical Events"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 1 }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "CPU Usage by Namespace",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum by (namespace) (rate(container_cpu_usage_seconds_total{container!=\"\"}[5m]))",
+              "legendFormat": "{{namespace}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Memory Usage by Namespace",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum by (namespace) (container_memory_working_set_bytes{container!=\"\"})",
+              "legendFormat": "{{namespace}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "title": "Pod Restarts (Last 1h)",
+          "type": "table",
+          "gridPos": { "h": 6, "w": 12, "x": 0, "y": 12 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sort_desc(increase(kube_pod_container_status_restarts_total[1h]) > 0)",
+              "format": "table",
+              "instant": true,
+              "legendFormat": ""
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "container": false,
+                  "uid": true,
+                  "instance": true,
+                  "job": true,
+                  "endpoint": true,
+                  "service": true
+                },
+                "renameByName": {
+                  "Value": "Restarts",
+                  "namespace": "Namespace",
+                  "pod": "Pod",
+                  "container": "Container"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "title": "Kyverno Policy Violations",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 12, "x": 12, "y": 12 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum by (policy_name) (increase(kyverno_policy_results_total{rule_result=\"fail\"}[5m]))",
+              "legendFormat": "{{policy_name}}"
+            }
+          ]
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["idp", "platform", "overview"],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "Platform Overview",
+      "uid": "platform-overview",
+      "version": 1
+    }

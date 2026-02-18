@@ -150,7 +150,7 @@ def test_prometheus_scrape_targets() -> None:
 
 
 def test_grafana_dashboard_loads() -> None:
-    """At least one dashboard exists in Grafana (platform-overview or built-in)."""
+    """Platform Overview dashboard exists in Grafana."""
     result = subprocess.run(
         [
             "kubectl", "run", "grafana-dash-test", "--rm", "-i", "--restart=Never",
@@ -164,8 +164,9 @@ def test_grafana_dashboard_loads() -> None:
     )
     clean = _strip_kubectl_noise(result.stdout)
     data = json.loads(clean) if clean else []
-    assert len(data) >= 1, (
-        f"Expected at least 1 dashboard in Grafana, got: {data}"
+    titles = [d.get("title", "") for d in data]
+    assert any("platform" in t.lower() or "overview" in t.lower() for t in titles), (
+        f"Expected 'Platform Overview' dashboard, found: {titles[:15]}"
     )
 
 
