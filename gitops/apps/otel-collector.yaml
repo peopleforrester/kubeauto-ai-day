@@ -1,0 +1,114 @@
+# ABOUTME: ArgoCD Application for OpenTelemetry Collector DaemonSet.
+# ABOUTME: Receives OTLP telemetry from apps and exports metrics to Prometheus via remote write.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: otel-collector
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    chart: opentelemetry-collector
+    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+    targetRevision: "0.145.0"
+    helm:
+      valuesObject:
+        mode: daemonset
+        presets:
+          kubernetesAttributes:
+            enabled: true
+        config:
+          receivers:
+            otlp:
+              protocols:
+                grpc:
+                  endpoint: 0.0.0.0:4317
+                http:
+                  endpoint: 0.0.0.0:4318
+          processors:
+            memory_limiter:
+              check_interval: 1s
+              limit_mib: 400
+              spike_limit_mib: 100
+            batch:
+              timeout: 5s
+              send_batch_size: 1024
+              send_batch_max_size: 2048
+            resource:
+              attributes:
+                - key: cluster.name
+                  value: kubeauto-ai-day
+                  action: upsert
+          exporters:
+            prometheusremotewrite:
+              endpoint: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write
+              tls:
+                insecure: true
+              resource_to_telemetry_conversion:
+                enabled: true
+            debug:
+              verbosity: basic
+              sampling_initial: 5
+              sampling_thereafter: 200
+          service:
+            telemetry:
+              logs:
+                level: info
+              metrics:
+                address: 0.0.0.0:8888
+            pipelines:
+              metrics:
+                receivers:
+                  - otlp
+                processors:
+                  - memory_limiter
+                  - batch
+                  - resource
+                exporters:
+                  - prometheusremotewrite
+                  - debug
+              traces:
+                receivers:
+                  - otlp
+                processors:
+                  - memory_limiter
+                  - batch
+                  - resource
+                exporters:
+                  - debug
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        ports:
+          otlp:
+            enabled: true
+            containerPort: 4317
+            servicePort: 4317
+            protocol: TCP
+          otlp-http:
+            enabled: true
+            containerPort: 4318
+            servicePort: 4318
+            protocol: TCP
+          metrics:
+            enabled: true
+            containerPort: 8888
+            servicePort: 8888
+            protocol: TCP
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
