@@ -14,17 +14,16 @@ spec:
   source:
     chart: falco
     repoURL: https://falcosecurity.github.io/charts
-    targetRevision: "7.2.1"
+    targetRevision: "8.0.0"
     helm:
       valuesObject:
         driver:
           kind: modern_ebpf
         tty: true
         falco:
-          grpc:
+          http_output:
             enabled: true
-          grpc_output:
-            enabled: true
+            url: "http://falco-falcosidekick.security.svc.cluster.local:2801"
           json_output: true
           log_stderr: true
           log_syslog: false
