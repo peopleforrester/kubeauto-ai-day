@@ -14,6 +14,8 @@ docs/*
 !docs/ARCHITECTURE.md
 !docs/SETUP.md
 !docs/TEARDOWN.md
+!docs/LESSONS-LEARNED.md
+!docs/VERSION-MAP.md
 
 # Environment and secrets
 .env

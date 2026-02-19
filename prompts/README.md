@@ -27,13 +27,17 @@ Each phase file follows this format:
 
 | File | Phase | Status |
 |------|-------|--------|
-| [phase-01-prompts.md](phase-01-prompts.md) | Foundation | Not started |
-| [phase-02-prompts.md](phase-02-prompts.md) | GitOps Bootstrap | Not started |
-| [phase-03-prompts.md](phase-03-prompts.md) | Security Stack | Not started |
-| [phase-04-prompts.md](phase-04-prompts.md) | Observability | Not started |
-| [phase-05-prompts.md](phase-05-prompts.md) | Developer Portal | Not started |
-| [phase-06-prompts.md](phase-06-prompts.md) | Integration Testing | Not started |
-| [phase-07-prompts.md](phase-07-prompts.md) | Production Hardening | Not started |
+| [phase-01-prompts.md](phase-01-prompts.md) | Foundation | Reconstructed |
+| [phase-02-prompts.md](phase-02-prompts.md) | GitOps Bootstrap | Reconstructed |
+| [phase-03-prompts.md](phase-03-prompts.md) | Security Stack | Reconstructed |
+| [phase-04-prompts.md](phase-04-prompts.md) | Observability | Reconstructed |
+| [phase-05-prompts.md](phase-05-prompts.md) | Developer Portal | Reconstructed |
+| [phase-06-prompts.md](phase-06-prompts.md) | Integration Testing | Reconstructed |
+| [phase-07-prompts.md](phase-07-prompts.md) | Production Hardening | Reconstructed |
+
+*Note: Prompt logs were reconstructed from git history (commit timestamps),
+scorecard notes (correction cycles), and session transcripts. They capture
+the substance of each interaction but are not verbatim transcripts.*
 
 ## Analysis
 

@@ -33,6 +33,79 @@ Install the following on your workstation:
 | argocd CLI | ArgoCD management (port-forward alternative) |
 | k9s | Terminal UI for Kubernetes |
 
+## Pre-Flight Checklist
+
+Run this checklist before starting. Every item is required.
+
+### AWS Resources (Manual)
+
+```bash
+# 1. Verify AWS credentials are configured
+aws sts get-caller-identity
+# Should show your account ID and IAM user/role
+
+# 2. Create ECR repository for the sample app
+aws ecr create-repository \
+  --repository-name kubeauto-sample-app \
+  --region us-west-2
+
+# 3. Build and push the sample app image
+cd sample-app
+docker build -t kubeauto-sample-app:v1.0.0 .
+aws ecr get-login-password --region us-west-2 | \
+  docker login --username AWS --password-stdin \
+  $(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-west-2.amazonaws.com
+docker tag kubeauto-sample-app:v1.0.0 \
+  $(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-west-2.amazonaws.com/kubeauto-sample-app:v1.0.0
+docker push \
+  $(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-west-2.amazonaws.com/kubeauto-sample-app:v1.0.0
+cd ..
+
+# 4. Update image references with your account ID
+# Replace <AWS_ACCOUNT_ID> in these files:
+#   - sample-app/k8s/deployment.yaml
+#   - backstage/k8s/templated-test-svc.yaml
+#   - gitops/apps/external-secrets.yaml (IAM role ARN)
+
+# 5. Create Secrets Manager secrets
+aws secretsmanager create-secret \
+  --name kubeauto/test-secret \
+  --secret-string '{"username":"testuser","password":"testpass123"}' \
+  --region us-west-2
+
+aws secretsmanager create-secret \
+  --name kubeauto/github-oauth \
+  --secret-string '{"clientID":"your-github-oauth-client-id","clientSecret":"your-github-oauth-client-secret"}' \
+  --region us-west-2
+
+# 6. Create a GitHub Personal Access Token
+# Go to: GitHub → Settings → Developer settings → Personal access tokens
+# Scopes needed: repo (full control of private repositories)
+# Save the token — you'll need it for ArgoCD repo access (Step 6 below)
+```
+
+### Tool Verification
+
+```bash
+# Verify all tools are installed
+terraform version    # >= 1.7
+kubectl version --client  # >= 1.34
+helm version         # >= 3.14
+aws --version        # v2
+python3 --version    # >= 3.12
+uv --version         # >= 0.6
+gitleaks version     # >= 8.x
+```
+
+### Python Dependencies
+
+```bash
+# Install test dependencies
+uv sync
+```
+
+---
+
 ## Step 1: Clone the Repository
 
 ```bash
