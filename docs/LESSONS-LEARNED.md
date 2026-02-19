@@ -419,3 +419,11 @@ release MUST happen at publish time — not while the cluster is live. ArgoCD
 syncs from the repo, so sanitized files get deployed and break image pulls.
 The pre-flight checklist in SETUP.md documents the reverse: replacing
 placeholders with your real account ID before deploying.
+
+### 9. IRSA Pods Need Restart After Annotation Fix
+When an ArgoCD sync deploys a broken IAM role ARN annotation on a service
+account (e.g., from placeholder sanitization), restoring the correct ARN
+is not enough. The IRSA projected token was minted at pod startup using
+the old (broken) annotation. The pod caches that token and will keep
+failing with `Request ARN is invalid` from STS until you restart it.
+`kubectl rollout restart deployment/<name>` forces new token projection.
