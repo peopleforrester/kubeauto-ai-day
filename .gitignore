@@ -16,6 +16,7 @@ docs/*
 !docs/TEARDOWN.md
 !docs/LESSONS-LEARNED.md
 !docs/VERSION-MAP.md
+!docs/WALKTHROUGH.md
 
 # Environment and secrets
 .env
