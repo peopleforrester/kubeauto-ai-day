@@ -4,7 +4,25 @@
 # ArgoCD server configuration
 server:
   extraArgs:
-    - --insecure  # TLS terminated at ALB in Phase 7
+    - --insecure  # TLS terminated at ALB
+
+  ingress:
+    enabled: true
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/backend-protocol: HTTP
+      alb.ingress.kubernetes.io/healthcheck-path: /healthz
+      alb.ingress.kubernetes.io/group.name: kubeauto-ingress
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:598274344262:certificate/74f4bfc7-6f5e-480c-85da-9819026d1d33
+    hosts:
+      - test1.ai-enhanced-devops.com
+    tls:
+      - hosts:
+          - test1.ai-enhanced-devops.com
 
 # Configuration parameters
 configs:
