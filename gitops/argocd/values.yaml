@@ -18,11 +18,8 @@ server:
       alb.ingress.kubernetes.io/healthcheck-path: /healthz
       alb.ingress.kubernetes.io/group.name: kubeauto-ingress
       alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:598274344262:certificate/74f4bfc7-6f5e-480c-85da-9819026d1d33
-    hosts:
-      - test1.ai-enhanced-devops.com
-    tls:
-      - hosts:
-          - test1.ai-enhanced-devops.com
+    hostname: test1.ai-enhanced-devops.com
+    tls: true
 
 # Configuration parameters
 configs:
