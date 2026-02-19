@@ -34,6 +34,17 @@ configs:
     application.resourceTrackingMethod: "annotation"
     # Admin user enabled for initial setup
     admin.enabled: "true"
+    # ArgoCD external URL (required for Dex callback)
+    url: "https://test1.ai-enhanced-devops.com"
+    # Dex GitHub OIDC connector
+    dex.config: |
+      connectors:
+        - type: github
+          id: github
+          name: GitHub
+          config:
+            clientID: $dex.github.clientID
+            clientSecret: $dex.github.clientSecret
 
   rbac:
     policy.csv: |
@@ -45,6 +56,9 @@ configs:
       p, role:platform-admin, logs, *, *, allow
       p, role:platform-admin, exec, *, */*, allow
 
+      # GitHub user gets admin (ArgoCD 3.x subject format)
+      g, peopleforrester, role:platform-admin
+
       # Read-only role for observers
       p, role:readonly, applications, get, */*, allow
       p, role:readonly, applications, list, */*, allow
@@ -55,9 +69,9 @@ configs:
       g, admin, role:platform-admin
     policy.default: role:readonly
 
-# Disable Dex (no SSO in initial install, added in Phase 7)
+# Dex OIDC provider for GitHub SSO
 dex:
-  enabled: false
+  enabled: true
 
 # Redis HA not needed for demo
 redis:
