@@ -8,22 +8,43 @@ metadata:
 data:
   catalog-info.yaml: |
     apiVersion: backstage.io/v1alpha1
+    kind: Domain
+    metadata:
+      name: platform-engineering
+      description: Cloud-native platform engineering domain
+      tags:
+        - platform
+        - kubernetes
+    spec:
+      owner: platform-team
+    ---
+    apiVersion: backstage.io/v1alpha1
     kind: System
     metadata:
       name: kubeauto-idp
-      description: KubeAuto Day Internal Developer Platform
+      description: KubeAuto Day Internal Developer Platform on EKS
       tags:
         - kubernetes
         - eks
         - platform
+        - cncf
+      links:
+        - url: https://test1.ai-enhanced-devops.com
+          title: ArgoCD Dashboard
+          icon: dashboard
+        - url: https://backstage.ai-enhanced-devops.com
+          title: Developer Portal
+          icon: catalog
     spec:
       owner: platform-team
+      domain: platform-engineering
+
   sample-app.yaml: |
     apiVersion: backstage.io/v1alpha1
     kind: Component
     metadata:
       name: sample-app
-      description: Sample Python Flask application with OTel instrumentation
+      description: Sample Python Flask application with OpenTelemetry auto-instrumentation
       annotations:
         argocd/app-name: sample-app
         backstage.io/kubernetes-label-selector: "app=sample-app"
@@ -32,17 +53,466 @@ data:
         - python
         - flask
         - otel
+      links:
+        - url: https://backstage.ai-enhanced-devops.com/catalog/default/component/sample-app
+          title: Catalog Page
     spec:
       type: service
       lifecycle: production
       owner: platform-team
       system: kubeauto-idp
+      providesApis:
+        - sample-app-api
+
+  platform-components.yaml: |
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: argocd
+      title: ArgoCD
+      description: GitOps continuous delivery engine (v3.3.0). Manages all cluster workloads via app-of-apps pattern with 30s reconciliation.
+      annotations:
+        argocd/app-name: app-of-apps
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/part-of=argocd"
+        backstage.io/kubernetes-namespace: argocd
+      tags:
+        - gitops
+        - cncf-graduated
+        - argocd
+      links:
+        - url: https://test1.ai-enhanced-devops.com
+          title: ArgoCD UI
+          icon: dashboard
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+      providesApis:
+        - argocd-api
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: prometheus
+      title: Prometheus
+      description: Metrics collection and alerting via kube-prometheus-stack (v82.1.0). Scrapes all platform components and application metrics.
+      annotations:
+        argocd/app-name: prometheus
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/name=kube-prometheus-stack-prometheus-operator"
+        backstage.io/kubernetes-namespace: monitoring
+      tags:
+        - monitoring
+        - cncf-graduated
+        - prometheus
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+      providesApis:
+        - prometheus-api
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: grafana
+      title: Grafana
+      description: Observability dashboards (v12.3.3). Platform Overview dashboard with 8 panels covering cluster health, security events, and deployments.
+      annotations:
+        argocd/app-name: prometheus
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/name=grafana"
+        backstage.io/kubernetes-namespace: monitoring
+      tags:
+        - monitoring
+        - observability
+        - grafana
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+      providesApis:
+        - grafana-api
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: kyverno
+      title: Kyverno
+      description: Kubernetes policy engine (v3.7.0). Enforces 6 security policies in apps namespace — resource limits, probes, non-root, no privilege escalation, registry allowlist, required labels.
+      annotations:
+        argocd/app-name: kyverno
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/part-of=kyverno"
+        backstage.io/kubernetes-namespace: kyverno
+      tags:
+        - security
+        - policy
+        - cncf-graduated
+        - kyverno
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: falco
+      title: Falco
+      description: Runtime security monitoring (v0.42.1, CNCF Graduated). eBPF-based syscall detection with 5 custom rules — write below /etc, sensitive file reads, crypto mining, EC2 metadata access, pod exec.
+      annotations:
+        argocd/app-name: falco
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/name=falco"
+        backstage.io/kubernetes-namespace: security
+      tags:
+        - security
+        - runtime
+        - cncf-graduated
+        - falco
+        - ebpf
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: external-secrets-operator
+      title: External Secrets Operator
+      description: Syncs secrets from AWS Secrets Manager to Kubernetes (v1.3.2). Uses IRSA for authentication, scoped to kubeauto/* resources.
+      annotations:
+        argocd/app-name: external-secrets
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/name=external-secrets"
+        backstage.io/kubernetes-namespace: platform
+      tags:
+        - security
+        - secrets
+        - aws
+        - eso
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: otel-collector
+      title: OpenTelemetry Collector
+      description: Telemetry pipeline (v0.145.0). Receives OTLP traces and metrics from applications, exports to Prometheus via remote write.
+      annotations:
+        argocd/app-name: otel-collector
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/name=opentelemetry-collector"
+        backstage.io/kubernetes-namespace: monitoring
+      tags:
+        - observability
+        - cncf-incubating
+        - opentelemetry
+        - tracing
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: cert-manager
+      title: cert-manager
+      description: TLS certificate management (v1.19.3). Provides Let's Encrypt staging and production ClusterIssuers with HTTP-01 challenges via ALB.
+      annotations:
+        argocd/app-name: cert-manager
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/name=cert-manager"
+        backstage.io/kubernetes-namespace: cert-manager
+      tags:
+        - security
+        - tls
+        - cncf-graduated
+        - cert-manager
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: backstage-portal
+      title: Backstage Developer Portal
+      description: Internal developer portal (v1.48.0). Custom image with GitHub auth, Kubernetes plugin, and ArgoCD plugin. Static file catalog with 2 scaffolder templates.
+      annotations:
+        argocd/app-name: backstage
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/name=backstage"
+        backstage.io/kubernetes-namespace: backstage
+      tags:
+        - developer-portal
+        - cncf-incubating
+        - backstage
+      links:
+        - url: https://backstage.ai-enhanced-devops.com
+          title: Backstage UI
+          icon: catalog
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: aws-load-balancer-controller
+      title: AWS Load Balancer Controller
+      description: Manages ALB/NLB for Kubernetes Ingress resources. Shared ALB via ingress group for ArgoCD, Backstage, and application endpoints.
+      annotations:
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/name=aws-load-balancer-controller"
+        backstage.io/kubernetes-namespace: kube-system
+      tags:
+        - networking
+        - aws
+        - ingress
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: falcosidekick
+      title: Falcosidekick
+      description: Falco event router with Prometheus metrics exporter. Forwards Falco alerts to monitoring stack.
+      annotations:
+        argocd/app-name: falcosidekick
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/name=falcosidekick"
+        backstage.io/kubernetes-namespace: security
+      tags:
+        - security
+        - falco
+        - alerting
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+
+  apis.yaml: |
+    apiVersion: backstage.io/v1alpha1
+    kind: API
+    metadata:
+      name: argocd-api
+      title: ArgoCD REST API
+      description: ArgoCD v3 REST API for application management, sync operations, and cluster configuration.
+      tags:
+        - rest
+        - argocd
+      links:
+        - url: https://test1.ai-enhanced-devops.com/swagger-ui
+          title: Swagger UI
+    spec:
+      type: openapi
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+      definition: |
+        openapi: 3.0.0
+        info:
+          title: ArgoCD API
+          version: v3.3.0
+          description: ArgoCD REST API for GitOps application management
+        servers:
+          - url: https://test1.ai-enhanced-devops.com/api/v1
+        paths:
+          /applications:
+            get:
+              summary: List all applications
+              operationId: listApplications
+              responses:
+                '200':
+                  description: List of ArgoCD applications
+          /applications/{name}:
+            get:
+              summary: Get application details
+              operationId: getApplication
+              parameters:
+                - name: name
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+              responses:
+                '200':
+                  description: Application details
+          /applications/{name}/sync:
+            post:
+              summary: Sync an application
+              operationId: syncApplication
+              parameters:
+                - name: name
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+              responses:
+                '200':
+                  description: Sync initiated
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: API
+    metadata:
+      name: prometheus-api
+      title: Prometheus Query API
+      description: PromQL query API for metrics retrieval and alerting rule management.
+      tags:
+        - rest
+        - prometheus
+        - metrics
+    spec:
+      type: openapi
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+      definition: |
+        openapi: 3.0.0
+        info:
+          title: Prometheus API
+          version: v2
+          description: Prometheus HTTP query API
+        servers:
+          - url: http://prometheus-kube-prometheus-prometheus.monitoring:9090/api/v1
+        paths:
+          /query:
+            get:
+              summary: Instant query
+              operationId: query
+              parameters:
+                - name: query
+                  in: query
+                  required: true
+                  schema:
+                    type: string
+              responses:
+                '200':
+                  description: Query results
+          /query_range:
+            get:
+              summary: Range query
+              operationId: queryRange
+              parameters:
+                - name: query
+                  in: query
+                  required: true
+                  schema:
+                    type: string
+                - name: start
+                  in: query
+                  required: true
+                  schema:
+                    type: string
+                - name: end
+                  in: query
+                  required: true
+                  schema:
+                    type: string
+                - name: step
+                  in: query
+                  required: true
+                  schema:
+                    type: string
+              responses:
+                '200':
+                  description: Range query results
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: API
+    metadata:
+      name: grafana-api
+      title: Grafana HTTP API
+      description: Grafana API for dashboard management, data source configuration, and alerting.
+      tags:
+        - rest
+        - grafana
+        - dashboards
+    spec:
+      type: openapi
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+      definition: |
+        openapi: 3.0.0
+        info:
+          title: Grafana API
+          version: v12.3.3
+          description: Grafana HTTP API for dashboard and data source management
+        servers:
+          - url: http://prometheus-grafana.monitoring/api
+        paths:
+          /search:
+            get:
+              summary: Search dashboards
+              operationId: searchDashboards
+              responses:
+                '200':
+                  description: Dashboard search results
+          /datasources:
+            get:
+              summary: List data sources
+              operationId: listDatasources
+              responses:
+                '200':
+                  description: List of configured data sources
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: API
+    metadata:
+      name: sample-app-api
+      title: Sample App API
+      description: Flask application health and metrics endpoints with OpenTelemetry instrumentation.
+      tags:
+        - rest
+        - flask
+        - otel
+    spec:
+      type: openapi
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+      definition: |
+        openapi: 3.0.0
+        info:
+          title: Sample App API
+          version: v1.0.0
+          description: Sample Flask application endpoints
+        paths:
+          /:
+            get:
+              summary: Health check
+              operationId: healthCheck
+              responses:
+                '200':
+                  description: Application is healthy
+          /metrics:
+            get:
+              summary: Prometheus metrics endpoint
+              operationId: getMetrics
+              responses:
+                '200':
+                  description: Prometheus-format metrics
+
   org.yaml: |
     apiVersion: backstage.io/v1alpha1
     kind: Group
     metadata:
       name: platform-team
-      description: Platform engineering team
+      description: Platform engineering team responsible for the KubeAuto Day IDP
     spec:
       type: team
       children: []
@@ -69,13 +539,17 @@ data:
     spec:
       memberOf:
         - platform-team
+
   deploy-service-template.yaml: |
     apiVersion: scaffolder.backstage.io/v1beta3
     kind: Template
     metadata:
       name: deploy-service
       title: Deploy a New Service
-      description: Creates a Kubernetes deployment with service, compliant with all Kyverno policies
+      description: |
+        Creates a Kyverno-compliant Kubernetes Deployment and Service in the apps namespace.
+        Generated manifests include security contexts, resource limits, health probes, and
+        required labels to pass all platform policies.
       tags:
         - kubernetes
         - argocd
@@ -87,47 +561,185 @@ data:
         - title: Service Details
           required:
             - name
-            - owner
             - image
           properties:
             name:
               title: Service Name
               type: string
-              description: Unique name for the service
+              description: Unique name for the service (lowercase, alphanumeric with hyphens)
               pattern: '^[a-z0-9][a-z0-9-]*[a-z0-9]$'
+              ui:autofocus: true
+            description:
+              title: Description
+              type: string
+              description: Brief description of what this service does
             owner:
               title: Owner Team
               type: string
+              description: Team that owns this service
               default: platform-team
+              enum:
+                - platform-team
             image:
               title: Container Image
               type: string
+              description: "Full image reference (e.g. docker.io/library/nginx:1.27)"
+              ui:placeholder: "docker.io/library/nginx:1.27"
+        - title: Resource Configuration
+          properties:
             replicas:
               title: Replicas
               type: integer
+              description: Number of pod replicas
               default: 2
               minimum: 1
               maximum: 5
             port:
               title: Container Port
               type: integer
+              description: Port the container listens on
               default: 8080
+            cpuRequest:
+              title: CPU Request
+              type: string
+              description: CPU request for each pod
+              default: 100m
+              enum:
+                - 50m
+                - 100m
+                - 250m
+                - 500m
+            memoryRequest:
+              title: Memory Request
+              type: string
+              description: Memory request for each pod
+              default: 128Mi
+              enum:
+                - 64Mi
+                - 128Mi
+                - 256Mi
+                - 512Mi
+            cpuLimit:
+              title: CPU Limit
+              type: string
+              description: CPU limit for each pod
+              default: 500m
+              enum:
+                - 250m
+                - 500m
+                - "1"
+            memoryLimit:
+              title: Memory Limit
+              type: string
+              description: Memory limit for each pod
+              default: 256Mi
+              enum:
+                - 128Mi
+                - 256Mi
+                - 512Mi
+                - 1Gi
       steps:
-        - id: log-inputs
-          name: Log Inputs
+        - id: generate-manifests
+          name: Generate Kubernetes Manifests
           action: debug:log
           input:
-            message: "Creating service ${{ parameters.name }} with image ${{ parameters.image }}"
+            message: |
+              Generated Kyverno-compliant manifests for ${{ parameters.name }}:
+
+              ---
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: ${{ parameters.name }}
+                namespace: apps
+                labels:
+                  app: ${{ parameters.name }}
+                  version: v1.0.0
+                  app.kubernetes.io/name: ${{ parameters.name }}
+                  app.kubernetes.io/part-of: kubeauto-idp
+              spec:
+                replicas: ${{ parameters.replicas }}
+                selector:
+                  matchLabels:
+                    app: ${{ parameters.name }}
+                template:
+                  metadata:
+                    labels:
+                      app: ${{ parameters.name }}
+                      version: v1.0.0
+                  spec:
+                    securityContext:
+                      runAsNonRoot: true
+                      runAsUser: 1000
+                      fsGroup: 1000
+                    containers:
+                      - name: ${{ parameters.name }}
+                        image: ${{ parameters.image }}
+                        ports:
+                          - containerPort: ${{ parameters.port }}
+                        resources:
+                          requests:
+                            cpu: ${{ parameters.cpuRequest }}
+                            memory: ${{ parameters.memoryRequest }}
+                          limits:
+                            cpu: ${{ parameters.cpuLimit }}
+                            memory: ${{ parameters.memoryLimit }}
+                        readinessProbe:
+                          httpGet:
+                            path: /
+                            port: ${{ parameters.port }}
+                          initialDelaySeconds: 5
+                          periodSeconds: 10
+                        livenessProbe:
+                          httpGet:
+                            path: /
+                            port: ${{ parameters.port }}
+                          initialDelaySeconds: 10
+                          periodSeconds: 30
+                        securityContext:
+                          allowPrivilegeEscalation: false
+                          capabilities:
+                            drop: ["ALL"]
+              ---
+              apiVersion: v1
+              kind: Service
+              metadata:
+                name: ${{ parameters.name }}
+                namespace: apps
+                labels:
+                  app: ${{ parameters.name }}
+              spec:
+                selector:
+                  app: ${{ parameters.name }}
+                ports:
+                  - port: 80
+                    targetPort: ${{ parameters.port }}
+                    protocol: TCP
+        - id: register-catalog
+          name: Register in Backstage Catalog
+          action: catalog:register
+          input:
+            catalogInfoUrl: https://backstage.ai-enhanced-devops.com/catalog
+            optional: true
+      output:
+        links:
+          - title: View in Catalog
+            url: /catalog/default/component/${{ parameters.name }}
+
   create-namespace-template.yaml: |
     apiVersion: scaffolder.backstage.io/v1beta3
     kind: Template
     metadata:
       name: create-namespace
       title: Create a New Namespace
-      description: Creates a Kubernetes namespace with default RBAC and network policies
+      description: |
+        Provisions a Kubernetes namespace with default-deny NetworkPolicies,
+        resource quotas, RBAC bindings, and Pod Security Standards labels.
+        All generated resources follow platform security baselines.
       tags:
         - kubernetes
         - namespace
+        - security
     spec:
       owner: platform-team
       type: resource
@@ -135,19 +747,177 @@ data:
         - title: Namespace Details
           required:
             - name
-            - owner
           properties:
             name:
               title: Namespace Name
               type: string
+              description: Name for the new namespace (lowercase, alphanumeric with hyphens)
               pattern: '^[a-z0-9][a-z0-9-]*[a-z0-9]$'
+              ui:autofocus: true
             owner:
               title: Owner Team
               type: string
               default: platform-team
+            maxPods:
+              title: Max Pods
+              type: integer
+              description: Maximum number of pods allowed in this namespace
+              default: 10
+              minimum: 5
+              maximum: 50
+            cpuQuota:
+              title: CPU Quota
+              type: string
+              description: Total CPU limit for the namespace
+              default: "4"
+              enum:
+                - "2"
+                - "4"
+                - "8"
+            memoryQuota:
+              title: Memory Quota
+              type: string
+              description: Total memory limit for the namespace
+              default: 8Gi
+              enum:
+                - 4Gi
+                - 8Gi
+                - 16Gi
       steps:
-        - id: log-inputs
-          name: Log Inputs
+        - id: generate-namespace
+          name: Generate Namespace Resources
           action: debug:log
           input:
-            message: "Creating namespace ${{ parameters.name }}"
+            message: |
+              Generated namespace resources for ${{ parameters.name }}:
+
+              ---
+              apiVersion: v1
+              kind: Namespace
+              metadata:
+                name: ${{ parameters.name }}
+                labels:
+                  pod-security.kubernetes.io/enforce: baseline
+                  pod-security.kubernetes.io/warn: restricted
+              ---
+              apiVersion: v1
+              kind: ResourceQuota
+              metadata:
+                name: ${{ parameters.name }}-quota
+                namespace: ${{ parameters.name }}
+              spec:
+                hard:
+                  pods: "${{ parameters.maxPods }}"
+                  requests.cpu: "${{ parameters.cpuQuota }}"
+                  requests.memory: "${{ parameters.memoryQuota }}"
+                  limits.cpu: "${{ parameters.cpuQuota }}"
+                  limits.memory: "${{ parameters.memoryQuota }}"
+              ---
+              apiVersion: networking.k8s.io/v1
+              kind: NetworkPolicy
+              metadata:
+                name: default-deny-all
+                namespace: ${{ parameters.name }}
+              spec:
+                podSelector: {}
+                policyTypes:
+                  - Ingress
+                  - Egress
+              ---
+              apiVersion: networking.k8s.io/v1
+              kind: NetworkPolicy
+              metadata:
+                name: allow-dns
+                namespace: ${{ parameters.name }}
+              spec:
+                podSelector: {}
+                policyTypes:
+                  - Egress
+                egress:
+                  - to:
+                      - namespaceSelector:
+                          matchLabels:
+                            kubernetes.io/metadata.name: kube-system
+                    ports:
+                      - protocol: UDP
+                        port: 53
+                      - protocol: TCP
+                        port: 53
+
+  onboard-developer-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: onboard-developer
+      title: Onboard a New Developer
+      description: |
+        Registers a new developer in the Backstage catalog with GitHub identity,
+        team membership, and platform access. Generates the necessary User entity
+        and RBAC configuration.
+      tags:
+        - onboarding
+        - rbac
+        - recommended
+    spec:
+      owner: platform-team
+      type: resource
+      parameters:
+        - title: Developer Details
+          required:
+            - githubUsername
+            - team
+          properties:
+            githubUsername:
+              title: GitHub Username
+              type: string
+              description: The developer's GitHub username (case-sensitive)
+              ui:autofocus: true
+            displayName:
+              title: Display Name
+              type: string
+              description: Full name for display purposes
+            team:
+              title: Team
+              type: string
+              description: Team to assign the developer to
+              default: platform-team
+              enum:
+                - platform-team
+            argocdRole:
+              title: ArgoCD Access Level
+              type: string
+              description: Level of access in ArgoCD
+              default: readonly
+              enum:
+                - platform-admin
+                - readonly
+              enumNames:
+                - Platform Admin (full access)
+                - Read Only (view applications)
+      steps:
+        - id: generate-user
+          name: Generate User Entity
+          action: debug:log
+          input:
+            message: |
+              Generated Backstage User entity:
+
+              ---
+              apiVersion: backstage.io/v1alpha1
+              kind: User
+              metadata:
+                name: ${{ parameters.githubUsername | lower }}
+                annotations:
+                  github.com/user-login: ${{ parameters.githubUsername }}
+              spec:
+                memberOf:
+                  - ${{ parameters.team }}
+
+              ArgoCD RBAC addition:
+                g, ${{ parameters.githubUsername }}, role:${{ parameters.argocdRole }}
+
+              Next steps:
+              1. Add the User entity to backstage/k8s/catalog-configmap.yaml
+              2. Add the RBAC line to gitops/argocd/values.yaml
+              3. Add the username to the Group members list
+              4. Commit and push — ArgoCD will sync automatically

@@ -76,6 +76,7 @@ spec:
                 - allow:
                     - Component
                     - System
+                    - Domain
                     - API
                     - Resource
                     - Location
@@ -88,11 +89,17 @@ spec:
                 - type: file
                   target: /app/catalog/sample-app.yaml
                 - type: file
+                  target: /app/catalog/platform-components.yaml
+                - type: file
+                  target: /app/catalog/apis.yaml
+                - type: file
                   target: /app/catalog/org.yaml
                 - type: file
                   target: /app/catalog/deploy-service-template.yaml
                 - type: file
                   target: /app/catalog/create-namespace-template.yaml
+                - type: file
+                  target: /app/catalog/onboard-developer-template.yaml
             kubernetes:
               serviceLocatorMethod:
                 type: multiTenant
