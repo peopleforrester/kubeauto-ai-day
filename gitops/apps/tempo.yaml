@@ -37,6 +37,7 @@ spec:
         persistence:
           enabled: true
           size: 5Gi
+          storageClassName: gp2
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
