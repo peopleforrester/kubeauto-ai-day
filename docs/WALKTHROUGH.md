@@ -1017,96 +1017,116 @@ The scorecard now includes a guardrail coverage column:
 
 ---
 
-## Updated Timeline
+## Actual Timeline (Reconciled)
 
 | Date | Milestone | Status |
 |---|---|---|
 | Feb 9 | Spec complete | Done |
-| Feb 19 | Today — Three-layer guardrails, skills, test files | In Progress |
-| Feb 20-22 | Phase 1-2 (foundation, gitops) | |
-| Feb 23-25 | Phase 3 (security — the hard one) | |
-| Feb 26-28 | Phase 4-5 (observability, portal) | |
-| Mar 1-3 | Phase 6-7 (integration, hardening) | |
-| Mar 4-10 | Scorecard, blog draft, demo runbook | |
-| Mar 11-17 | Practice runs, slides, recording review | |
-| Mar 18-22 | Buffer + final polish | |
-| Mar 23 | KubeAuto Day Europe | Target |
+| Feb 11 | Version audit (EKS, ArgoCD, Kyverno, Falco, Backstage all updated) | Done |
+| Feb 17 | Phases 1-6 complete (foundation through integration testing) | Done |
+| Feb 18 | Phase 7 complete (cert-manager, quotas, PDBs, gitleaks, security docs) | Done |
+| Feb 19 | Phase 8 collateral, documentation gaps, ALB Ingress, ACM TLS, OIDC | Done |
+| Feb 20 | Reconciliation — this checklist updated against actual state | Done |
+| Mar 4-10 | Build actual slides from outline, QR codes | TODO |
+| Mar 11-17 | Practice runs with timer, demo runbook 3x end-to-end | TODO |
+| Mar 18-22 | Buffer + final polish | TODO |
+| Mar 23 | KubeAuto Day Europe — Amsterdam | Target |
 
 ---
 
-## Risk Register
+## Risk Register (Reconciled)
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Terraform EKS IAM issues | High | Phase 1 blocked | eksctl fallback. Use if stuck > 3 iterations. |
-| Kyverno policy interactions | High | Phase 3 extended | kyverno-policies skill + Kyverno CLI pre-commit dry-run (Layer 1) |
-| OTel config hallucination | High | Phase 4 broken | otel-wiring skill. Manual review mandatory. |
-| Backstage plugin wiring | Medium | Phase 5 broken | backstage-templates skill with exact annotations |
-| Context window exhaustion | Medium | Lost progress | Separate sessions per phase |
-| AWS costs | Medium | $ | TEARDOWN.md. Budget alert at $50. |
-| Clock past 10 hours | Medium | Narrative adjusts | Honest scorecard. "16 hours" is still valid. |
-| Pre-commit hooks too strict | Medium | Build friction | Warning mode first, enforce mode after Phase 2 |
-| Smart Ralph incompatibility | Low | Can't automate | Manual execution with bash stop hook |
+| Risk | Likelihood | Impact | Mitigation | Outcome |
+|---|---|---|---|---|
+| Terraform EKS IAM issues | High | Phase 1 blocked | eksctl fallback | IRSA used for EBS CSI + LB Controller; Pod Identity for future. No eksctl needed. |
+| Kyverno policy interactions | High | Phase 3 extended | kyverno-policies skill | 3 correction cycles. Webhook format wrong, CRD annotation too large (ServerSideApply fix), stale cache. |
+| OTel config hallucination | High | Phase 4 broken | otel-wiring skill | 3 correction cycles. Missing image.repository, wrong image (k8s vs contrib), DaemonSet disables ClusterIP service. |
+| Backstage plugin wiring | Medium | Phase 5 broken | backstage-templates skill | 1 correction cycle. Kyverno livenessProbe validation on dry-run. Private repo catalog solved via ConfigMap. |
+| Context window exhaustion | Medium | Lost progress | Separate sessions per phase | Hit twice. Session continuations worked via summary + context reload. |
+| AWS costs | Medium | $ | TEARDOWN.md | TEARDOWN.md written. Cluster running since Feb 17. |
+| Clock past 10 hours | Medium | Narrative adjusts | Honest scorecard | 3hr AI / 11.5hr manual est. 73.6% toil reduction. Narrative holds. |
+| Pre-commit hooks too strict | Medium | Build friction | Warning mode first | Not implemented — existing llm_coding_workflow hooks used instead (lint, secret scan, AI ref blocking). |
+| Smart Ralph incompatibility | Low | Can't automate | Manual execution | Not used. Interactive sessions with human-in-the-loop instead. |
+| **NEW: Sanitization breaks live cluster** | — | — | — | Replacing AWS account IDs with placeholders while ArgoCD syncs from repo broke image pulls. Lesson: sanitize at publish time only. |
+| **NEW: IRSA token caching** | — | — | — | Restoring IAM role ARN on service account insufficient — pods cache projected tokens. Must restart pods after annotation fix. |
+| **NEW: ArgoCD cache staleness** | — | — | — | After fixing CRD API versions or Helm values, must hard-refresh ArgoCD Applications. Cache aggressively caches API discovery. |
 
 ---
 
-## Execution Checklist
+## Execution Checklist (Reconciled Against Actual Build)
 
-### Today (Feb 19)
-- [ ] Scaffold repo directory structure
-- [ ] Write CLAUDE.md
-- [ ] **Layer 1:** Write `.pre-commit-config.yaml`
-- [ ] **Layer 1:** Write all Git hook scripts (`commit-msg-validate.sh`, `pre-push-tests.sh`, `check-image-allowlist.sh`, `check-namespace-scope.sh`)
-- [ ] **Layer 1:** Install pre-commit framework + hooks
-- [ ] **Layer 2:** Write `.claude/settings.json` with all Claude Code hooks
-- [ ] **Layer 2:** Write `cc-pretool-guard.sh`, `cc-posttool-audit.sh`, `cc-stop-deterministic.sh`
-- [ ] Write 3 slash commands (build-phase, score-component, validate-phase)
-- [ ] Write test files for Phase 1 and Phase 2
-- [ ] Write `eks-hardening.md` and `argocd-patterns.md` skills
-- [ ] Copy spec to `spec/BUILD-SPEC.md`
-- [ ] Create `SCORECARD.md` with updated template (guardrail column)
-- [ ] Create `.current-phase` file (set to 1)
-- [ ] Verify all tooling installed
-- [ ] Set up terminal recording
-- [ ] Set up AWS budget alert at $50
+### Repo Scaffolding
+- [x] Scaffold repo directory structure
+- [x] Write CLAUDE.md
+- [x] Copy spec to `spec/BUILD-SPEC.md`
+- [x] Create `SCORECARD.md` (6-dimension template; guardrail column not added)
+- [ ] Create `.current-phase` file — **Not created. Phases tracked via TaskCreate/TaskUpdate instead.**
 
-### Feb 20 — Phase 1 Kickoff
-- [ ] Start recording
-- [ ] `echo "1" > .current-phase`
-- [ ] `claude -p "/build-phase 1" --max-iterations 15`
-- [ ] Export transcript
-- [ ] `pre-commit run --all-files`
-- [ ] `git tag phase-1-complete`
+### Layer 1: Git Hooks
+- [ ] Write `.pre-commit-config.yaml` — **Not implemented. Used existing llm_coding_workflow git hooks (pre-commit: lint/typecheck, pre-push: secret scan + tests) deployed via `deploy.sh`.**
+- [ ] Write IDP-specific hook scripts (`commit-msg-validate.sh`, `pre-push-tests.sh`, `check-image-allowlist.sh`, `check-namespace-scope.sh`) — **Not implemented. These are NEW scripts described in the walkthrough for the rebuild. The existing hooks cover general code quality, not IDP-specific phase/namespace scoping.**
+- [ ] Install pre-commit framework — **Not used. Standalone bash hooks from llm_coding_workflow used instead.**
 
-### Feb 21-22 — Phase 2
-- [ ] Write kyverno-policies and falco-rules skills
-- [ ] Run Phase 2
-- [ ] Verify ArgoCD app-of-apps
-- [ ] **From this point: Layer 1 + Layer 2 + Layer 3 (partial) all active**
+### Layer 2: Claude Code Hooks
+- [ ] Write `.claude/settings.json` with IDP-specific hooks — **Not implemented as project-level settings. Global hooks (check-aboutme, check-commit-message, validate-file) from llm_coding_workflow were active. IDP-specific hooks (cc-pretool-guard, cc-posttool-audit, cc-stop-deterministic) were NOT created.**
+- [ ] Write `cc-pretool-guard.sh` (block kubectl apply after Phase 2) — **Not implemented. kubectl apply was used manually in some cases.**
+- [ ] Write `cc-posttool-audit.sh` (scorecard reminders) — **Not implemented.**
+- [ ] Write `cc-stop-deterministic.sh` (Ralph Wiggum phase gate) — **Not implemented. Existing `stop-hook.sh` present but phase gate pattern not used.**
 
-### Feb 23-25 — Phase 3
-- [ ] Budget 120 min + buffer
-- [ ] 30 iterations
-- [ ] Manual IAM trust policy review
-- [ ] **After completion: Guardrails 1-3, 6-8 enforced at cluster level**
+### Commands & Skills
+- [x] Write 3 slash commands (`build-phase`, `score-component`, `validate-phase`)
+- [x] Write 6 skills files (`eks-hardening`, `argocd-patterns`, `kyverno-policies`, `falco-rules`, `otel-wiring`, `backstage-templates`)
+- [x] Write test files for all 7 phases (59 tests total)
 
-### Feb 26-Mar 3 — Phases 4-7
-- [ ] Execute sequentially
-- [ ] Each phase tagged at completion
-- [ ] **After Phase 7: All eight guardrails active at all three layers**
+### Build Execution
+- [x] Phases 1-7 complete — all 59 tests passing
+- [x] Terminal recordings exist (phase-00, phase-01 in recordings/)
+- [ ] Export transcript after each phase — **Transcripts not exported as JSON. Prompt logs reconstructed retrospectively in `prompts/phase-01 through 07-prompts.md`.**
+- [ ] `pre-commit run --all-files` after each phase — **Pre-commit framework not installed. Existing git hooks ran on each commit.**
+- [ ] `git tag phase-X-complete` after each phase — **No git tags created.**
+- [ ] Verify guardrail coverage grows with each phase — **Not formally tracked.**
 
-### Mar 4-10 — Collateral
-- [ ] Finalize scorecard with guardrail coverage totals
-- [ ] Blog post
-- [ ] Demo runbook
-- [ ] Slide outline
-- [ ] 3x end-to-end demo flow
+### Collateral (Phase 8)
+- [x] Scorecard finalized (3hr AI / 11.5hr manual / 73.6% reduction / 24 correction cycles)
+- [x] Blog post draft (`collateral/blog-post-draft.md`)
+- [x] Demo runbook (`collateral/demo-runbook.md`)
+- [x] Slide outline (`collateral/slide-outline.md`)
+- [x] Attendee handout (`collateral/attendee-handout.md`)
+- [x] Social media thread (`collateral/social-media-thread.md`)
+- [ ] 3x end-to-end demo flow — **Manual task, not yet done.**
 
-### Mar 11-22 — Polish + Buffer
-- [ ] Practice with timer
-- [ ] OIDC access test
-- [ ] Publish repo (Apache 2.0)
-- [ ] QR codes
+### Documentation
+- [x] ARCHITECTURE.md
+- [x] SETUP.md (with pre-flight checklist)
+- [x] TEARDOWN.md
+- [x] LESSONS-LEARNED.md (9 cross-cutting lessons, 24 correction cycles documented)
+- [x] VERSION-MAP.md (chart-to-app version mapping)
+- [x] SECURITY.md
+- [x] COST.md
+- [x] WALKTHROUGH.md (this document)
+- [x] README.md (public-facing)
+- [x] LICENSE (Apache 2.0)
+- [x] Prompt logs populated for all 7 phases
+
+### Production Hardening
+- [x] cert-manager with Let's Encrypt ClusterIssuers (staging + production)
+- [x] ALB Ingress for ArgoCD with ACM TLS certificate
+- [x] ArgoCD accessible at `https://test1.ai-enhanced-devops.com`
+- [x] GitHub OIDC via Dex (peopleforrester = platform-admin)
+- [x] Resource quotas (10 pods, 4 CPU, 8Gi in apps)
+- [x] PodDisruptionBudgets for sample-app and ArgoCD
+- [x] gitleaks clean
+- [ ] OIDC tested with second GitHub account — **Manual task.**
+
+### Remaining Items
+- [ ] **Build actual slides** from `collateral/slide-outline.md` (PowerPoint/Google Slides)
+- [ ] **QR codes** for repo, scorecard, `https://test1.ai-enhanced-devops.com`
+- [ ] **Demo runbook 3x end-to-end** without intervention
+- [ ] **Practice run with timer** (target 27 min for 30-min slot)
+- [ ] **OIDC test with second account**
+- [ ] **Add scorecard guardrail coverage column** (optional — current 6-dimension scorecard is complete)
+- [ ] **Git tags for phase completion** (retroactive, optional)
+- [ ] **IDP-specific Layer 1 + Layer 2 hooks** (for the rebuild walkthrough — not needed for current live platform)
 
 ---
 
