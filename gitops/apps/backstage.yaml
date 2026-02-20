@@ -85,11 +85,7 @@ spec:
             alb.ingress.kubernetes.io/healthcheck-path: /
             alb.ingress.kubernetes.io/group.name: kubeauto-ingress
             alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:598274344262:certificate/151d10d0-1941-4fbf-bfd8-0e8c3be1a8d6
-          hosts:
-            - host: backstage.ai-enhanced-devops.com
-              paths:
-                - path: /
-                  pathType: Prefix
+          host: backstage.ai-enhanced-devops.com
   destination:
     server: https://kubernetes.default.svc
     namespace: backstage
