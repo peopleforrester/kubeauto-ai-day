@@ -51,6 +51,34 @@ spec:
               searchNamespace: ALL
             datasources:
               enabled: true
+          additionalDataSources:
+            - name: Tempo
+              type: tempo
+              url: http://tempo.monitoring:3100
+              access: proxy
+              isDefault: false
+              jsonData:
+                tracesToLogsV2:
+                  datasourceUid: loki
+                  filterByTraceID: true
+                tracesToMetrics:
+                  datasourceUid: prometheus
+                nodeGraph:
+                  enabled: true
+                serviceMap:
+                  datasourceUid: prometheus
+            - name: Loki
+              type: loki
+              uid: loki
+              url: http://loki.monitoring:3100
+              access: proxy
+              isDefault: false
+              jsonData:
+                derivedFields:
+                  - datasourceUid: tempo
+                    matcherRegex: "traceID=(\\w+)"
+                    name: TraceID
+                    url: "$${__value.raw}"
           resources:
             requests:
               cpu: 100m

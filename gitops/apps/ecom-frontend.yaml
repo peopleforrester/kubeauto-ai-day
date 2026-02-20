@@ -1,0 +1,26 @@
+# ABOUTME: ArgoCD Application for the E-Commerce frontend.
+# ABOUTME: Nginx serving the shop UI, proxies API calls to ecom-api service.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ecom-frontend
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/peopleforrester/kubeauto-ai-day.git
+    targetRevision: staging
+    path: gitops/manifests/ecom-frontend
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

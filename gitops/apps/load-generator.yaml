@@ -1,0 +1,26 @@
+# ABOUTME: ArgoCD Application for the load generator.
+# ABOUTME: Simulates traffic against all demo apps for observability data.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: load-generator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/peopleforrester/kubeauto-ai-day.git
+    targetRevision: staging
+    path: gitops/manifests/load-generator
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

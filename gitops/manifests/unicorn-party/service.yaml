@@ -1,0 +1,18 @@
+# ABOUTME: Kubernetes Service for the unicorn-party demo application.
+# ABOUTME: Exposes the unicorn-party deployment on port 80, forwarding to container port 8080.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: unicorn-party
+  namespace: apps
+  labels:
+    app: unicorn-party
+    version: "1.0.0"
+spec:
+  selector:
+    app: unicorn-party
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP

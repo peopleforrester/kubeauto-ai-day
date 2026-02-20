@@ -1,0 +1,26 @@
+# ABOUTME: ArgoCD Application for the E-Commerce worker microservice.
+# ABOUTME: Node.js Express with OTel, processes orders from ecom-api.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ecom-worker
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/peopleforrester/kubeauto-ai-day.git
+    targetRevision: staging
+    path: gitops/manifests/ecom-worker
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

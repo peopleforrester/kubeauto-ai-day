@@ -52,6 +52,10 @@ spec:
                 insecure: true
               resource_to_telemetry_conversion:
                 enabled: true
+            otlp/tempo:
+              endpoint: tempo.monitoring.svc.cluster.local:4317
+              tls:
+                insecure: true
             debug:
               verbosity: basic
               sampling_initial: 5
@@ -81,6 +85,7 @@ spec:
                   - batch
                   - resource
                 exporters:
+                  - otlp/tempo
                   - debug
         service:
           enabled: true

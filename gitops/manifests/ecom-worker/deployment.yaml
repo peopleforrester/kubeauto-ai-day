@@ -1,0 +1,65 @@
+# ABOUTME: Kubernetes Deployment for the ecom-worker demo application.
+# ABOUTME: Kyverno-compliant with security contexts, resource limits, health probes, and OTel env vars.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecom-worker
+  namespace: apps
+  labels:
+    app: ecom-worker
+    version: "1.0.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecom-worker
+  template:
+    metadata:
+      labels:
+        app: ecom-worker
+        version: "1.0.0"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: ecom-worker
+          image: 598274344262.dkr.ecr.us-west-2.amazonaws.com/kubeauto-ecom-worker:1.0.0
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: "ecom-worker"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector.monitoring:4317"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - "ALL"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3

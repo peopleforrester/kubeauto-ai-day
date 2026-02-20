@@ -1,0 +1,18 @@
+# ABOUTME: NetworkPolicy allowing pods in apps namespace to communicate with each other.
+# ABOUTME: Required for triple-tier e-commerce app (frontend -> API -> worker).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-intra-namespace
+  namespace: apps
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector: {}
+  egress:
+    - to:
+        - podSelector: {}
