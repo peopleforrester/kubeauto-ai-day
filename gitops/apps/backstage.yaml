@@ -21,7 +21,7 @@ spec:
           image:
             registry: 598274344262.dkr.ecr.us-west-2.amazonaws.com
             repository: kubeauto-backstage
-            tag: "1.48.0"
+            tag: "1.48.1"
           extraEnvVarsSecrets:
             - backstage-secrets
           extraEnvVars:
