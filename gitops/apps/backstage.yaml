@@ -100,6 +100,8 @@ spec:
                   target: /app/catalog/create-namespace-template.yaml
                 - type: file
                   target: /app/catalog/onboard-developer-template.yaml
+                - type: file
+                  target: /app/catalog/demo-apps.yaml
             kubernetes:
               serviceLocatorMethod:
                 type: multiTenant

@@ -303,6 +303,65 @@ data:
       lifecycle: production
       owner: platform-team
       system: kubeauto-idp
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: tempo
+      title: Grafana Tempo
+      description: Distributed tracing backend (v1.18.1). Receives OTLP traces from OTel Collector, queryable via Grafana with service maps and node graphs.
+      annotations:
+        argocd/app-name: tempo
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/name=tempo"
+        backstage.io/kubernetes-namespace: monitoring
+      tags:
+        - observability
+        - tracing
+        - grafana
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: loki
+      title: Grafana Loki
+      description: Log aggregation system (v6.29.0). SingleBinary mode with Promtail log shipping from all cluster pods.
+      annotations:
+        argocd/app-name: loki
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/name=loki"
+        backstage.io/kubernetes-namespace: monitoring
+      tags:
+        - observability
+        - logging
+        - grafana
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: promtail
+      title: Promtail
+      description: Log collector DaemonSet shipping container logs to Loki for centralized log aggregation and search.
+      annotations:
+        argocd/app-name: promtail
+        backstage.io/kubernetes-label-selector: "app.kubernetes.io/name=promtail"
+        backstage.io/kubernetes-namespace: monitoring
+      tags:
+        - observability
+        - logging
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
 
   apis.yaml: |
     apiVersion: backstage.io/v1alpha1
@@ -921,3 +980,157 @@ data:
               2. Add the RBAC line to gitops/argocd/values.yaml
               3. Add the username to the Group members list
               4. Commit and push — ArgoCD will sync automatically
+
+  demo-apps.yaml: |
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: unicorn-party
+      title: Unicorn Party
+      description: HTML5 Canvas visual demo with dancing unicorns, rainbow trails, sparkle particles, and interactive click effects.
+      annotations:
+        argocd/app-name: unicorn-party
+        backstage.io/kubernetes-label-selector: "app=unicorn-party"
+        backstage.io/kubernetes-namespace: apps
+      tags:
+        - demo
+        - frontend
+        - html5
+    spec:
+      type: website
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: ecom-frontend
+      title: E-Commerce Frontend
+      description: Nginx-based storefront UI with product catalog, order creation, and stats dashboard. Proxies API requests to ecom-api.
+      annotations:
+        argocd/app-name: ecom-frontend
+        backstage.io/kubernetes-label-selector: "app=ecom-frontend"
+        backstage.io/kubernetes-namespace: apps
+      tags:
+        - demo
+        - frontend
+        - ecommerce
+    spec:
+      type: website
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+      dependsOn:
+        - component:ecom-api
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: ecom-api
+      title: E-Commerce API
+      description: Python Flask API with OpenTelemetry instrumentation. Handles product listings, order creation, and delegates processing to ecom-worker.
+      annotations:
+        argocd/app-name: ecom-api
+        backstage.io/kubernetes-label-selector: "app=ecom-api"
+        backstage.io/kubernetes-namespace: apps
+      tags:
+        - demo
+        - python
+        - flask
+        - otel
+        - ecommerce
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+      providesApis:
+        - ecom-api
+      dependsOn:
+        - component:ecom-worker
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: ecom-worker
+      title: E-Commerce Worker
+      description: Node.js Express order processing microservice with OpenTelemetry instrumentation. Simulates async order fulfillment.
+      annotations:
+        argocd/app-name: ecom-worker
+        backstage.io/kubernetes-label-selector: "app=ecom-worker"
+        backstage.io/kubernetes-namespace: apps
+      tags:
+        - demo
+        - nodejs
+        - otel
+        - ecommerce
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: load-generator
+      title: Load Generator
+      description: Python-based synthetic traffic generator hitting all demo app endpoints to produce observability data.
+      annotations:
+        argocd/app-name: load-generator
+        backstage.io/kubernetes-label-selector: "app=load-generator"
+        backstage.io/kubernetes-namespace: apps
+      tags:
+        - demo
+        - testing
+        - load
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: API
+    metadata:
+      name: ecom-api
+      title: E-Commerce API
+      description: REST API for the triple-tier e-commerce demo application.
+      tags:
+        - rest
+        - flask
+        - ecommerce
+    spec:
+      type: openapi
+      lifecycle: production
+      owner: platform-team
+      system: kubeauto-idp
+      definition: |
+        openapi: 3.0.0
+        info:
+          title: E-Commerce API
+          version: v1.0.0
+          description: Flask API for product catalog and order management
+        paths:
+          /api/products:
+            get:
+              summary: List products
+              operationId: listProducts
+              responses:
+                '200':
+                  description: Product catalog
+          /api/orders:
+            post:
+              summary: Create order
+              operationId: createOrder
+              responses:
+                '201':
+                  description: Order created
+          /api/stats:
+            get:
+              summary: Get system stats
+              operationId: getStats
+              responses:
+                '200':
+                  description: Current system statistics
