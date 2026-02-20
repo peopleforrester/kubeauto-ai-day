@@ -37,6 +37,27 @@ data:
       lifecycle: production
       owner: platform-team
       system: kubeauto-idp
+  org.yaml: |
+    apiVersion: backstage.io/v1alpha1
+    kind: Group
+    metadata:
+      name: platform-team
+      description: Platform engineering team
+    spec:
+      type: team
+      children: []
+      members:
+        - peopleforrester
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: User
+    metadata:
+      name: peopleforrester
+      annotations:
+        github.com/user-login: peopleforrester
+    spec:
+      memberOf:
+        - platform-team
   deploy-service-template.yaml: |
     apiVersion: scaffolder.backstage.io/v1beta3
     kind: Template

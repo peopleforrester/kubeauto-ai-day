@@ -1,5 +1,5 @@
 # ABOUTME: ArgoCD Application for Backstage developer portal.
-# ABOUTME: Deploys Backstage with static catalog locations and software templates.
+# ABOUTME: Custom image with GitHub auth, Kubernetes plugin, and ArgoCD plugin.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -19,9 +19,22 @@ spec:
       valuesObject:
         backstage:
           image:
-            registry: ghcr.io
-            repository: backstage/backstage
-            tag: "1.9.1"
+            registry: 598274344262.dkr.ecr.us-west-2.amazonaws.com
+            repository: kubeauto-backstage
+            tag: "1.48.0"
+          extraEnvVarsSecrets:
+            - backstage-secrets
+          extraEnvVars:
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backstage-github-oauth
+                  key: clientID
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backstage-github-oauth
+                  key: clientSecret
           extraVolumes:
             - name: catalog
               configMap:
@@ -42,6 +55,16 @@ spec:
               database:
                 client: better-sqlite3
                 connection: ":memory:"
+            auth:
+              environment: production
+              providers:
+                github:
+                  production:
+                    clientId: ${GITHUB_CLIENT_ID}
+                    clientSecret: ${GITHUB_CLIENT_SECRET}
+                    signIn:
+                      resolvers:
+                        - resolver: usernameMatchingUserEntityName
             catalog:
               rules:
                 - allow:
@@ -51,15 +74,45 @@ spec:
                     - Resource
                     - Location
                     - Template
+                    - User
+                    - Group
               locations:
                 - type: file
                   target: /app/catalog/catalog-info.yaml
                 - type: file
                   target: /app/catalog/sample-app.yaml
                 - type: file
+                  target: /app/catalog/org.yaml
+                - type: file
                   target: /app/catalog/deploy-service-template.yaml
                 - type: file
                   target: /app/catalog/create-namespace-template.yaml
+            kubernetes:
+              serviceLocatorMethod:
+                type: multiTenant
+              clusterLocatorMethods:
+                - type: config
+                  clusters:
+                    - name: kubeauto-ai-day
+                      url: https://kubernetes.default.svc
+                      authProvider: serviceAccount
+                      serviceAccountToken: ${K8S_SA_TOKEN}
+                      skipTLSVerify: true
+            argocd:
+              appLocatorMethods:
+                - type: config
+                  instances:
+                    - name: kubeauto
+                      url: https://test1.ai-enhanced-devops.com
+                      token: ${ARGOCD_AUTH_TOKEN}
+            proxy:
+              endpoints:
+                /argocd/api:
+                  target: https://test1.ai-enhanced-devops.com/api/v1/
+                  headers:
+                    Cookie: argocd.token=${ARGOCD_AUTH_TOKEN}
+                  changeOrigin: true
+                  secure: false
             techdocs:
               builder: local
               generator:

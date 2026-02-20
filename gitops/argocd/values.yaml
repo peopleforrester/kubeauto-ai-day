@@ -34,6 +34,8 @@ configs:
     application.resourceTrackingMethod: "annotation"
     # Admin disabled — OIDC via GitHub is the only login method
     admin.enabled: "false"
+    # Backstage service account for ArgoCD plugin API access
+    accounts.backstage: apiKey
     # ArgoCD external URL (required for Dex callback)
     url: "https://test1.ai-enhanced-devops.com"
     # Dex GitHub OIDC connector
@@ -67,6 +69,14 @@ configs:
 
       # Default: admin for local admin user
       g, admin, role:platform-admin
+
+      # Backstage service account (read-only for ArgoCD plugin)
+      p, role:backstage-readonly, applications, get, */*, allow
+      p, role:backstage-readonly, applications, list, */*, allow
+      p, role:backstage-readonly, projects, get, *, allow
+      p, role:backstage-readonly, projects, list, *, allow
+      p, role:backstage-readonly, clusters, get, *, allow
+      g, backstage, role:backstage-readonly
     policy.default: role:readonly
 
 # Dex OIDC provider for GitHub SSO
