@@ -58,8 +58,9 @@ configs:
       p, role:platform-admin, logs, *, *, allow
       p, role:platform-admin, exec, *, */*, allow
 
-      # GitHub user gets admin (ArgoCD 3.x subject format)
+      # GitHub users get admin (ArgoCD 3.x subject format)
       g, peopleforrester, role:platform-admin
+      g, WiggityWhitney, role:platform-admin
 
       # Read-only role for observers
       p, role:readonly, applications, get, */*, allow
@@ -77,7 +78,7 @@ configs:
       p, role:backstage-readonly, projects, list, *, allow
       p, role:backstage-readonly, clusters, get, *, allow
       g, backstage, role:backstage-readonly
-    policy.default: role:readonly
+    policy.default: ''
 
 # Dex OIDC provider for GitHub SSO
 dex:
