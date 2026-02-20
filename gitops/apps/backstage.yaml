@@ -55,6 +55,12 @@ spec:
               database:
                 client: better-sqlite3
                 connection: ":memory:"
+              auth:
+                externalAccess:
+                  - type: static
+                    options:
+                      token: ${K8S_SA_TOKEN}
+                      subject: backstage-test
             auth:
               environment: production
               providers:

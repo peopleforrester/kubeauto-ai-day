@@ -56,40 +56,49 @@ def test_backstage_ui_accessible() -> None:
     """Backstage HTTP endpoint responds with 200."""
     result = subprocess.run(
         [
-            "kubectl", "run", "backstage-health-test", "--rm", "-i",
-            "--restart=Never",
-            "--image=docker.io/library/busybox:latest",
-            "--namespace", BACKSTAGE_NS,
-            "--", "wget", "-q", "-O-", "--timeout=10",
-            "http://backstage.backstage.svc.cluster.local:7007/api/catalog/entities?limit=1",
+            "kubectl", "exec", "-n", BACKSTAGE_NS, "deploy/backstage",
+            "--", "node", "-e",
+            "const h=require('http');"
+            "h.get('http://localhost:7007/',r=>{"
+            "console.log(r.statusCode);"
+            "r.resume();"
+            "}).on('error',e=>console.error(e.message));",
         ],
         capture_output=True, text=True, timeout=30,
     )
-    clean = _strip_kubectl_noise(result.stdout)
-    assert result.returncode == 0 or len(clean) > 0, (
-        f"Backstage not responding: rc={result.returncode} "
-        f"stdout={result.stdout[:300]} stderr={result.stderr[:300]}"
+    assert "200" in result.stdout, (
+        f"Backstage not responding: stdout={result.stdout[:300]} stderr={result.stderr[:300]}"
     )
 
 
 # --- Catalog Tests ---
 
 
-def test_catalog_has_component() -> None:
-    """At least one Component entity exists in the Backstage catalog."""
+def _backstage_catalog_query(filter_str: str) -> list[dict[str, Any]]:
+    """Query Backstage catalog via kubectl exec into the pod using Node.js."""
+    node_script = (
+        "const h=require('http');"
+        "const token=process.env.K8S_SA_TOKEN;"
+        f"h.get('http://localhost:7007/api/catalog/entities?filter={filter_str}',"
+        "{headers:{'Authorization':'Bearer '+token}},r=>{"
+        "let d='';r.on('data',c=>d+=c);"
+        "r.on('end',()=>console.log(d));"
+        "}).on('error',e=>console.error(e.message));"
+    )
     result = subprocess.run(
-        [
-            "kubectl", "run", "backstage-catalog-test", "--rm", "-i",
-            "--restart=Never",
-            "--image=docker.io/library/busybox:latest",
-            "--namespace", BACKSTAGE_NS,
-            "--", "wget", "-q", "-O-", "--timeout=10",
-            "http://backstage.backstage.svc.cluster.local:7007/api/catalog/entities?filter=kind=component",
-        ],
+        ["kubectl", "exec", "-n", BACKSTAGE_NS, "deploy/backstage",
+         "--", "node", "-e", node_script],
         capture_output=True, text=True, timeout=30,
     )
-    clean = _strip_kubectl_noise(result.stdout)
-    data = json.loads(clean) if clean else []
+    try:
+        return json.loads(result.stdout.strip()) if result.stdout.strip() else []
+    except json.JSONDecodeError:
+        return []
+
+
+def test_catalog_has_component() -> None:
+    """At least one Component entity exists in the Backstage catalog."""
+    data = _backstage_catalog_query("kind=component")
     components = [e.get("metadata", {}).get("name", "") for e in data]
     assert len(components) >= 1, (
         f"Expected at least 1 Component in catalog, got: {components}"
@@ -98,19 +107,7 @@ def test_catalog_has_component() -> None:
 
 def test_template_exists() -> None:
     """Deploy-service template exists in the Backstage catalog."""
-    result = subprocess.run(
-        [
-            "kubectl", "run", "backstage-template-test", "--rm", "-i",
-            "--restart=Never",
-            "--image=docker.io/library/busybox:latest",
-            "--namespace", BACKSTAGE_NS,
-            "--", "wget", "-q", "-O-", "--timeout=10",
-            "http://backstage.backstage.svc.cluster.local:7007/api/catalog/entities?filter=kind=template",
-        ],
-        capture_output=True, text=True, timeout=30,
-    )
-    clean = _strip_kubectl_noise(result.stdout)
-    data = json.loads(clean) if clean else []
+    data = _backstage_catalog_query("kind=template")
     template_names = [e.get("metadata", {}).get("name", "") for e in data]
     assert "deploy-service" in template_names, (
         f"Expected 'deploy-service' template, found: {template_names}"
