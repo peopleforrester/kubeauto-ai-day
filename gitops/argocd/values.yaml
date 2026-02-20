@@ -17,7 +17,7 @@ server:
       alb.ingress.kubernetes.io/backend-protocol: HTTP
       alb.ingress.kubernetes.io/healthcheck-path: /healthz
       alb.ingress.kubernetes.io/group.name: kubeauto-ingress
-      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:598274344262:certificate/74f4bfc7-6f5e-480c-85da-9819026d1d33
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:598274344262:certificate/151d10d0-1941-4fbf-bfd8-0e8c3be1a8d6
     hostname: test1.ai-enhanced-devops.com
     tls: true
 
@@ -32,8 +32,8 @@ configs:
   cm:
     # Annotation-based tracking is default in 3.x — explicit for clarity
     application.resourceTrackingMethod: "annotation"
-    # Admin user enabled for initial setup
-    admin.enabled: "true"
+    # Admin disabled — OIDC via GitHub is the only login method
+    admin.enabled: "false"
     # ArgoCD external URL (required for Dex callback)
     url: "https://test1.ai-enhanced-devops.com"
     # Dex GitHub OIDC connector

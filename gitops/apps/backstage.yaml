@@ -32,11 +32,11 @@ spec:
           appConfig:
             app:
               title: KubeAuto Day IDP
-              baseUrl: http://localhost:7007
+              baseUrl: https://backstage.ai-enhanced-devops.com
             organization:
               name: KubeAuto Day
             backend:
-              baseUrl: http://localhost:7007
+              baseUrl: https://backstage.ai-enhanced-devops.com
               listen:
                 port: 7007
               database:
@@ -73,6 +73,23 @@ spec:
             limits:
               cpu: 1000m
               memory: 1Gi
+        ingress:
+          enabled: true
+          className: alb
+          annotations:
+            alb.ingress.kubernetes.io/scheme: internet-facing
+            alb.ingress.kubernetes.io/target-type: ip
+            alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+            alb.ingress.kubernetes.io/ssl-redirect: "443"
+            alb.ingress.kubernetes.io/backend-protocol: HTTP
+            alb.ingress.kubernetes.io/healthcheck-path: /
+            alb.ingress.kubernetes.io/group.name: kubeauto-ingress
+            alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:598274344262:certificate/151d10d0-1941-4fbf-bfd8-0e8c3be1a8d6
+          hosts:
+            - host: backstage.ai-enhanced-devops.com
+              paths:
+                - path: /
+                  pathType: Prefix
   destination:
     server: https://kubernetes.default.svc
     namespace: backstage
