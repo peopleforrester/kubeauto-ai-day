@@ -56,8 +56,11 @@ monitoring, security, platform, backstage, cert-manager.
 **Cross-namespace isolation:** Verified by test — `developer-view` cannot create
 resources outside their bound namespace.
 
-**ArgoCD RBAC:** OIDC users mapped to read-only role (view applications, no
-sync/delete). Admin users retain full access via local admin account.
+**ArgoCD RBAC:** Dex/GitHub OIDC users mapped via explicit RBAC bindings.
+Default policy is deny-all — unapproved GitHub users who authenticate get zero
+permissions. Named users (`peopleforrester`, `WiggityWhitney`) are mapped to
+`platform-admin`. The `backstage` service account has `backstage-readonly` for
+API access. Local admin account is disabled.
 
 ## 4. NetworkPolicy Model
 
@@ -111,17 +114,62 @@ Grafana, sample app) once domain DNS is configured.
 
 ## 7. OIDC Configuration
 
-**Provider:** GitHub OAuth App
-**Flow:** GitHub → OAuth callback → ArgoCD/Backstage/Grafana session
+**Provider:** GitHub OAuth Apps (separate apps per service for distinct callback URLs)
+**Flow:** GitHub → OAuth callback → service-specific session
 
-| Service | Auth Config |
-|---------|-------------|
-| ArgoCD | Dex connector with GitHub OIDC, RBAC mapping to read-only |
-| Backstage | GitHub auth provider in app-config.yaml |
-| Grafana | GitHub OAuth in grafana.ini |
+| Service | Auth Config | Access Control |
+|---------|-------------|----------------|
+| ArgoCD | Dex connector with GitHub OIDC | RBAC: deny-all default, explicit user→role bindings |
+| Backstage | GitHub auth provider (`@backstage/plugin-auth-backend-module-github-provider`) | `usernameMatchingUserEntityName` resolver — only users with a matching `User` entity in the catalog can sign in |
+| Grafana | GitHub OAuth in grafana.ini | OAuth app-level restriction |
 
-**Credential storage:** OAuth client_id and client_secret stored in AWS
-Secrets Manager (`kubeauto/github-oauth`), synced via ESO.
+### Backstage Auth Model
+
+Backstage uses a two-gate authentication model:
+
+1. **Gate 1 — GitHub OAuth**: Any GitHub user can initiate the OAuth flow
+2. **Gate 2 — Sign-in Resolver**: After GitHub authenticates the user, the
+   `usernameMatchingUserEntityName` resolver checks whether a `User` entity
+   with a matching `metadata.name` exists in the Backstage catalog. If no
+   match is found, sign-in is rejected.
+
+**Adding users:** Create a `User` entity in `backstage/k8s/catalog-configmap.yaml`
+with `metadata.name` matching the GitHub username (lowercase) and annotation
+`github.com/user-login` matching the exact GitHub username.
+
+**Permission framework:** Set to `allow-all-policy` (appropriate for demo).
+All authenticated users have equal access within Backstage.
+
+### ArgoCD Auth Model
+
+ArgoCD uses Dex as an OIDC broker with GitHub as the identity provider:
+
+1. **Authentication**: Any GitHub user can complete the OAuth flow via Dex
+2. **Authorization**: RBAC policy determines access. Default policy is empty
+   (deny-all), so unauthenticated users see nothing useful.
+
+**Adding users:** Add `g, <github-username>, role:<role-name>` to
+`configs.rbac.policy.csv` in `gitops/argocd/values.yaml`.
+
+### Key Architectural Decisions
+
+- **Custom Docker image required for Backstage auth**: The stock Backstage
+  image (`ghcr.io/backstage/backstage`) uses the default `create-app` scaffold
+  with guest-only `SignInPage`. The frontend `App.tsx` `providers` array is
+  compiled into the Docker image at build time and cannot be changed via
+  runtime config. Switching from guest to GitHub sign-in requires modifying
+  `App.tsx`, rebuilding the image, and pushing to ECR.
+- **ArgoCD admin disabled**: Admin account disabled via `admin.enabled: "false"`.
+  GitHub OIDC is the only login method. The `argocd-initial-admin-secret` has
+  been deleted.
+- **Separate OAuth Apps**: ArgoCD and Backstage use different GitHub OAuth Apps
+  because their callback URLs differ (`/api/dex/callback` vs
+  `/api/auth/github/handler/frame`).
+
+**Credential storage:** OAuth credentials stored in AWS Secrets Manager:
+- `kubeauto/github-oauth` — ArgoCD GitHub OAuth (synced via ESO)
+- `kubeauto/backstage-github-oauth` — Backstage GitHub OAuth (K8s secret)
+- `kubeauto/argocd-backstage-token` — ArgoCD API token for Backstage plugin
 
 ## 8. Audit Trail
 
