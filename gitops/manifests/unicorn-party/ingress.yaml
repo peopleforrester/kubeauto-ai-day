@@ -1,0 +1,30 @@
+# ABOUTME: Ingress for the Unicorn Party demo app via shared ALB.
+# ABOUTME: Exposes unicorn.ai-enhanced-devops.com with TLS via wildcard cert.
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: unicorn-party
+  namespace: apps
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    alb.ingress.kubernetes.io/group.name: kubeauto-ingress
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:598274344262:certificate/151d10d0-1941-4fbf-bfd8-0e8c3be1a8d6
+spec:
+  ingressClassName: alb
+  rules:
+    - host: unicorn.ai-enhanced-devops.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: unicorn-party
+                port:
+                  number: 80
