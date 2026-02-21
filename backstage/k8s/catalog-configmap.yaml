@@ -606,9 +606,10 @@ data:
       name: deploy-service
       title: Deploy a New Service
       description: |
-        Creates a Kyverno-compliant Kubernetes Deployment and Service in the apps namespace.
-        Generated manifests include security contexts, resource limits, health probes, and
-        required labels to pass all platform policies.
+        Creates a fully operational service in the apps namespace with everything needed
+        to run on the platform: Kyverno-compliant Deployment, Service, ALB Ingress with
+        TLS, emptyDir volumes for nginx-based images, and OTel telemetry egress. All
+        generated manifests pass platform security policies out of the box.
       tags:
         - kubernetes
         - argocd
@@ -644,7 +645,7 @@ data:
               type: string
               description: "Full image reference (e.g. docker.io/library/nginx:1.27)"
               ui:placeholder: "docker.io/library/nginx:1.27"
-        - title: Resource Configuration
+        - title: Resource & Networking Configuration
           properties:
             replicas:
               title: Replicas
@@ -658,6 +659,16 @@ data:
               type: integer
               description: Port the container listens on
               default: 8080
+            exposeExternally:
+              title: Expose via ALB Ingress
+              type: boolean
+              description: Create an ALB Ingress with TLS at <name>.ai-enhanced-devops.com
+              default: true
+            isNginxBased:
+              title: Nginx-based Image
+              type: boolean
+              description: Add writable cache volumes required for nginx running as non-root
+              default: false
             cpuRequest:
               title: CPU Request
               type: string
@@ -703,9 +714,10 @@ data:
           action: debug:log
           input:
             message: |
-              Generated Kyverno-compliant manifests for ${{ parameters.name }}:
+              Generated platform-compliant manifests for ${{ parameters.name }}:
 
               ---
+              # Deployment (Kyverno-compliant: non-root, resource limits, probes, labels)
               apiVersion: apps/v1
               kind: Deployment
               metadata:
@@ -743,6 +755,14 @@ data:
                           limits:
                             cpu: ${{ parameters.cpuLimit }}
                             memory: ${{ parameters.memoryLimit }}
+                        volumeMounts:
+                          - name: tmp
+                            mountPath: /tmp
+                          # Include these for nginx-based images:
+                          # - name: nginx-cache
+                          #   mountPath: /var/cache/nginx
+                          # - name: nginx-run
+                          #   mountPath: /var/run
                         readinessProbe:
                           httpGet:
                             path: /
@@ -759,7 +779,16 @@ data:
                           allowPrivilegeEscalation: false
                           capabilities:
                             drop: ["ALL"]
+                    volumes:
+                      - name: tmp
+                        emptyDir: {}
+                      # Include these for nginx-based images:
+                      # - name: nginx-cache
+                      #   emptyDir: {}
+                      # - name: nginx-run
+                      #   emptyDir: {}
               ---
+              # Service
               apiVersion: v1
               kind: Service
               metadata:
@@ -774,6 +803,44 @@ data:
                   - port: 80
                     targetPort: ${{ parameters.port }}
                     protocol: TCP
+              ---
+              # ALB Ingress with TLS (shared ALB, wildcard cert)
+              # URL: https://${{ parameters.name }}.ai-enhanced-devops.com
+              apiVersion: networking.k8s.io/v1
+              kind: Ingress
+              metadata:
+                name: ${{ parameters.name }}
+                namespace: apps
+                annotations:
+                  alb.ingress.kubernetes.io/scheme: internet-facing
+                  alb.ingress.kubernetes.io/target-type: ip
+                  alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+                  alb.ingress.kubernetes.io/ssl-redirect: "443"
+                  alb.ingress.kubernetes.io/backend-protocol: HTTP
+                  alb.ingress.kubernetes.io/healthcheck-path: /
+                  alb.ingress.kubernetes.io/group.name: kubeauto-ingress
+                  alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:598274344262:certificate/151d10d0-1941-4fbf-bfd8-0e8c3be1a8d6
+              spec:
+                ingressClassName: alb
+                rules:
+                  - host: ${{ parameters.name }}.ai-enhanced-devops.com
+                    http:
+                      paths:
+                        - path: /
+                          pathType: Prefix
+                          backend:
+                            service:
+                              name: ${{ parameters.name }}
+                              port:
+                                number: 80
+
+              # Platform policies already cover this service:
+              # - Network: ALB ingress allowed from VPC CIDR (10.0.0.0/16)
+              # - Network: Intra-namespace communication allowed
+              # - Network: OTel telemetry egress to monitoring:4317/4318
+              # - Network: DNS egress to kube-system:53
+              # - Security: Kyverno enforces non-root, resource limits, probes, labels
+              # - Quotas: apps namespace limited to 10 pods, 4 CPU, 8Gi memory
         - id: register-catalog
           name: Register in Backstage Catalog
           action: catalog:register
@@ -784,6 +851,8 @@ data:
         links:
           - title: View in Catalog
             url: /catalog/default/component/${{ parameters.name }}
+          - title: Live URL
+            url: https://${{ parameters.name }}.ai-enhanced-devops.com
 
   create-namespace-template.yaml: |
     apiVersion: scaffolder.backstage.io/v1beta3

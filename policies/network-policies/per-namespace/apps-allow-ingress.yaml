@@ -1,5 +1,5 @@
-# ABOUTME: Allow ingress to apps namespace from the ingress controller.
-# ABOUTME: Permits traffic from AWS LB Controller in kube-system on HTTP/HTTPS ports.
+# ABOUTME: Allow ingress to apps namespace from ALB and ingress controller.
+# ABOUTME: Permits traffic from VPC CIDR (ALB target-type: ip) and kube-system on app ports.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -12,6 +12,16 @@ spec:
   policyTypes:
     - Ingress
   ingress:
+    # ALB with target-type: ip sends traffic directly from VPC ENIs
+    - from:
+        - ipBlock:
+            cidr: 10.0.0.0/16
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 5000
+    # Also allow from kube-system for internal ingress controller routing
     - from:
         - namespaceSelector:
             matchLabels:
