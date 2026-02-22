@@ -1,0 +1,84 @@
+# ABOUTME: Pre-commit hook configuration implementing Layer 1 (Git) guardrails.
+# ABOUTME: Deterministic, local checks that Claude Code cannot bypass.
+
+repos:
+  # Guardrail 7: Secrets & Credential Isolation
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.22.1
+    hooks:
+      - id: gitleaks
+
+  # Local hooks for IDP-specific validation
+  - repo: local
+    hooks:
+      # Guardrail 4: Assume Misunderstanding (YAML syntax validation)
+      - id: yaml-lint
+        name: YAML Lint
+        entry: yamllint -c .yamllint.yml
+        language: system
+        files: '\.ya?ml$'
+        exclude: '.git/|.venv/|.terraform/|node_modules/'
+
+      # Guardrail 4: Assume Misunderstanding (Kubernetes schema validation)
+      - id: kubeconform-validate
+        name: Kubeconform Schema Validation
+        entry: bash -c 'find gitops/base/ gitops/namespaces/ policies/ security/rbac/ security/network-policies/ security/eso/ security/quotas-pdbs/ security/cert-manager/ sample-app/k8s/ -name "*.yaml" -not -name "values.yaml" -not -name "custom-rules.yaml" -not -name "eks-aware-rules.yaml" -not -path "*/.terraform/*" 2>/dev/null | xargs -r kubeconform -strict -ignore-missing-schemas -kubernetes-version 1.34.0 -skip CustomResourceDefinition,ClusterPolicy,ClusterSecretStore,ExternalSecret,PrometheusRule,ServiceMonitor,PodMonitor,Application,AppProject,Instrumentation'
+        language: system
+        files: '\.yaml$'
+        pass_filenames: false
+
+      # Guardrail 4: Assume Misunderstanding (Terraform validation)
+      - id: terraform-validate
+        name: Terraform Validate
+        entry: bash -c 'if [ -d infrastructure/terraform ] && [ -d infrastructure/terraform/.terraform ]; then cd infrastructure/terraform && terraform fmt -check && terraform validate; else echo "Terraform not initialized, skipping validation"; fi'
+        language: system
+        files: '\.tf$'
+        pass_filenames: false
+
+      # Guardrail 4: Assume Misunderstanding (Helm lint)
+      - id: helm-lint
+        name: Helm Lint
+        entry: bash -c 'FOUND=0; for chart in $(find gitops/ -name "Chart.yaml" 2>/dev/null); do FOUND=1; helm lint "$(dirname "$chart")" || exit 1; done; exit 0'
+        language: system
+        files: '\.yaml$'
+        pass_filenames: false
+
+      # Guardrail 8: Supply Chain Validation (Dockerfile scanning)
+      - id: trivy-dockerfile
+        name: Trivy Dockerfile Scan
+        entry: bash -c 'for df in $(find . -name "Dockerfile" -not -path "./.git/*" -not -path "./.venv/*" 2>/dev/null); do trivy config "$df" --severity HIGH,CRITICAL --exit-code 1 || exit 1; done; exit 0'
+        language: system
+        files: 'Dockerfile'
+        pass_filenames: false
+
+      # Guardrail 8: Supply Chain Validation (image registry allowlist)
+      - id: image-allowlist
+        name: Image Registry Allowlist
+        entry: bash -c '.claude/hooks/check-image-allowlist.sh'
+        language: system
+        files: '\.yaml$'
+        pass_filenames: false
+
+      # Guardrail 2: Blast Radius Limits (namespace scope validation)
+      - id: namespace-scope-check
+        name: Namespace Scope Validation
+        entry: bash -c '.claude/hooks/check-namespace-scope.sh'
+        language: system
+        files: '\.yaml$'
+        pass_filenames: false
+
+      # Guardrail 1/3: Pre-push test gate
+      - id: phase-test-gate
+        name: Phase Test Gate
+        entry: bash -c '.claude/hooks/pre-push-tests.sh'
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+
+      # Guardrail 5: Immutable Audit Trail (commit message format)
+      - id: commit-msg-validate
+        name: Conventional Commit Format
+        entry: bash -c '.claude/hooks/commit-msg-validate.sh "$1"'
+        language: system
+        stages: [commit-msg]
+        always_run: true

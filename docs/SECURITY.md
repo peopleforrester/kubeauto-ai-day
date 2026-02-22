@@ -6,7 +6,11 @@
 This document describes the security controls implemented in the KubeAuto Day
 Internal Developer Platform running on Amazon EKS.
 
-## 1. Kyverno Policy Summary
+All security controls map to the **Eight Guardrails Framework** documented in
+[`docs/EIGHT-GUARDRAILS.md`](EIGHT-GUARDRAILS.md). Each section below notes
+which guardrails it implements.
+
+## 1. Kyverno Policy Summary — Guardrails #2, #3, #4, #8
 
 **Engine:** Kyverno 1.17+ (ClusterPolicy)
 **Mode:** Enforce in `apps` namespace only; all system namespaces excluded
@@ -23,7 +27,7 @@ Internal Developer Platform running on Amazon EKS.
 **Excluded namespaces:** kube-system, kube-public, kube-node-lease, argocd,
 monitoring, security, platform, backstage, cert-manager.
 
-## 2. Falco Rules Summary
+## 2. Falco Rules Summary — Guardrails #3, #5
 
 **Engine:** Falco (CNCF Graduated), eBPF driver
 **Deployment:** DaemonSet in `security` namespace
@@ -43,7 +47,7 @@ monitoring, security, platform, backstage, cert-manager.
 
 **Output:** JSON logs + Falcosidekick with Prometheus metrics exporter.
 
-## 3. RBAC Model
+## 3. RBAC Model — Guardrail #2
 
 **Principle:** Least-privilege, namespace-scoped role bindings.
 
@@ -62,7 +66,7 @@ permissions. Named users (`peopleforrester`, `WiggityWhitney`) are mapped to
 `platform-admin`. The `backstage` service account has `backstage-readonly` for
 API access. Local admin account is disabled.
 
-## 4. NetworkPolicy Model
+## 4. NetworkPolicy Model — Guardrail #2
 
 **Strategy:** Default-deny with explicit allow rules per namespace.
 
@@ -77,7 +81,7 @@ API access. Local admin account is disabled.
 connections or receive traffic from other application pods. Only the AWS
 Load Balancer Controller in kube-system can reach application services.
 
-## 5. ESO Secret Flow
+## 5. ESO Secret Flow — Guardrail #7
 
 **Stack:** External Secrets Operator 1.3.2 → AWS Secrets Manager
 
@@ -96,7 +100,7 @@ fallback. The ESO service account assumes an IAM role with
 **No secrets in Git.** Only ExternalSecret references (secret name, key path)
 are stored in the repository. The actual secret values are resolved at runtime.
 
-## 6. TLS Posture
+## 6. TLS Posture — Guardrail #8
 
 **Stack:** cert-manager 1.19+ with Let's Encrypt ACME
 
@@ -112,7 +116,7 @@ no Route53 dependency.
 **Coverage:** TLS on all externally-facing ingresses (ArgoCD, Backstage,
 Grafana, sample app) once domain DNS is configured.
 
-## 7. OIDC Configuration
+## 7. OIDC Configuration — Guardrail #1
 
 **Provider:** GitHub OAuth Apps (separate apps per service for distinct callback URLs)
 **Flow:** GitHub → OAuth callback → service-specific session
@@ -171,7 +175,7 @@ ArgoCD uses Dex as an OIDC broker with GitHub as the identity provider:
 - `kubeauto/backstage-github-oauth` — Backstage GitHub OAuth (K8s secret)
 - `kubeauto/argocd-backstage-token` — ArgoCD API token for Backstage plugin
 
-## 8. Audit Trail
+## 8. Audit Trail — Guardrail #5
 
 **Falco alerts:** Real-time syscall monitoring with JSON output. All events
 include pod name, namespace, container image, and user context.

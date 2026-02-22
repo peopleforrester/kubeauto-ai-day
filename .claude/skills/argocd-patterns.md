@@ -247,6 +247,23 @@ spec:
           selfHeal: true
 ```
 
+---
+
+## Guardrail Integration
+
+ArgoCD implements **Guardrails #1 and #6** at Layer 3 (Kubernetes Infrastructure).
+
+| Guardrail | How ArgoCD Implements It |
+|-----------|------------------------|
+| **#1 Propose-Approve-Execute** | All changes go through Git (propose) → ArgoCD sync (approve/execute). No `kubectl apply` in production namespaces after Phase 2. Manual sync disabled for app namespaces; automated sync with self-heal for platform namespaces. |
+| **#6 Automated Rollback** | Self-heal auto-reverts manual drift to match Git state. `argocd app rollback` provides instant rollback to previous revisions. Git revert is the cheapest rollback — tagged commits at each phase completion provide clean rollback points. |
+
+**Layer 2 enforcement:** The `cc-pretool-guard.sh` hook blocks `kubectl apply/create/replace` in production namespaces after Phase 2, forcing the GitOps path.
+
+**Layer 1 enforcement:** Pre-push test gate ensures tests pass before code reaches the repo that ArgoCD syncs from.
+
+---
+
 ### ArgoCD Project Scoping
 
 Restrict what the `default` project can deploy to, and create a platform project.

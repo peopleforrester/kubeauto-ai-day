@@ -247,6 +247,23 @@ Falco rules have three building blocks: **macros**, **lists**, and **rules**.
   source: syscall
 ```
 
+---
+
+## Guardrail Integration
+
+Falco implements **Guardrails #3 and #5** at Layer 3 (Kubernetes Infrastructure).
+
+| Guardrail | How Falco Implements It |
+|-----------|------------------------|
+| **#3 Stop Hooks & Circuit Breakers** | Runtime detection of anomalous behavior: exec into containers, sensitive file reads, unexpected outbound connections, IMDS access, /etc writes. Falco is detection-only (does not block), but alerts enable rapid human response. |
+| **#5 Immutable Audit Trail** | Syscall-level event logging provides an immutable record of what happened inside containers. Falcosidekick exports to Prometheus metrics, creating a queryable audit trail in Grafana dashboards. |
+
+**Falco is detection, not prevention.** Use Kyverno for admission-time blocking and NetworkPolicies for network blocking. Falco tells you what happened after the fact — which is essential for incident response and the audit trail.
+
+**Layer 2 enforcement:** No direct Layer 2 hooks for Falco. The `cc-posttool-audit.sh` hook reminds operators to verify after applying changes.
+
+---
+
 ### Falcosidekick Values (security/falcosidekick/values.yaml)
 
 ```yaml

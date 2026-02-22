@@ -303,6 +303,22 @@ spec:
                 - ALL
 ```
 
+---
+
+## Guardrail Integration
+
+Backstage implements **Guardrail #1** at Layer 3 (Kubernetes Infrastructure).
+
+| Guardrail | How Backstage Implements It |
+|-----------|----------------------------|
+| **#1 Propose-Approve-Execute** | Software templates enforce a structured propose-approve-execute workflow for developers. Templates produce Kyverno-compliant resources (labels, limits, probes, non-privileged). Developers propose via template, platform team approves via catalog review, ArgoCD executes via GitOps sync. |
+
+**Backstage + Kyverno synergy:** Templates generate compliant resources at creation time (shift-left). Kyverno validates at admission time (defense-in-depth). If a template produces non-compliant resources, Kyverno rejects them — this catches template bugs before they reach production.
+
+**Layer 2 enforcement:** No direct Layer 2 hooks for Backstage. The catalog is populated via static file locations and ConfigMap mounts.
+
+---
+
 ### Root Catalog File (backstage/catalog/catalog-info.yaml)
 
 ```yaml

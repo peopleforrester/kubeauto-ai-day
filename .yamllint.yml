@@ -1,0 +1,27 @@
+# ABOUTME: YAML lint configuration for Layer 1 guardrail validation.
+# ABOUTME: Enforces consistent YAML formatting across all manifests and configs.
+
+extends: default
+
+rules:
+  document-start: disable
+  line-length:
+    max: 200
+    level: warning
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no']
+    check-keys: false
+  comments:
+    min-spaces-from-content: 1
+  indentation:
+    spaces: 2
+    indent-sequences: whatever
+  empty-lines:
+    max: 2
+
+ignore:
+  - .git/
+  - .venv/
+  - .terraform/
+  - node_modules/
+  - infrastructure/terraform/.terraform/
