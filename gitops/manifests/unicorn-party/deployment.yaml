@@ -8,7 +8,7 @@ metadata:
   namespace: apps
   labels:
     app: unicorn-party
-    version: "2.0.1"
+    version: "2.0.2"
 spec:
   replicas: 1
   selector:
@@ -18,7 +18,7 @@ spec:
     metadata:
       labels:
         app: unicorn-party
-        version: "2.0.1"
+        version: "2.0.2"
     spec:
       securityContext:
         runAsNonRoot: true
@@ -26,7 +26,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: unicorn-party
-          image: 598274344262.dkr.ecr.us-west-2.amazonaws.com/kubeauto-unicorn-party:2.0.1
+          image: 598274344262.dkr.ecr.us-west-2.amazonaws.com/kubeauto-unicorn-party:2.0.2
           ports:
             - containerPort: 8080
               protocol: TCP
