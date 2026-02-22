@@ -64,14 +64,13 @@ Cluster is live. Collateral (blog, slides outline, social, QR codes) committed.
 - Pre-publish checklist: run `/gh-public-check`, verify no secrets, confirm
   `.gitignore` coverage, remove any private references
 
-### 9. Git Tags for Phase Completion
-- Retroactive tags (`phase-1-complete` through `phase-7-complete`)
-- Optional but nice for the git history narrative
+### ~~9. Git Tags for Phase Completion~~ DONE (2026-02-22)
+- 8 annotated tags created: `phase-0-complete` through `phase-7-complete`
+- Each tag points to the final commit for that phase with descriptive message
 
-### 10. Guardrail Column in Scorecard
-- `docs/WALKTHROUGH.md` describes a "Guardrails Implemented" column
-- Current scorecard has 6 dimensions (no guardrail column)
-- Could add retroactively if the talk narrative requires it
+### ~~10. Guardrail Column in Scorecard~~ DONE (2026-02-22)
+- Added "Guardrails" column to `spec/SCORECARD.md` mapping each component to guardrails #1-#8
+- Added Guardrail Coverage summary table showing which components implement each guardrail
 
 ---
 
