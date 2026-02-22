@@ -25,6 +25,14 @@ The platform is real. The scorecard is honest. The methodology is reusable.
 
 Full scorecard: [`spec/SCORECARD.md`](spec/SCORECARD.md)
 
+## Deep Dives
+
+- [**Architecture**](docs/ARCHITECTURE.md) — Platform architecture, component relationships, data flows
+- [**Walkthrough**](docs/WALKTHROUGH.md) — Complete build narrative with Three-Layer Guardrail Architecture
+- [**Eight Guardrails**](docs/EIGHT-GUARDRAILS.md) — Defense-in-depth framework (Git → Claude Code → Kubernetes)
+- [**Security**](docs/SECURITY.md) — Kyverno, Falco, RBAC, ESO, NetworkPolicies, cert-manager
+- [**Lessons Learned**](docs/LESSONS-LEARNED.md) — What went wrong and what we'd do differently
+
 ## Platform Stack
 
 | Layer | Component | Version |
@@ -56,9 +64,8 @@ security/
   network-policies/         # Default-deny + allow rules
   cert-manager/             # ClusterIssuers
   quotas-pdbs/              # ResourceQuota + 5 PDBs
-monitoring/
-  dashboards/               # Grafana Platform Overview dashboard
-  alert-rules/              # 4 custom PrometheusRules
+observability/
+  grafana/dashboards/       # Grafana Platform Overview dashboard
 backstage/
   catalog/                  # System, Component, Templates
   templates/                # deploy-service, create-namespace
