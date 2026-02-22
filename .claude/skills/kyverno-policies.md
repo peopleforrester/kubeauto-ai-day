@@ -314,6 +314,25 @@ spec:
     limits.memory: "8Gi"
 ```
 
+---
+
+## Guardrail Integration
+
+Kyverno implements **Guardrails #2, #3, #4, and #8** at Layer 3 (Kubernetes Infrastructure).
+
+| Guardrail | How Kyverno Implements It |
+|-----------|--------------------------|
+| **#2 Blast Radius Limits** | Enforce policies scoped to `apps` namespace only. System namespaces excluded. Works alongside RBAC and ResourceQuotas for defense-in-depth. |
+| **#3 Stop Hooks & Circuit Breakers** | Admission webhooks reject non-compliant resources at the API server. Six ClusterPolicies act as circuit breakers: require-labels, restrict-registries, require-limits, disallow-privileged, require-probes, require-networkpolicy. |
+| **#4 Assume Misunderstanding** | Validate rules catch structural errors (missing labels, missing limits) before resources are created. Acts as a "second pair of eyes" on every resource admission. |
+| **#8 Supply Chain Validation** | `restrict-image-registries` policy enforces that only images from ECR, GHCR, docker.io/library, and registry.k8s.io are allowed in the `apps` namespace. |
+
+**Layer 1 enforcement:** The `kyverno-validate` pre-commit hook runs Kyverno CLI dry-run on staged manifests before they reach the cluster (requires kyverno CLI installed locally).
+
+**Layer 1 enforcement:** The `image-allowlist` pre-commit hook provides a file-level registry check as a fast pre-flight before admission.
+
+---
+
 ### Kyverno Helm Installation Values
 
 ```yaml

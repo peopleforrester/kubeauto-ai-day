@@ -247,6 +247,22 @@ prometheus:
     # at path /api/v1/write
 ```
 
+---
+
+## Guardrail Integration
+
+The OTel Collector + Prometheus + Grafana stack implements **Guardrail #5** at Layer 3 (Kubernetes Infrastructure).
+
+| Guardrail | How Observability Implements It |
+|-----------|-------------------------------|
+| **#5 Immutable Audit Trail** | Distributed traces link requests across services. Prometheus metrics provide time-series audit data. Grafana dashboards make the audit trail queryable and visual. Custom alert rules (NodeNotReady, PodCrashLoop, ArgoCDAppDegraded, FalcoCriticalAlert) provide active monitoring of the audit trail. |
+
+**The observability stack makes all other guardrails auditable.** Without metrics and traces, you know policies exist but not whether they're firing. With OTel, every Kyverno rejection, Falco alert, and ArgoCD sync event becomes a data point.
+
+**Layer 2 enforcement:** The `cc-posttool-audit.sh` hook reminds operators to verify deployments after applying changes — the observability stack is what makes that verification possible.
+
+---
+
 ### ServiceMonitor for OTel Collector Self-Metrics
 
 ```yaml

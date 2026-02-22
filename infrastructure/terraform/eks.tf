@@ -7,7 +7,7 @@ module "eks" {
 
   # v21.15+: uses `name` and `kubernetes_version` (not cluster_name/cluster_version)
   name               = var.cluster_name
-  kubernetes_version  = var.cluster_version
+  kubernetes_version = var.cluster_version
 
   # v21 default: API-only authentication (no aws-auth ConfigMap)
   authentication_mode = "API"
@@ -52,7 +52,7 @@ module "eks" {
       most_recent = true
     }
     aws-ebs-csi-driver = {
-      most_recent             = true
+      most_recent              = true
       service_account_role_arn = module.ebs_csi_irsa.iam_role_arn
     }
   }

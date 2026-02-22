@@ -3,6 +3,7 @@
 !.claude/commands/
 !.claude/hooks/
 !.claude/skills/
+!.claude/settings.json
 claude_output/
 *.claude-session
 
@@ -17,6 +18,8 @@ docs/*
 !docs/LESSONS-LEARNED.md
 !docs/VERSION-MAP.md
 !docs/WALKTHROUGH.md
+!docs/EIGHT-GUARDRAILS.md
+!docs/EIGHT-GUARDRAILS-RECONCILIATION.md
 
 # Environment and secrets
 .env

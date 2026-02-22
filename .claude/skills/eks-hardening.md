@@ -206,6 +206,23 @@ metadata:
     pod-security.kubernetes.io/warn: restricted
 ```
 
+---
+
+## Guardrail Integration
+
+EKS infrastructure implements **Guardrails #2 and #7** at Layer 3 (Kubernetes Infrastructure).
+
+| Guardrail | How EKS Implements It |
+|-----------|----------------------|
+| **#2 Blast Radius Limits** | VPC isolation (private subnets, NAT gateway). Security groups restrict node-to-node and API access. Private API endpoint. PSS labels on `apps` namespace. Managed node groups with defined instance types and scaling limits. |
+| **#7 Secrets & Credential Isolation** | Pod Identity eliminates long-lived credentials. No static IAM keys. IRSA used only as fallback for specific addons. KMS encryption for secrets at rest. Control plane audit logging captures all API server actions. |
+
+**Layer 2 enforcement:** The `cc-pretool-guard.sh` hook blocks `terraform destroy` without explicit confirmation and blocks write operations on `kube-system`.
+
+**Layer 1 enforcement:** `terraform validate` and `terraform fmt` pre-commit hooks catch configuration errors before they reach the cluster.
+
+---
+
 ### AWS Load Balancer Controller
 
 Installed in Phase 1 for ingress support. Uses Pod Identity.
