@@ -1,5 +1,6 @@
 # Claude Code (internal state)
 .claude/*
+!.claude/README.md
 !.claude/commands/
 !.claude/hooks/
 !.claude/skills/
@@ -9,6 +10,7 @@ claude_output/
 
 # Docs (spec, PRD, plan are local-only; ADRs are committed)
 docs/*
+!docs/README.md
 !docs/adr/
 !docs/SECURITY.md
 !docs/COST.md
