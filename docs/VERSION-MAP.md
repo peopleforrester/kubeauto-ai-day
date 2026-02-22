@@ -11,7 +11,7 @@ Last updated: February 2026
 
 | Component | Helm Chart | Chart Version | App Version | Repository |
 |-----------|-----------|---------------|-------------|-----------|
-| ArgoCD | argo-cd | 9.x | 3.2.6 | `https://argoproj.github.io/argo-helm` |
+| ArgoCD | argo-cd | 9.4.2 | 3.3.0 | `https://argoproj.github.io/argo-helm` |
 | Kyverno | kyverno | 3.7.0 | 1.17.0 | `https://kyverno.github.io/kyverno` |
 | Falco | falco | 8.0.0 | 0.43.0 | `https://falcosecurity.github.io/charts` |
 | Falcosidekick | falcosidekick | 0.12.1 | (latest) | `https://falcosecurity.github.io/charts` |
@@ -49,7 +49,7 @@ Last updated: February 2026
 ### ArgoCD: chart 7.x → 9.x (ArgoCD 2.x → 3.2)
 
 **The entire ArgoCD 2.x line is EOL.** Chart 5.x and 6.x = ArgoCD 2.x.
-Chart 7.x = ArgoCD 3.0. Chart 9.x = ArgoCD 3.2.
+Chart 7.x = ArgoCD 3.0. Chart 9.x = ArgoCD 3.2–3.3.
 
 | Change | Impact |
 |--------|--------|

@@ -100,21 +100,24 @@ and capabilities drop ALL. System namespaces are excluded."
 ## 5. Runtime Security: Falco (2 min)
 
 ```bash
-# Show Falco is running
+# Show Falco is running on every node (DaemonSet)
 kubectl get pods -n security -l app.kubernetes.io/name=falco
 
-# Trigger a detectable event: write to /etc
+# Trigger a detectable event: exec a shell into a running pod
 POD=$(kubectl get pods -n apps -l app=sample-app -o jsonpath='{.items[0].metadata.name}')
-kubectl exec -n apps $POD -- sh -c "touch /etc/demo-marker"
+kubectl exec -n apps $POD -- sh -c "echo 'Falco should detect this shell exec'"
 
-# Check Falco logs for the alert
+# Check Falco logs for the alert (wait 5s for async processing)
 sleep 5
-kubectl logs -n security -l app.kubernetes.io/name=falco -c falco --tail=10 --since=15s | grep demo-marker
+kubectl logs -n security -l app.kubernetes.io/name=falco -c falco --tail=20 --since=15s | grep -i "exec\|shell\|terminal"
 ```
 
-**Talking point:** "Falco uses eBPF to detect syscall-level events. Writing to
-/etc triggers the 'Write Below Etc' rule. We also have custom rules for
-EC2 metadata access and crypto mining detection."
+**Talking point:** "Falco uses eBPF to detect syscall-level events in real time.
+Spawning a shell in a container triggers an alert immediately. We also detect
+writes to /etc, EC2 metadata access, and crypto mining activity."
+
+**If no alert shows:** Check `--since=30s` or `--tail=100` — Falco processes
+events asynchronously and high-volume pods may push logs further back.
 
 ---
 
@@ -212,13 +215,45 @@ non-compliant workloads."
 uv run pytest tests/test_phase_06_integration.py -v
 ```
 
-**Talking point:** "50 automated tests validate every component, from Terraform
+**Talking point:** "59 automated tests validate every component, from Terraform
 state to Falco detection to ArgoCD self-healing. All tests hit real
 infrastructure — no mocks."
 
 ---
 
+## Known Issues
+
+| Issue | Symptom | Workaround |
+|-------|---------|------------|
+| ArgoCD drift detection timing | Self-heal takes up to 30s (reconciliation interval) | Start the drift demo early, talk through it while waiting |
+| Falco alert delay | Alerts appear in logs 2-10s after the event | Add `sleep 5` before checking logs; check `--since=30s` |
+| Falcosidekick event lag | Metrics may not immediately reflect new events | Check `--tail=200` instead of `--tail=10` for recent alerts |
+| app-of-apps OutOfSync | Root app often shows OutOfSync while children are Synced | This is normal for app-of-apps pattern; all child apps are Healthy |
+| Kyverno OutOfSync | Kyverno app shows OutOfSync in ArgoCD | CRD size exceeds annotation limits; Kyverno is Healthy regardless |
+| Backstage catalog load | Catalog entities take ~20s to load after pod restart | Wait for pod to be Ready before querying catalog API |
+| Grafana initial dashboard load | First load may show "No data" briefly | Refresh the dashboard; Prometheus needs a few scrape intervals |
+
+**If something fails live:**
+- Stay calm, acknowledge it: "This is real infrastructure, not a rehearsed recording"
+- Check pod status: `kubectl get pods -n <namespace>`
+- Check pod logs: `kubectl logs -n <namespace> <pod> --tail=20`
+- Skip to next demo section and come back if time allows
+- The test suite is your safety net: `uv run pytest tests/test_phase_06_integration.py -v`
+
+---
+
 ## Quick Reference
+
+### External URLs (Browser)
+
+| Service | URL |
+|---------|-----|
+| ArgoCD | https://test1.ai-enhanced-devops.com |
+| Backstage | https://backstage.ai-enhanced-devops.com |
+| Unicorn Party | https://unicorn.ai-enhanced-devops.com |
+| E-Commerce Demo | https://ecom.ai-enhanced-devops.com |
+
+### Internal URLs (kubectl)
 
 | Service | Namespace | Internal URL |
 |---------|-----------|--------------|
@@ -229,7 +264,10 @@ infrastructure — no mocks."
 | Sample App | apps | http://sample-app.apps.svc:8080 |
 | Falcosidekick | security | http://falco-falcosidekick.security.svc:2801 |
 
-| Default Credentials | |
-|---------------------|---|
+### Credentials
+
+| Service | Credentials |
+|---------|-------------|
 | Grafana | admin / admin |
-| ArgoCD | admin / (get from secret: `kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' \| base64 -d`) |
+| ArgoCD | GitHub OIDC (peopleforrester, WiggityWhitney) |
+| Backstage | GitHub OIDC (peopleforrester, WiggityWhitney) |

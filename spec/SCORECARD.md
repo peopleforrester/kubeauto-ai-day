@@ -36,23 +36,23 @@ See `scorecard/methodology.md` (created in Phase 8) for full methodology.
 | E2E Integration | 7 | 2 | 12 min | 30 min | No | 7 cross-component tests; 2 fixes needed: NetworkPolicy blocks pod-to-service egress (used localhost), Falco non-interactive exec not logged (switched to /etc write marker); ArgoCD 30s reconciliation for demo |
 | TLS + cert-manager | 8 | 1 | 5 min | 25 min | No | cert-manager 1.19.1 deployed cleanly; 1 fix for Application YAML in subdirectory (app-of-apps doesn't recurse); HTTP-01 ClusterIssuers Ready; namespace ordering required force refresh |
 | Resource Quotas + PDBs | 9 | 0 | 3 min | 15 min | No | ResourceQuota and 5 PDBs correct first try; ArgoCD Application pattern reused cleanly |
-| OIDC Authentication | - | - | - | - | - | Deferred: requires domain name + GitHub OAuth App setup (manual prerequisite) |
+| OIDC Authentication | 8 | 1 | 8 min | 35 min | No | GitHub OIDC via ArgoCD Dex connector; manual prerequisite (OAuth App creation) completed; Backstage GitHub auth integrated; 1 correction for callback URL config |
 | Documentation | 9 | 0 | 5 min | 30 min | No | SECURITY.md (8 sections), COST.md, ADR-007 all correct first try; gitleaks allowlist for known test secret |
-| Architecture Decision Records | 9 | 0 | 3 min | 15 min | No | 7 ADRs written across all phases; MADR format consistent; ADR-007 auth strategy completed |
+| Architecture Decision Records | 9 | 0 | 3 min | 15 min | No | 9 ADRs written across all phases (000-007 + 003b); MADR format consistent; ADR-007 auth strategy completed |
 
 ## Totals
 
-- **Total AI-assisted build time: 3 hours 2 min** (182 min across 26 scored components)
-- **Estimated manual build time: 11 hours 30 min** (690 min)
-- **Net toil reduction: 73.6%** (508 min saved)
-- **Total correction cycles: 24** (avg 0.92 per component)
+- **Total AI-assisted build time: 3 hours 10 min** (190 min across 27 scored components)
+- **Estimated manual build time: 12 hours 5 min** (725 min)
+- **Net toil reduction: 73.8%** (535 min saved)
+- **Total correction cycles: 25** (avg 0.93 per component)
 - **Average toil-reduced score: 8.0/10**
-- Components where AI genuinely reduced toil (No shift): **21/26**
-- Components where AI partially shifted toil: **5/26** (EKS, Kyverno Install, Falco Install, ESO, OTel)
-- Components where AI fully shifted toil: **0/26**
-- Components where starting from scratch would have been faster: **0/26**
-- Components with zero corrections: **13/26** (50%)
-- Components deferred: **1/27** (OIDC — manual prerequisite)
+- Components where AI genuinely reduced toil (No shift): **22/27**
+- Components where AI partially shifted toil: **5/27** (EKS, Kyverno Install, Falco Install, ESO, OTel)
+- Components where AI fully shifted toil: **0/27**
+- Components where starting from scratch would have been faster: **0/27**
+- Components with zero corrections: **13/27** (48%)
+- Components deferred: **0/27**
 
 ## Scoring Key
 

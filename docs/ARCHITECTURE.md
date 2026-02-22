@@ -35,7 +35,7 @@ apply is used in production namespaces.
 │  │  │  ┌──────────┐ ┌──────────┐ ┌───────────┐ ┌───────────────┐  │ │  │
 │  │  │  │  argocd  │ │ security │ │ monitoring│ │   backstage   │  │ │  │
 │  │  │  │ ArgoCD   │ │ Kyverno  │ │ Prom+Graf │ │  Backstage    │  │ │  │
-│  │  │  │ 3.2.6    │ │ Falco    │ │ OTel      │ │  1.9.1        │  │ │  │
+│  │  │  │ 3.3.0    │ │ Falco    │ │ OTel      │ │  1.9.1        │  │ │  │
 │  │  │  │          │ │ ESO      │ │ Alerting  │ │  Templates    │  │ │  │
 │  │  │  └──────────┘ └──────────┘ └───────────┘ └───────────────┘  │ │  │
 │  │  │  ┌──────────┐ ┌──────────┐ ┌───────────────────────────────┐│ │  │
@@ -76,7 +76,7 @@ Developer → git push → GitHub (staging branch)
       (namespaces)     (CRDs/infra)    (applications)
 ```
 
-ArgoCD manages 20 Applications via the app-of-apps pattern. Sync waves
+ArgoCD manages 27 Applications via the app-of-apps pattern. Sync waves
 ensure resources are created in dependency order:
 
 | Wave | Components |
@@ -86,9 +86,9 @@ ensure resources are created in dependency order:
 | -3 | Falco, ESO (security infrastructure) |
 | -1 | Falcosidekick, ESO resources |
 | 0 | Prometheus, Grafana dashboards, RBAC, NetworkPolicies |
-| 1 | OTel Collector, cert-manager issuers |
+| 1 | OTel Collector, Loki, Tempo, Promtail, cert-manager issuers |
 | 2 | Kyverno policies, resource quotas |
-| 5 | Sample app, Backstage |
+| 5 | Sample app, Backstage, demo apps (unicorn-party, ecom, load-generator) |
 
 ### Security Data Flow
 
@@ -164,6 +164,7 @@ Each major decision is documented in an Architecture Decision Record:
 
 | Decision | Choice | ADR |
 |----------|--------|-----|
+| Domain name | ai-enhanced-devops.com | [ADR-000](adr/ADR-000-domain-name.md) |
 | Infrastructure as Code | Terraform + EKS module v21 | [ADR-001](adr/ADR-001-iac-tool.md) |
 | GitOps engine | ArgoCD 3.2+ | [ADR-002](adr/ADR-002-gitops-engine.md) |
 | Policy engine | Kyverno 1.17 (traditional ClusterPolicy) | [ADR-003](adr/ADR-003-policy-engine.md) |
@@ -178,7 +179,7 @@ Each major decision is documented in an Architecture Decision Record:
 | Component | Version | Chart | Installation Method |
 |-----------|---------|-------|---------------------|
 | EKS | 1.34 | N/A | Terraform |
-| ArgoCD | 3.2.6 | argo-cd 9.x | Helm (Terraform bootstrap) |
+| ArgoCD | 3.3.0 | argo-cd 9.4.2 | Helm (Terraform bootstrap) |
 | Kyverno | 1.17.0 | kyverno 3.7.0 | ArgoCD Application |
 | Falco | 0.43.0 | falco 8.0.0 | ArgoCD Application |
 | Falcosidekick | | falcosidekick 0.9.3 | ArgoCD Application |
@@ -211,4 +212,3 @@ Each major decision is documented in an Architecture Decision Record:
 - Cost optimization beyond instance selection
 - Gateway API (used traditional Ingress + ALB)
 - Crossplane (stretch goal, not implemented)
-- Production OIDC (deferred — requires domain setup)

@@ -19,7 +19,7 @@ decision recorded, and every correction cycle documented honestly.
 
 **The platform:**
 - EKS 1.34 on AWS (VPC, IAM, managed node groups)
-- ArgoCD 3.2 for GitOps (app-of-apps pattern, 20 managed Applications)
+- ArgoCD 3.3 for GitOps (app-of-apps pattern, 27 managed Applications)
 - Kyverno 1.17 for policy enforcement (6 policies, enforce mode in apps namespace)
 - Falco 0.43 for runtime security (eBPF driver, 5 custom rules)
 - ESO for secret management (AWS Secrets Manager integration)
@@ -42,16 +42,16 @@ providing component patterns and known pitfalls.
 
 | Metric | Value |
 |--------|-------|
-| Total AI-assisted build time | 3 hours 2 min |
-| Estimated manual build time | 11 hours 30 min |
-| Net toil reduction | 73.6% |
-| Total correction cycles | 24 |
+| Total AI-assisted build time | 3 hours 10 min |
+| Estimated manual build time | 12 hours 5 min |
+| Net toil reduction | 73.8% |
+| Total correction cycles | 25 |
 | Average quality score | 8.0/10 |
-| Components with zero corrections | 13/26 (50%) |
-| Components where AI shifted toil | 5/26 (19%) |
-| Components where manual would be faster | 0/26 |
+| Components with zero corrections | 13/27 (48%) |
+| Components where AI shifted toil | 5/27 (19%) |
+| Components where manual would be faster | 0/27 |
 
-**The headline number: 73.6% toil reduction is real.** But the story behind
+**The headline number: 73.8% toil reduction is real.** But the story behind
 it is more nuanced than any vendor pitch will tell you.
 
 ## Where AI Genuinely Helped
@@ -65,7 +65,7 @@ first try in 13 of 26 components.
 **Boilerplate reduction:**
 ArgoCD Application manifests are 90% boilerplate. Once the AI understood the
 app-of-apps pattern, it cranked out correct Application YAMLs instantly.
-The human cost of manually writing 20 Application manifests is significant;
+The human cost of manually writing 27 Application manifests is significant;
 the AI cost was near zero.
 
 **Documentation:**

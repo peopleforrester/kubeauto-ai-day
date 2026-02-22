@@ -42,7 +42,7 @@ Speaker: Michael Forrester, KodeKloud
 ## Slide 5: What We Built
 
 Architecture diagram showing:
-- EKS 1.34 + ArgoCD 3.2 (GitOps)
+- EKS 1.34 + ArgoCD 3.3 (GitOps)
 - Kyverno + Falco (Security)
 - Prometheus + Grafana + OTel (Observability)
 - ESO + Secrets Manager (Secrets)
@@ -69,7 +69,7 @@ Architecture diagram showing:
 ## Slides 8-10: Live Demo (~5-7 min)
 
 ### Demo 1: GitOps in Action
-- Show ArgoCD dashboard with 20 synced apps
+- Show ArgoCD dashboard with 27 synced apps
 - Make a change in Git → watch 30s reconciliation
 - Show drift detection + self-healing
 
@@ -88,11 +88,11 @@ Architecture diagram showing:
 
 | Metric | Value |
 |--------|-------|
-| AI build time | 3 hours |
-| Manual estimate | 11.5 hours |
-| Toil reduction | 73.6% |
-| Correction cycles | 24 total |
-| Zero-correction components | 50% |
+| AI build time | 3 hours 10 min |
+| Manual estimate | 12 hours |
+| Toil reduction | 73.8% |
+| Correction cycles | 25 total |
+| Zero-correction components | 48% |
 
 ## Slide 12: The Results — Detail
 
@@ -144,7 +144,7 @@ toil.
 
 ## Slide 17: The Honest Take
 
-> "73.6% toil reduction is real, but the remaining 26.4% is harder toil.
+> "73.8% toil reduction is real, but the remaining ~26% is harder toil.
 > Debugging confident-but-wrong AI output is more cognitive load than
 > writing config yourself."
 
