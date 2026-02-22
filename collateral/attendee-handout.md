@@ -11,7 +11,7 @@ Speaker: Michael Forrester, KodeKloud
 | Layer | Component | Version |
 |-------|-----------|---------|
 | Infrastructure | EKS on AWS | 1.34 |
-| GitOps | ArgoCD | 3.2.6 |
+| GitOps | ArgoCD | 3.3.0 |
 | Policy | Kyverno | 1.17.0 |
 | Runtime Security | Falco | 0.43.0 |
 | Secrets | ESO + AWS Secrets Manager | 1.3.2 |
@@ -36,11 +36,11 @@ The repo contains:
 
 | Metric | Value |
 |--------|-------|
-| AI build time | 3 hours |
-| Manual estimate | 11.5 hours |
-| Toil reduction | 73.6% |
-| Components scored | 26/27 |
-| Zero-correction rate | 50% |
+| AI build time | 3 hours 10 min |
+| Manual estimate | 12 hours |
+| Toil reduction | 73.8% |
+| Components scored | 27/27 |
+| Zero-correction rate | 48% |
 
 ## Use the Scorecard Template
 
@@ -53,7 +53,7 @@ Want to measure your own AI-assisted builds?
 
 ## Key Takeaways
 
-1. **AI reduces toil by ~74% for IDP builds** — but the remaining 26% is harder
+1. **AI reduces toil by ~74% for IDP builds** — but the remaining ~26% is harder
 2. **Version currency is AI's #1 weakness** — always pin versions in prompts
 3. **TDD catches AI mistakes immediately** — write the test first, always
 4. **Skill files/context are essential** — generic prompts get generic (wrong) output
@@ -63,6 +63,7 @@ Want to measure your own AI-assisted builds?
 
 | ADR | Decision |
 |-----|----------|
+| 000 | Domain name (ai-enhanced-devops.com) |
 | 001 | Terraform over Pulumi/CDK |
 | 002 | ArgoCD over Flux |
 | 003 | Kyverno over OPA/Gatekeeper |

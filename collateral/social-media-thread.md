@@ -12,9 +12,9 @@ cycle documented.
 
 Here's the honest scorecard:
 
-AI build time: 3 hours
-Manual estimate: 11.5 hours
-Toil reduction: 73.6%
+AI build time: 3 hours 10 min
+Manual estimate: 12 hours
+Toil reduction: 73.8%
 
 But the interesting part isn't the headline number.
 
@@ -22,7 +22,7 @@ But the interesting part isn't the headline number.
 
 ## Post 2/5 — What Worked
 
-Half the components (13/26) had ZERO correction cycles. AI nailed them
+Nearly half the components (13/27) had ZERO correction cycles. AI nailed them
 first try:
 - RBAC, NetworkPolicies, Kyverno policies
 - Grafana dashboards, alert rules
@@ -65,7 +65,7 @@ Everything is open source:
 - Full repo with Terraform, ArgoCD apps, tests
 - Reusable scorecard template
 - Scoring methodology
-- 7 Architecture Decision Records
+- 9 Architecture Decision Records
 
 Build your own IDP. Score it honestly. Share the results.
 

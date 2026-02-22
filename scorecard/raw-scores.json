@@ -277,31 +277,35 @@
       "ai_time_min": 3,
       "manual_time_min": 15,
       "toil_shifted": "no",
-      "notes": "7 ADRs written across all phases; MADR format consistent"
-    }
-  ],
-  "deferred": [
+      "notes": "9 ADRs written across all phases (000-007 + 003b); MADR format consistent"
+    },
     {
       "name": "OIDC Authentication",
       "phase": 7,
-      "reason": "Requires domain name + GitHub OAuth App setup (manual prerequisite)"
+      "toil_reduced": 8,
+      "correction_cycles": 1,
+      "ai_time_min": 8,
+      "manual_time_min": 35,
+      "toil_shifted": "no",
+      "notes": "GitHub OIDC via ArgoCD Dex connector; manual prerequisite (OAuth App creation) completed; Backstage GitHub auth integrated; 1 correction for callback URL config"
     }
   ],
+  "deferred": [],
   "totals": {
-    "total_ai_time_min": 182,
-    "total_ai_time_hours": 3.03,
-    "total_manual_time_min": 690,
-    "total_manual_time_hours": 11.5,
-    "net_toil_reduction_pct": 73.6,
-    "total_correction_cycles": 24,
+    "total_ai_time_min": 190,
+    "total_ai_time_hours": 3.17,
+    "total_manual_time_min": 725,
+    "total_manual_time_hours": 12.08,
+    "net_toil_reduction_pct": 73.8,
+    "total_correction_cycles": 25,
     "average_toil_reduced_score": 8.0,
-    "components_genuinely_reduced": 21,
+    "components_genuinely_reduced": 22,
     "components_partially_shifted": 5,
     "components_fully_shifted": 0,
     "components_faster_from_scratch": 0,
     "zero_correction_components": 13,
-    "one_correction_components": 8,
+    "one_correction_components": 9,
     "two_correction_components": 3,
-    "three_correction_components": 4
+    "three_correction_components": 3
   }
 }

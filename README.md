@@ -16,11 +16,11 @@ The platform is real. The scorecard is honest. The methodology is reusable.
 
 | Metric | Value |
 |--------|-------|
-| AI build time | 3 hours |
-| Manual estimate | 11.5 hours |
-| Toil reduction | 73.6% |
-| Components scored | 26/27 |
-| Zero-correction rate | 50% |
+| AI build time | 3 hours 10 min |
+| Manual estimate | 12 hours |
+| Toil reduction | 73.8% |
+| Components scored | 27/27 |
+| Zero-correction rate | 48% |
 | Average quality score | 8.0/10 |
 
 Full scorecard: [`spec/SCORECARD.md`](spec/SCORECARD.md)
@@ -30,7 +30,7 @@ Full scorecard: [`spec/SCORECARD.md`](spec/SCORECARD.md)
 | Layer | Component | Version |
 |-------|-----------|---------|
 | Infrastructure | EKS on AWS | 1.34 |
-| GitOps | ArgoCD | 3.2.6 |
+| GitOps | ArgoCD | 3.3.0 |
 | Policy Enforcement | Kyverno | 1.17.0 |
 | Runtime Security | Falco (eBPF) | 0.43.0 |
 | Secret Management | ESO + AWS Secrets Manager | 1.3.2 |
@@ -38,7 +38,7 @@ Full scorecard: [`spec/SCORECARD.md`](spec/SCORECARD.md)
 | Developer Portal | Backstage | 1.9.1 |
 | TLS | cert-manager + Let's Encrypt | 1.19.3 |
 
-20 ArgoCD Applications managed via app-of-apps pattern.
+27 ArgoCD Applications managed via app-of-apps pattern.
 
 ## Repository Structure
 
@@ -46,7 +46,7 @@ Full scorecard: [`spec/SCORECARD.md`](spec/SCORECARD.md)
 infrastructure/terraform/   # EKS, VPC, IAM (Terraform)
 gitops/
   bootstrap/                # ArgoCD + root app-of-apps
-  apps/                     # 18 ArgoCD Application manifests
+  apps/                     # 26 ArgoCD Application manifests
   namespaces/               # Namespace definitions
 security/
   kyverno/                  # 6 ClusterPolicies
@@ -65,7 +65,7 @@ backstage/
 sample-app/                 # Python Flask app with OTel
 tests/                      # 59 tests across 7 phases (real infra, no mocks)
 docs/
-  adr/                      # 8 Architecture Decision Records
+  adr/                      # 9 Architecture Decision Records
   ARCHITECTURE.md           # Platform architecture overview
   SETUP.md                  # Reproduction guide
   TEARDOWN.md               # Cluster destruction guide
@@ -106,6 +106,7 @@ See [`docs/SETUP.md`](docs/SETUP.md) for step-by-step instructions.
 
 | ADR | Decision |
 |-----|----------|
+| [000](docs/adr/ADR-000-domain-name.md) | Domain name (ai-enhanced-devops.com) |
 | [001](docs/adr/ADR-001-iac-tool.md) | Terraform over Pulumi/CDK |
 | [002](docs/adr/ADR-002-gitops-engine.md) | ArgoCD over Flux |
 | [003](docs/adr/ADR-003-policy-engine.md) | Kyverno over OPA/Gatekeeper |
@@ -118,7 +119,7 @@ See [`docs/SETUP.md`](docs/SETUP.md) for step-by-step instructions.
 ## Key Findings
 
 1. **AI reduces IDP build toil by ~74%** — but the remaining 26% is harder toil
-2. **50% of components had zero corrections** — AI excels at boilerplate
+2. **48% of components had zero corrections** — AI excels at boilerplate
 3. **Version currency is AI's #1 weakness** — stale chart versions, deprecated APIs
 4. **TDD catches AI mistakes fast** — write the test first, always
 5. **Skill files/context are essential** — generic prompts get generic errors
