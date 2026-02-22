@@ -54,8 +54,10 @@ build/
 venv/
 *.egg
 
-# Node (Backstage)
+# Node (Backstage and local tooling)
 node_modules/
+package.json
+package-lock.json
 .next/
 backstage/dist/
 backstage/.cache/
