@@ -5,14 +5,16 @@ Lifecycle management scripts for the KubeAuto Day IDP platform.
 ## Rebuild (Zero → Running)
 
 ```bash
-export GITHUB_TOKEN=ghp_your_token_here
 ./scripts/rebuild.sh
 ```
+
+All secrets (including the GitHub token) are pulled automatically from
+AWS Secrets Manager. No environment variables needed.
 
 **Time:** ~45 minutes (20 min Terraform + 5 min ArgoCD + 20 min full sync)
 
 **What it does:**
-1. Pre-flight checks (tools, AWS creds, GitHub token)
+1. Pre-flight checks (tools, AWS creds, GitHub token from AWS SM)
 2. `terraform apply` — EKS cluster, VPC, IAM, LB Controller
 3. Configure kubectl
 4. Install ArgoCD via Helm
@@ -28,8 +30,9 @@ export GITHUB_TOKEN=ghp_your_token_here
 - Verify GitHub OAuth callback URLs
 
 **Prerequisites preserved across teardown/rebuild:**
-- AWS Secrets Manager: `kubeauto/github-oauth`, `kubeauto/backstage-github-oauth`,
-  `kubeauto/argocd-backstage-token`, `kubeauto/test-secret`
+- AWS Secrets Manager: `kubeauto/github-token`, `kubeauto/github-oauth`,
+  `kubeauto/backstage-github-oauth`, `kubeauto/argocd-backstage-token`,
+  `kubeauto/test-secret`
 - ECR repositories (container images)
 - GitHub OAuth App (persists in GitHub settings)
 - DNS records (persist in Namecheap)
