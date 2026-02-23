@@ -51,13 +51,26 @@ fi
 ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
 log "AWS account: $ACCOUNT_ID"
 
-# Verify GitHub token for private repo access
+# Get GitHub token — try AWS Secrets Manager first, fall back to env var
 if [[ -z "${GITHUB_TOKEN:-}" ]]; then
-    err "GITHUB_TOKEN not set. ArgoCD needs this to pull from the private repo."
-    echo "  export GITHUB_TOKEN=ghp_your_token_here"
-    exit 1
+    log "GITHUB_TOKEN not set, fetching from AWS Secrets Manager..."
+    GH_TOKEN_JSON=$(aws secretsmanager get-secret-value \
+        --secret-id kubeauto/github-token \
+        --region "$REGION" \
+        --query 'SecretString' --output text 2>/dev/null) || true
+    if [[ -n "$GH_TOKEN_JSON" ]]; then
+        GITHUB_TOKEN=$(echo "$GH_TOKEN_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+        export GITHUB_TOKEN
+        log "GitHub token loaded from AWS Secrets Manager"
+    else
+        err "GITHUB_TOKEN not set and kubeauto/github-token not found in Secrets Manager."
+        echo "  Either: export GITHUB_TOKEN=ghp_your_token_here"
+        echo "  Or:     aws secretsmanager create-secret --name kubeauto/github-token --secret-string '{\"token\":\"ghp_...\"}' --region $REGION"
+        exit 1
+    fi
+else
+    log "GITHUB_TOKEN set via environment"
 fi
-log "GITHUB_TOKEN is set"
 
 # Check for Terraform state from previous run
 if [[ -f "$TF_DIR/terraform.tfstate" ]]; then
@@ -339,14 +352,13 @@ echo -e "${YELLOW}MANUAL STEPS REQUIRED:${NC}"
 echo "  1. Update DNS CNAME in Namecheap:"
 echo "     *.ai-enhanced-devops.com → $ALB_HOST"
 echo ""
-echo "  2. Update GitHub OAuth App callback URLs (if ALB hostname changed):"
-echo "     ArgoCD:    https://test1.ai-enhanced-devops.com/api/dex/callback"
-echo "     Backstage: https://backstage.ai-enhanced-devops.com/api/auth/github/handler/frame"
-echo ""
-echo "  3. Verify applications:"
+echo "  2. Verify applications:"
 echo "     kubectl get applications -n argocd"
 echo ""
-echo "  4. Run the test suite:"
+echo "  3. Run the test suite:"
 echo "     uv run pytest tests/ -v"
+echo ""
+echo -e "${BLUE}Note:${NC} GitHub OAuth callback URLs use the domain name, not the ALB"
+echo "  hostname, so they should still work without changes."
 echo ""
 echo -e "${GREEN}Done!${NC}"
