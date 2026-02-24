@@ -1,4 +1,5 @@
 {
+  "disableAllHooks": false,
   "hooks": {
     "PreToolUse": [
       {
@@ -30,11 +31,6 @@
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/cc-stop-deterministic.sh"
-          },
-          {
-            "type": "prompt",
-            "prompt": "Evaluate whether Claude should stop. Input: $ARGUMENTS. Claude is building an IDP per spec/BUILD-SPEC.md. Block the stop if: 1) No <promise>PHASEX_DONE</promise> tag was output, 2) Test criteria for the current phase are not all passing, 3) SCORECARD.md was not updated for completed components. Explain what still needs to be done.",
-            "timeout": 30
           }
         ]
       }

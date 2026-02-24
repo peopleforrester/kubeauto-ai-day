@@ -4,6 +4,12 @@
 
 OUTPUT=$(cat -)
 
+# Only enforce during active builds — allow exit for non-build tasks
+if [ ! -f "$CLAUDE_PROJECT_DIR/.build-active" ]; then
+    echo '{"decision": "allow"}'
+    exit 0
+fi
+
 # Check for phase completion promises
 if echo "$OUTPUT" | grep -q "<promise>PHASE[0-7]_DONE</promise>"; then
     echo '{"decision": "allow"}'
