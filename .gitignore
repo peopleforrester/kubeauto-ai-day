@@ -87,7 +87,12 @@ recordings/*.cast
 recordings/*.log
 recordings/*-timing.log
 recordings/*-time.dat
+recordings/*-transcript.txt
+recordings/*-clean.txt
+recordings/*-events.json
+recordings/clips/
 !recordings/README.md
+!recordings/*-summary.md
 
 # Temporary files
 *.tmp
