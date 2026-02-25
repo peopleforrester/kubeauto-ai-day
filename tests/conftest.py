@@ -9,6 +9,43 @@ from kubernetes.client import CoreV1Api, ApiClient
 import boto3
 
 
+# --- Short-name aliases for convenience ---
+# Tests can use either the long name (k8s_core_v1) or short name (k8s_core).
+
+
+@pytest.fixture(scope="session")
+def k8s_core(k8s_core_v1: CoreV1Api) -> CoreV1Api:
+    """Short alias for k8s_core_v1."""
+    return k8s_core_v1
+
+
+@pytest.fixture(scope="session")
+def k8s_apps(k8s_apps_v1: client.AppsV1Api) -> client.AppsV1Api:
+    """Short alias for k8s_apps_v1."""
+    return k8s_apps_v1
+
+
+@pytest.fixture(scope="session")
+def k8s_custom(k8s_custom_objects: client.CustomObjectsApi) -> client.CustomObjectsApi:
+    """Short alias for k8s_custom_objects."""
+    return k8s_custom_objects
+
+
+@pytest.fixture(scope="session")
+def k8s_rbac(k8s_rbac_v1: client.RbacAuthorizationV1Api) -> client.RbacAuthorizationV1Api:
+    """Short alias for k8s_rbac_v1."""
+    return k8s_rbac_v1
+
+
+@pytest.fixture(scope="session")
+def boto_ec2() -> boto3.client:
+    """Return an EC2 client for security group assertions."""
+    return boto3.client("ec2", region_name="us-west-2")
+
+
+# --- Full-name fixtures ---
+
+
 @pytest.fixture(scope="session")
 def k8s_core_v1() -> CoreV1Api:
     """Load kubeconfig and return a CoreV1Api client.

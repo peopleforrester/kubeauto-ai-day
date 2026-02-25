@@ -2,35 +2,14 @@
 # ABOUTME: Validates catalog, templates, and service deployment via template skeleton.
 
 import json
-import re
 import subprocess
 from typing import Any
 
 import pytest
-from kubernetes import client, config
-from kubernetes.client import CoreV1Api, AppsV1Api, CustomObjectsApi
+from kubernetes.client import CoreV1Api, AppsV1Api
 
 BACKSTAGE_NS = "backstage"
 APPS_NS = "apps"
-
-
-def _strip_kubectl_noise(stdout: str) -> str:
-    """Remove trailing 'pod \"xxx\" deleted' line from kubectl run --rm output."""
-    return re.sub(r'pod "[\w-]+" deleted\s*$', "", stdout).strip()
-
-
-@pytest.fixture(scope="module")
-def k8s_core() -> CoreV1Api:
-    """Load kubeconfig and return CoreV1Api client."""
-    config.load_kube_config()
-    return client.CoreV1Api()
-
-
-@pytest.fixture(scope="module")
-def k8s_apps() -> AppsV1Api:
-    """Return AppsV1Api client."""
-    config.load_kube_config()
-    return client.AppsV1Api()
 
 
 # --- Backstage Pod Tests ---

@@ -3,7 +3,6 @@
 
 import subprocess
 import pytest
-from typing import Optional
 
 from kubernetes import client, config
 from kubernetes.client import CoreV1Api
@@ -13,27 +12,6 @@ TERRAFORM_DIR = "infrastructure/terraform"
 CLUSTER_NAME = "kubeauto-ai-day"
 REGION = "us-west-2"
 EXPECTED_NAMESPACES = ["platform", "argocd", "monitoring", "backstage", "apps", "security"]
-
-
-@pytest.fixture(scope="module")
-def k8s_core_v1() -> CoreV1Api:
-    """Load kubeconfig and return a CoreV1Api client."""
-    config.load_kube_config()
-    return client.CoreV1Api()
-
-
-@pytest.fixture(scope="module")
-def boto_eks() -> "boto3.client":
-    """Return an EKS client."""
-    import boto3
-    return boto3.client("eks", region_name=REGION)
-
-
-@pytest.fixture(scope="module")
-def boto_ec2() -> "boto3.client":
-    """Return an EC2 client."""
-    import boto3
-    return boto3.client("ec2", region_name=REGION)
 
 
 def test_terraform_validate() -> None:
@@ -141,7 +119,7 @@ def test_node_security_groups(boto_eks: "boto3.client", boto_ec2: "boto3.client"
         for ip_range in rule.get("IpRanges", []):
             if ip_range.get("CidrIp") == "0.0.0.0/0":
                 # Only acceptable for HTTPS (443) for public API endpoint
-                assert rule.get("FromPort") == 443 or rule.get("IpProtocol") == "-1" is False, (
+                assert rule.get("FromPort") == 443 or rule.get("IpProtocol") != "-1", (
                     "Security group has overly permissive inbound rule"
                 )
 

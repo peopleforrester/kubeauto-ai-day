@@ -41,6 +41,7 @@ spec:
             enabled: false
         # Grafana configuration
         grafana:
+          # WARNING: Demo-only default. For production, use ESO to sync from AWS Secrets Manager.
           adminPassword: "admin"
           # Sidecar for dashboard provisioning from ConfigMaps
           sidecar:
