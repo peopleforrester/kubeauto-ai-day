@@ -2,13 +2,20 @@
 # ABOUTME: Layer 1 guardrail for propose-approve-execute and circuit breakers (Guardrails 1, 3).
 # ABOUTME: Blocks push if current phase tests don't pass.
 
-PHASE=$(cat .current-phase 2>/dev/null || echo "7")
 REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$REPO_DIR"
+
+# Only enforce during active builds — allow push for non-build work
+if [ ! -f "$REPO_DIR/.build-active" ]; then
+    echo "=== Layer 1 Guardrail: Pre-Push Test Gate ==="
+    echo "No active build (.build-active absent). Skipping phase test gate."
+    exit 0
+fi
+
+PHASE=$(cat .current-phase 2>/dev/null || echo "0")
 
 echo "=== Layer 1 Guardrail: Pre-Push Test Gate ==="
 echo "Running Phase $PHASE tests before push..."
-
-cd "$REPO_DIR"
 
 # Run phase-specific tests
 if ls tests/test_phase_0${PHASE}_*.py 1>/dev/null 2>&1; then

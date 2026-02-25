@@ -2,7 +2,7 @@
 # ABOUTME: Layer 1 guardrail for blast radius limits (Guardrail 2).
 # ABOUTME: Validates manifests only target namespaces allowed for the current phase.
 
-PHASE=$(cat .current-phase 2>/dev/null || echo "7")
+PHASE=$(cat .current-phase 2>/dev/null || echo "0")
 
 # Define which namespaces each phase can touch
 case $PHASE in
