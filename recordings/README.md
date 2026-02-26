@@ -1,38 +1,81 @@
 # Build Recordings
 
-Screen recordings and terminal captures for each phase of the IDP build.
+Terminal captures of the entire IDP build, from Phase 0 scaffolding through Phase 7 hardening.
 
 ## Recording Tools
 
 - **asciinema** (`.cast` files) — Terminal session recordings, replayable
 - **script** (`.log` + timing files) — Raw terminal output with timing data
 
-## Files
+## Primary Recording
 
-| Phase | asciinema | script log | script timing | Status |
-|-------|-----------|------------|---------------|--------|
-| Phase 0 | phase-00.cast | phase-00.log | phase-00-timing.log | In progress |
-| Phase 1 | phase-01.cast | — | phase-01-timing.log | Captured |
-| Phase 2 | phase-02.cast | phase-02.log | phase-02-timing.log | Not started |
-| Phase 3 | phase-03.cast | phase-03.log | phase-03-timing.log | Not started |
-| Phase 4 | phase-04.cast | phase-04.log | phase-04-timing.log | Not started |
-| Phase 5 | phase-05.cast | phase-05.log | phase-05-timing.log | Not started |
-| Phase 6 | phase-06.cast | phase-06.log | phase-06-timing.log | Not started |
-| Phase 7 | phase-07.cast | phase-07.log | phase-07-timing.log | Not started |
+The entire build was captured in a single continuous asciinema session:
+
+| File | Size | Wall Clock | Active Time | Phases Covered |
+|------|------|------------|-------------|----------------|
+| `phase-00.cast` | 1.8 GB | 173h 20m | 10h 48m | All (0–7) |
+
+The original plan was per-phase recordings, but the session ran continuously
+across the full build. Phase timestamps from the summary:
+
+| Phase | Approx. Start | Prompt |
+|-------|---------------|--------|
+| 0 | ~5h 52m | "Let's start Phase 0" |
+| 1 | ~26h 27m | "Let's start Phase 1" |
+| 2 | ~28h 44m | "Excellent, let's do phase two Argo CD!" |
+| 3 | ~31h 4m | "Okay, let's start phase three!" |
+| 4 | ~33h 52m | "Let's do phase four!" |
+| 5 | ~34h 24m | "Let's keep going with phase five!" |
+| 6 | ~134h | Phase 6 integration work |
+| 7 | ~152h+ | Phase 7 hardening and collateral |
+
+A separate shorter recording also exists:
+
+| File | Description |
+|------|-------------|
+| `phase-01.cast` | 60 MB standalone Phase 1 capture |
+
+## Highlight Clips
+
+10 clips extracted from `phase-00.cast` via `scripts/cut_clips.py`, each under
+8 MB for asciinema.org upload:
+
+| Clip | File | Description |
+|------|------|-------------|
+| 01 | `clips/01-build-begins.cast` | Build kickoff |
+| 02 | `clips/02-session-killed-recovery.cast` | Session killed, recovery |
+| 03 | `clips/03-phase-two-argocd.cast` | ArgoCD bootstrap |
+| 04 | `clips/04-secrets-manager-frustration.cast` | ESO/Secrets Manager debugging |
+| 05 | `clips/05-cost-check.cast` | Cost awareness check |
+| 06 | `clips/06-overnight-decision.cast` | Overnight build decision |
+| 07 | `clips/07-no-github-login-button.cast` | Backstage auth discovery |
+| 08 | `clips/08-use-puppeteer-yourself.cast` | Puppeteer self-use moment |
+| 09 | `clips/09-unicorns-faster.cast` | Unicorn Party speedrun |
+| 10 | `clips/10-meta-recording-moment.cast` | Meta recording moment |
+
+## Processing Scripts
+
+Both in `scripts/`:
+
+- **`process_cast.py`** — Streams large .cast files, strips ANSI, extracts
+  prompts/tool calls/errors/timing. Produces `-clean.txt`, `-summary.md`,
+  `-events.json`.
+- **`cut_clips.py`** — Cuts time-range clips from .cast files with
+  delta-adjusted timestamps. Keeps output under 8 MB.
+
+## Generated Outputs
+
+| File | Description | Gitignored? |
+|------|-------------|-------------|
+| `phase-00-summary.md` | Session stats, idle periods, events, clip suggestions | No (committed) |
+| `phase-01-summary.md` | Phase 1 standalone summary | No (committed) |
+| `phase-00-clean.txt` | ANSI-stripped transcript (597 MB) | Yes |
+| `phase-00-events.json` | Structured events (224 MB) | Yes |
+| `phase-00-timing.log` | Raw timing data | Yes |
+| `phase-00.log` | Raw script output | Yes |
 
 ## Notes
 
 - `.cast`, `.log`, `.mp4`, and timing files are gitignored (large binary/text files)
+- Summary files (`*-summary.md`) are committed via `.gitignore` exception
 - `recordings/logs/` stores text logs from overnight Ralph Wiggum builds
-- Start recording BEFORE launching Claude Code (recording wraps the shell)
-
-## Starting Recording
-
-```bash
-cd /path/to/kubeauto-ai-day
-asciinema rec recordings/phase-XX.cast
-script -T recordings/phase-XX-timing.log recordings/phase-XX.log
-claude
-```
-
-To stop: exit Claude Code → `exit` (ends script) → `exit` (ends asciinema)
