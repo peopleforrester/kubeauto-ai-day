@@ -4,7 +4,6 @@
 import time
 
 import pytest
-from kubernetes import client, config
 from kubernetes.client import CoreV1Api, CustomObjectsApi
 
 
@@ -12,20 +11,6 @@ ARGOCD_NAMESPACE = "argocd"
 ARGOCD_GROUP = "argoproj.io"
 ARGOCD_VERSION = "v1alpha1"
 ARGOCD_PLURAL = "applications"
-
-
-@pytest.fixture(scope="module")
-def k8s_core() -> CoreV1Api:
-    """Load kubeconfig and return a CoreV1Api client."""
-    config.load_kube_config()
-    return client.CoreV1Api()
-
-
-@pytest.fixture(scope="module")
-def k8s_custom() -> CustomObjectsApi:
-    """Return a CustomObjectsApi client for ArgoCD CRDs."""
-    config.load_kube_config()
-    return client.CustomObjectsApi()
 
 
 def _get_argocd_app(k8s_custom: CustomObjectsApi, name: str) -> dict:

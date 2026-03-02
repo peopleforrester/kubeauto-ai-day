@@ -2,12 +2,11 @@
 # ABOUTME: Validates cert-manager, resource quotas, PDBs, gitleaks, and security posture.
 
 import json
-import re
 import subprocess
 from typing import Any
 
 import pytest
-from kubernetes import client, config
+from kubernetes import client
 from kubernetes.client import CoreV1Api, AppsV1Api, CustomObjectsApi
 
 MONITORING_NS = "monitoring"
@@ -15,27 +14,6 @@ APPS_NS = "apps"
 ARGOCD_NS = "argocd"
 BACKSTAGE_NS = "backstage"
 PLATFORM_NS = "platform"
-
-
-@pytest.fixture(scope="module")
-def k8s_core() -> CoreV1Api:
-    """Load kubeconfig and return CoreV1Api client."""
-    config.load_kube_config()
-    return client.CoreV1Api()
-
-
-@pytest.fixture(scope="module")
-def k8s_apps() -> AppsV1Api:
-    """Return AppsV1Api client."""
-    config.load_kube_config()
-    return client.AppsV1Api()
-
-
-@pytest.fixture(scope="module")
-def k8s_custom() -> CustomObjectsApi:
-    """Return CustomObjectsApi client."""
-    config.load_kube_config()
-    return client.CustomObjectsApi()
 
 
 # --- cert-manager Tests ---

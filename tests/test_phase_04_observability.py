@@ -2,36 +2,17 @@
 # ABOUTME: Validates metrics collection, dashboards, alerting, and OTel instrumentation.
 
 import json
-import re
 import subprocess
 import time
 from typing import Any
 
 import pytest
-from kubernetes import client, config
-from kubernetes.client import CoreV1Api, CustomObjectsApi
+from kubernetes.client import CoreV1Api
+
+from helpers.kubectl_helpers import strip_kubectl_noise
 
 MONITORING_NS = "monitoring"
 APPS_NS = "apps"
-
-
-def _strip_kubectl_noise(stdout: str) -> str:
-    """Remove trailing 'pod \"xxx\" deleted' line from kubectl run --rm output."""
-    return re.sub(r'pod "[\w-]+" deleted\s*$', "", stdout).strip()
-
-
-@pytest.fixture(scope="module")
-def k8s_core() -> CoreV1Api:
-    """Load kubeconfig and return CoreV1Api client."""
-    config.load_kube_config()
-    return client.CoreV1Api()
-
-
-@pytest.fixture(scope="module")
-def k8s_custom() -> CustomObjectsApi:
-    """Return CustomObjectsApi client."""
-    config.load_kube_config()
-    return client.CustomObjectsApi()
 
 
 # --- Prometheus Tests ---
@@ -133,7 +114,7 @@ def test_prometheus_scrape_targets() -> None:
     assert result.returncode == 0, (
         f"Failed to query Prometheus targets: {result.stderr[:500]}"
     )
-    data = json.loads(_strip_kubectl_noise(result.stdout))
+    data = json.loads(strip_kubectl_noise(result.stdout))
     active_jobs = {
         t.get("labels", {}).get("job", "")
         for t in data.get("data", {}).get("activeTargets", [])
@@ -162,7 +143,7 @@ def test_grafana_dashboard_loads() -> None:
         ],
         capture_output=True, text=True, timeout=30,
     )
-    clean = _strip_kubectl_noise(result.stdout)
+    clean = strip_kubectl_noise(result.stdout)
     data = json.loads(clean) if clean else []
     titles = [d.get("title", "") for d in data]
     assert any("platform" in t.lower() or "overview" in t.lower() for t in titles), (
@@ -183,7 +164,7 @@ def test_grafana_panel_has_data() -> None:
         ],
         capture_output=True, text=True, timeout=30,
     )
-    clean = _strip_kubectl_noise(result.stdout)
+    clean = strip_kubectl_noise(result.stdout)
     data = json.loads(clean) if clean else []
     prom_ds = [d for d in data if d.get("type") == "prometheus"]
     assert len(prom_ds) >= 1, (
@@ -252,7 +233,7 @@ def test_alert_rules_exist() -> None:
     assert result.returncode == 0, (
         f"Failed to query Prometheus rules: {result.stderr[:500]}"
     )
-    data = json.loads(_strip_kubectl_noise(result.stdout))
+    data = json.loads(strip_kubectl_noise(result.stdout))
     all_rules: list[str] = []
     for group in data.get("data", {}).get("groups", []):
         for rule in group.get("rules", []):

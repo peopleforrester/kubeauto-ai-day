@@ -19,10 +19,10 @@ which guardrails it implements.
 |--------|------|-------------|
 | `require-resource-limits` | Validate | All containers must have CPU/memory requests and limits |
 | `require-probes` | Validate | All containers must have readiness and liveness probes |
-| `disallow-latest-tag` | Validate | Image tags must not be `latest` |
-| `disallow-privilege-escalation` | Validate | `allowPrivilegeEscalation` must be false |
-| `require-run-as-non-root` | Validate | `runAsNonRoot` must be true, capabilities drop ALL |
+| `restrict-image-registries` | Validate | Only allow images from approved registries |
+| `disallow-privileged` | Validate | Privileged containers and privilege escalation blocked |
 | `require-labels` | Validate | Pods must have `app` and `version` labels |
+| `require-networkpolicy` | Audit | Namespaces must have at least one NetworkPolicy |
 
 **Excluded namespaces:** kube-system, kube-public, kube-node-lease, argocd,
 monitoring, security, platform, backstage, cert-manager.

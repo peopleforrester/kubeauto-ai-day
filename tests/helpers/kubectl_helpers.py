@@ -1,9 +1,15 @@
 # ABOUTME: Wrapper functions for kubectl operations with progress output.
 # ABOUTME: Provides typed helpers for common kubectl commands used in tests.
 
+import re
 import subprocess
 import sys
 from typing import Optional
+
+
+def strip_kubectl_noise(stdout: str) -> str:
+    """Remove trailing 'pod \"xxx\" deleted' line from kubectl run --rm output."""
+    return re.sub(r'pod "[\w-]+" deleted\s*$', "", stdout).strip()
 
 
 def run_kubectl(

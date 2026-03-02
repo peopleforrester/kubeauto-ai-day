@@ -2,38 +2,19 @@
 # ABOUTME: Tests end-to-end flows across ArgoCD, Kyverno, Falco, OTel, and Grafana.
 
 import json
-import re
 import subprocess
 import time
 from typing import Any
 
 import pytest
-from kubernetes import client, config
-from kubernetes.client import CoreV1Api, AppsV1Api, CustomObjectsApi
+from kubernetes.client import CoreV1Api, AppsV1Api
+
+from helpers.kubectl_helpers import strip_kubectl_noise
 
 MONITORING_NS = "monitoring"
 APPS_NS = "apps"
 ARGOCD_NS = "argocd"
 BACKSTAGE_NS = "backstage"
-
-
-def _strip_kubectl_noise(stdout: str) -> str:
-    """Remove trailing 'pod \"xxx\" deleted' line from kubectl run --rm output."""
-    return re.sub(r'pod "[\w-]+" deleted\s*$', "", stdout).strip()
-
-
-@pytest.fixture(scope="module")
-def k8s_core() -> CoreV1Api:
-    """Load kubeconfig and return CoreV1Api client."""
-    config.load_kube_config()
-    return client.CoreV1Api()
-
-
-@pytest.fixture(scope="module")
-def k8s_apps() -> AppsV1Api:
-    """Return AppsV1Api client."""
-    config.load_kube_config()
-    return client.AppsV1Api()
 
 
 # --- E2E Deploy Test ---
@@ -136,7 +117,7 @@ def test_otel_metrics_in_prometheus() -> None:
         ],
         capture_output=True, text=True, timeout=30,
     )
-    clean = _strip_kubectl_noise(result.stdout)
+    clean = strip_kubectl_noise(result.stdout)
     data = json.loads(clean)
     results = data.get("data", {}).get("result", [])
     jobs = {r.get("metric", {}).get("job", "") for r in results}
@@ -205,7 +186,7 @@ def test_grafana_prometheus_datasource_healthy() -> None:
         ],
         capture_output=True, text=True, timeout=30,
     )
-    clean = _strip_kubectl_noise(result.stdout)
+    clean = strip_kubectl_noise(result.stdout)
     assert "success" in clean.lower(), (
         f"Grafana → Prometheus datasource query failed: {result.stdout[:300]}"
     )
