@@ -51,7 +51,7 @@ See `scorecard/methodology.md` (created in Phase 8) for full methodology.
 - Components where AI partially shifted toil: **5/27** (EKS, Kyverno Install, Falco Install, ESO, OTel)
 - Components where AI fully shifted toil: **0/27**
 - Components where starting from scratch would have been faster: **0/27**
-- Components with zero corrections: **13/27** (48%)
+- Components with zero corrections: **11/27** (41%)
 - Components deferred: **0/27**
 
 ## Guardrail Coverage
