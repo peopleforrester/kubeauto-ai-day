@@ -66,9 +66,10 @@ def test_grafana_ui_accessible() -> None:
         ],
         capture_output=True, text=True, timeout=30,
     )
-    output = result.stdout.lower()
-    assert "ok" in output or "database" in output, (
-        f"Expected Grafana health OK, got: {result.stdout[:500]} stderr: {result.stderr[:500]}"
+    clean = strip_kubectl_noise(result.stdout)
+    health = json.loads(clean) if clean.strip() else {}
+    assert health.get("database") == "ok", (
+        f"Expected Grafana health {{\"database\": \"ok\"}}, got: {clean[:500]} stderr: {result.stderr[:500]}"
     )
 
 
@@ -146,8 +147,8 @@ def test_grafana_dashboard_loads() -> None:
     clean = strip_kubectl_noise(result.stdout)
     data = json.loads(clean) if clean else []
     titles = [d.get("title", "") for d in data]
-    assert any("platform" in t.lower() or "overview" in t.lower() for t in titles), (
-        f"Expected 'Platform Overview' dashboard, found: {titles[:15]}"
+    assert any(t == "Platform Overview" for t in titles), (
+        f"Expected dashboard titled 'Platform Overview', found: {titles[:15]}"
     )
 
 
