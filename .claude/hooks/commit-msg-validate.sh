@@ -1,8 +1,9 @@
 #!/bin/bash
+set -eo pipefail
 # ABOUTME: Layer 1 guardrail for immutable audit trail (Guardrail 5).
 # ABOUTME: Enforces conventional commit format with phase/component tags.
 
-MSG_FILE="$1"
+MSG_FILE="${1:-}"
 
 if [ -z "$MSG_FILE" ] || [ ! -f "$MSG_FILE" ]; then
     # No message file provided — skip validation

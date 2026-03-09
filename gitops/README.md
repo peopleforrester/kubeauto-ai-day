@@ -65,13 +65,24 @@ Each child app points to either a Helm chart (external) or a directory in this r
 
 ## Sync Wave Ordering
 
+Negative waves are infrastructure prerequisites. Positive waves are applications.
+Gaps between groups are reserved for future components.
+
 | Wave | Resources |
 |------|-----------|
 | -10  | Namespaces |
-| -5   | CRDs (Kyverno, cert-manager) |
-| 0    | Most applications (default) |
-| 1    | Resources depending on CRDs (policies, issuers) |
-| 2    | Applications depending on other apps (dashboards, ESO resources) |
+| -5   | Kyverno (CRD provider) |
+| -4   | Kyverno policies, RBAC, NetworkPolicies, ESO operator |
+| -3   | Falco, ESO resources (ClusterSecretStore + ExternalSecrets) |
+| -2   | Falcosidekick |
+| 1    | Prometheus (kube-prometheus-stack), cert-manager |
+| 2    | OTel Collector, cert-manager ClusterIssuers |
+| 3    | Grafana dashboards, resource quotas, Loki, Tempo |
+| 4    | Promtail |
+| 5    | Sample app, Backstage resources (RBAC, catalog) |
+| 6    | Backstage |
+| 7    | Demo apps (Unicorn Party, E-commerce frontend/API/worker) |
+| 8    | Load generator |
 
 ## Adding a New Application
 

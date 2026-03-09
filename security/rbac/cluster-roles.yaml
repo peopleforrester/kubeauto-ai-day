@@ -7,6 +7,9 @@ metadata:
   name: platform-admin
   labels:
     app.kubernetes.io/part-of: kubeauto-idp
+# NOTE: Intentional cluster-admin equivalent for demo platform.
+# In production, scope down to specific API groups and resources.
+# See ADR-007 for auth strategy rationale.
 rules:
   - apiGroups: ["*"]
     resources: ["*"]

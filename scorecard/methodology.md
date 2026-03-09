@@ -119,6 +119,23 @@ The human (Michael) performed:
   written with knowledge of common pitfalls. Without them, correction
   cycles would likely be higher.
 
+## Worked Example
+
+**Component: OTel Collector Config** (from the KubeAuto Day build)
+
+| Dimension | Value | Rationale |
+|-----------|-------|-----------|
+| Toil Reduced | 6/10 | AI produced a working config but required 3 rounds of correction |
+| Correction Cycles | 3 | (1) Chart 0.145.0 breaking change for image.repository, (2) wrong image variant (k8s lacks prometheusremotewrite), (3) DaemonSet mode disables Service by default |
+| AI Time | 15 min | Including all 3 correction rounds |
+| Est. Manual Time | 35 min | Reading chart changelog + values reference + testing |
+| Toil Shifted? | Partial | AI saved time on initial YAML but debugging version-specific quirks took extra effort |
+| Notes | Root cause of all 3 corrections: stale AI knowledge about chart breaking changes |
+
+**Key insight:** The 3 correction cycles all stemmed from a single root cause —
+the AI's training data did not include the 0.145.0 breaking changes. A skill file
+with current chart notes would have prevented all three.
+
 ## How to Use the Scorecard Template
 
 See `SCORECARD-TEMPLATE.md` for a blank template you can use for your own

@@ -1,5 +1,5 @@
 # ABOUTME: Kubernetes namespace definitions for all platform components.
-# ABOUTME: Creates 6 namespaces with PSS labels on apps namespace for defense-in-depth.
+# ABOUTME: Creates 8 namespaces with PSS labels on apps namespace for defense-in-depth.
 ---
 apiVersion: v1
 kind: Namespace
@@ -44,6 +44,13 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: security
+  labels:
+    app.kubernetes.io/part-of: kubeauto-idp
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kyverno
   labels:
     app.kubernetes.io/part-of: kubeauto-idp
 ---

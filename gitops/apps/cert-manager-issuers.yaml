@@ -6,6 +6,8 @@ metadata:
   name: cert-manager-issuers
   namespace: argocd
   annotations:
+    # Wave 2: Depends on cert-manager (wave 1) for CRDs and admission webhook.
+    # Retry config handles the case where CRDs are not yet registered.
     argocd.argoproj.io/sync-wave: "2"
   finalizers:
     - resources-finalizer.argocd.argoproj.io

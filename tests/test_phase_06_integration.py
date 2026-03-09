@@ -40,8 +40,9 @@ def test_e2e_sample_app_accessible() -> None:
         ],
         capture_output=True, text=True, timeout=20,
     )
-    assert "ok" in result.stdout.lower(), (
-        f"Sample app health check failed: stdout={result.stdout[:300]} stderr={result.stderr[:300]}"
+    health = json.loads(result.stdout.strip()) if result.stdout.strip() else {}
+    assert health.get("status") == "ok", (
+        f"Expected sample app health {{\"status\": \"ok\"}}, got: stdout={result.stdout[:300]} stderr={result.stderr[:300]}"
     )
 
 
@@ -187,8 +188,9 @@ def test_grafana_prometheus_datasource_healthy() -> None:
         capture_output=True, text=True, timeout=30,
     )
     clean = strip_kubectl_noise(result.stdout)
-    assert "success" in clean.lower(), (
-        f"Grafana → Prometheus datasource query failed: {result.stdout[:300]}"
+    data = json.loads(clean) if clean.strip() else {}
+    assert data.get("status") == "success", (
+        f"Grafana → Prometheus datasource query failed: expected status 'success', got: {clean[:300]}"
     )
 
 

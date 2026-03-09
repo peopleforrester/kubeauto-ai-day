@@ -82,13 +82,18 @@ ensure resources are created in dependency order:
 | Wave | Components |
 |------|-----------|
 | -10 | Namespaces |
-| -5 | Kyverno, cert-manager (CRD providers) |
-| -3 | Falco, ESO (security infrastructure) |
-| -1 | Falcosidekick, ESO resources |
-| 0 | Prometheus, Grafana dashboards, RBAC, NetworkPolicies |
-| 1 | OTel Collector, Loki, Tempo, Promtail, cert-manager issuers |
-| 2 | Kyverno policies, resource quotas |
-| 5 | Sample app, Backstage, demo apps (unicorn-party, ecom, load-generator) |
+| -5 | Kyverno (CRD provider) |
+| -4 | Kyverno policies, RBAC, NetworkPolicies, ESO operator |
+| -3 | Falco, ESO resources |
+| -2 | Falcosidekick |
+| 1 | Prometheus (kube-prometheus-stack), cert-manager |
+| 2 | OTel Collector, cert-manager issuers |
+| 3 | Grafana dashboards, resource quotas, Loki, Tempo |
+| 4 | Promtail |
+| 5 | Sample app, Backstage resources |
+| 6 | Backstage |
+| 7 | Demo apps (Unicorn Party, E-commerce) |
+| 8 | Load generator |
 
 ### Security Data Flow
 
@@ -201,6 +206,25 @@ Each major decision is documented in an Architecture Decision Record:
 - Full observability stack (metrics, dashboards, alerts)
 - Developer self-service via Backstage templates
 - TLS certificate automation via Let's Encrypt
+
+## Known Limitations
+
+- **Backstage static catalog**: Catalog entities are stored in a ConfigMap
+  mounted as files (`file:///` locations). This avoids needing a GitHub PAT
+  for private repo access but does not scale beyond ~100 entities (ConfigMap
+  1MB limit). For production, configure GitHub integration in Backstage with
+  a Personal Access Token to enable `url:` type catalog locations.
+  See [ADR-006](adr/ADR-006-developer-portal.md).
+
+- **Grafana admin password**: Stored as a plaintext value in Helm values
+  (`adminPassword: "admin"`). For production, use ESO to sync from AWS
+  Secrets Manager and reference via `grafana.admin.existingSecret`.
+  See the [TLS & credential guidance in SECURITY.md](SECURITY.md).
+
+- **Platform-admin ClusterRole**: Uses wildcard permissions (`*` on all
+  API groups, resources, and verbs) — equivalent to cluster-admin. This
+  is intentional for the demo platform. For production, scope down to
+  specific API groups and resources per the principle of least privilege.
 
 ## What's Out of Scope
 

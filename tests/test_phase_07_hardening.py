@@ -6,7 +6,7 @@ import subprocess
 from typing import Any
 
 import pytest
-from kubernetes import client
+from kubernetes import client, config
 from kubernetes.client import CoreV1Api, AppsV1Api, CustomObjectsApi
 
 MONITORING_NS = "monitoring"
@@ -81,18 +81,29 @@ def test_resource_quota_exists(k8s_core: CoreV1Api) -> None:
 
 
 def test_resource_quota_enforced() -> None:
-    """Cannot exceed pod quota in apps namespace via dry-run."""
-    # Try to create 11 pods (quota is 10) — this is a dry-run so non-destructive
-    # We test that the quota object reports correct max
-    result = subprocess.run(
+    """ResourceQuota in apps namespace has correct limits and is actively tracking usage."""
+    # Verify the quota spec is correct
+    spec_result = subprocess.run(
         ["kubectl", "get", "resourcequota", "-n", APPS_NS, "-o",
          "jsonpath={.items[0].spec.hard.pods}"],
         capture_output=True, text=True, timeout=10,
     )
-    max_pods = result.stdout.strip()
+    max_pods = spec_result.stdout.strip()
     assert max_pods, "Could not read pods quota"
     assert int(max_pods) <= 10, (
         f"Expected pods quota <= 10, got {max_pods}"
+    )
+
+    # Verify quota tracking is active (status.used exists and is populated)
+    usage_result = subprocess.run(
+        ["kubectl", "get", "resourcequota", "-n", APPS_NS, "-o",
+         "jsonpath={.items[0].status.used.pods}"],
+        capture_output=True, text=True, timeout=10,
+    )
+    used_pods = usage_result.stdout.strip()
+    assert used_pods, "ResourceQuota status.used.pods not populated — quota tracking inactive"
+    assert int(used_pods) <= int(max_pods), (
+        f"Used pods ({used_pods}) exceeds quota ({max_pods})"
     )
 
 

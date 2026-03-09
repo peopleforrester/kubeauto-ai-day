@@ -70,7 +70,7 @@ def test_namespaces_exist(k8s_core_v1: CoreV1Api) -> None:
         assert expected_ns in ns_names, f"Namespace '{expected_ns}' not found"
 
 
-def test_pod_identity_agent(boto_eks: "boto3.client") -> None:
+def test_pod_identity_agent(boto_eks: "botocore.client.BaseClient") -> None:
     """EKS Pod Identity agent addon is active."""
     addons = boto_eks.list_addons(clusterName=CLUSTER_NAME)
     assert "eks-pod-identity-agent" in addons["addons"], (
@@ -78,7 +78,7 @@ def test_pod_identity_agent(boto_eks: "boto3.client") -> None:
     )
 
 
-def test_vpc_cni_network_policy(boto_eks: "boto3.client") -> None:
+def test_vpc_cni_network_policy(boto_eks: "botocore.client.BaseClient") -> None:
     """VPC CNI addon is installed with NetworkPolicy support."""
     addon = boto_eks.describe_addon(
         clusterName=CLUSTER_NAME,
@@ -94,7 +94,7 @@ def test_vpc_cni_network_policy(boto_eks: "boto3.client") -> None:
     )
 
 
-def test_private_api_endpoint(boto_eks: "boto3.client") -> None:
+def test_private_api_endpoint(boto_eks: "botocore.client.BaseClient") -> None:
     """API endpoint has private access enabled."""
     cluster = boto_eks.describe_cluster(name=CLUSTER_NAME)
     vpc_config = cluster["cluster"]["resourcesVpcConfig"]
@@ -103,7 +103,7 @@ def test_private_api_endpoint(boto_eks: "boto3.client") -> None:
     )
 
 
-def test_node_security_groups(boto_eks: "boto3.client", boto_ec2: "boto3.client") -> None:
+def test_node_security_groups(boto_eks: "botocore.client.BaseClient", boto_ec2: "botocore.client.BaseClient") -> None:
     """Node security group restricts inbound appropriately."""
     cluster = boto_eks.describe_cluster(name=CLUSTER_NAME)
     cluster_sg = cluster["cluster"]["resourcesVpcConfig"]["clusterSecurityGroupId"]
