@@ -25,6 +25,7 @@ Install the following on your workstation:
 | python | >= 3.12 | Test runner |
 | uv | >= 0.6 | Python package manager |
 | gitleaks | >= 8.x | Secret scanning |
+| docker | >= 24.x | Container image building (sample app + Backstage) |
 
 ### Optional Tools
 
@@ -95,6 +96,7 @@ aws --version        # v2
 python3 --version    # >= 3.12
 uv --version         # >= 0.6
 gitleaks version     # >= 8.x
+docker version       # >= 24.x
 ```
 
 ### Python Dependencies
@@ -221,13 +223,18 @@ kubectl get applications -n argocd -w
 
 Expected sync order (by wave):
 1. Namespaces (wave -10)
-2. Kyverno, cert-manager (wave -5)
-3. Falco, ESO (wave -3)
-4. Falcosidekick, ESO resources (wave -1)
-5. Prometheus, RBAC, NetworkPolicies, dashboards (wave 0)
-6. OTel, cert-manager issuers (wave 1)
-7. Kyverno policies, quotas (wave 2)
-8. Sample app, Backstage (wave 5)
+2. Kyverno (wave -5)
+3. Kyverno policies, RBAC, NetworkPolicies, ESO operator (wave -4)
+4. Falco, ESO resources (wave -3)
+5. Falcosidekick (wave -2)
+6. Prometheus, cert-manager (wave 1)
+7. OTel Collector, cert-manager issuers (wave 2)
+8. Grafana dashboards, resource quotas, Loki, Tempo (wave 3)
+9. Promtail (wave 4)
+10. Sample app, Backstage resources (wave 5)
+11. Backstage (wave 6)
+12. Demo apps — Unicorn Party, E-commerce (wave 7)
+13. Load generator (wave 8)
 
 Full deployment takes approximately 5-8 minutes.
 
@@ -304,4 +311,68 @@ prometheusremotewrite exporter.
 ### cert-manager not syncing
 
 Ensure the cert-manager namespace exists (sync wave -10 must complete
-before wave -5).
+before wave 1).
+
+### Terraform Failures
+
+**`terraform init` fails with provider version conflicts:**
+```bash
+# Clear cached providers and reinitialize
+rm -rf .terraform .terraform.lock.hcl
+terraform init -upgrade
+```
+
+**`terraform apply` hangs on EKS cluster creation:**
+EKS cluster creation takes 15-20 minutes. This is normal. Do not cancel
+the operation — it will leave resources in an inconsistent state.
+
+**Addon bootstrap fails (CoreDNS, VPC CNI not found):**
+EKS managed addons require at least one running node. The node group
+must be created before addons can be applied. If Terraform fails with
+addon errors, run `terraform apply` again — the second pass will find
+the nodes and succeed.
+
+```bash
+# If addons fail, retry after nodes are ready
+terraform apply
+```
+
+**IAM role trust policy errors (Pod Identity / IRSA):**
+```bash
+# Verify the OIDC provider exists
+aws eks describe-cluster --name kubeauto-ai-day --region us-west-2 \
+  --query "cluster.identity.oidc.issuer" --output text
+
+# Verify IAM role trust relationships
+aws iam get-role --role-name <role-name> \
+  --query "Role.AssumeRolePolicyDocument"
+```
+
+**State lock errors (another process is running):**
+```bash
+# Check if another terraform process is actually running
+# If not, force unlock (use the lock ID from the error message)
+terraform force-unlock <LOCK_ID>
+```
+
+**`terraform destroy` ordering problems:**
+Destroy in reverse dependency order. EKS addons must be removed before
+the cluster. If destroy fails, retry — Terraform will skip already-deleted
+resources.
+
+```bash
+cd infrastructure/terraform
+terraform destroy
+# If it fails on ordering, retry:
+terraform destroy
+```
+
+**VPC/subnet not tagged for ALB Controller:**
+The ALB Controller requires specific tags on subnets. The Terraform module
+handles this automatically, but if you see ALB creation failures:
+```bash
+# Verify subnet tags
+aws ec2 describe-subnets --filters "Name=vpc-id,Values=<VPC_ID>" \
+  --query "Subnets[].{ID:SubnetId,Tags:Tags}" --output table
+# Required tags: kubernetes.io/role/elb=1 (public), kubernetes.io/role/internal-elb=1 (private)
+```

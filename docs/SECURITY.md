@@ -53,7 +53,7 @@ monitoring, security, platform, backstage, cert-manager.
 
 | Role | Scope | Permissions |
 |------|-------|-------------|
-| `platform-admin` | ClusterRole | Full access to platform namespaces |
+| `platform-admin` | ClusterRole | Full access (cluster-admin equivalent — intentional for demo; scope down for production) |
 | `developer-view` | ClusterRole | Read-only across all namespaces |
 | `apps-deployer` | Role (apps) | Create/update deployments, services, configmaps |
 

@@ -41,7 +41,12 @@ spec:
             enabled: false
         # Grafana configuration
         grafana:
-          # WARNING: Demo-only default. For production, use ESO to sync from AWS Secrets Manager.
+          # WARNING: Demo-only default password. For production, replace with:
+          #   admin:
+          #     existingSecret: grafana-admin-credentials
+          #     userKey: admin-user
+          #     passwordKey: admin-password
+          # and create an ExternalSecret to sync from AWS Secrets Manager.
           adminPassword: "admin"
           # Sidecar for dashboard provisioning from ConfigMaps
           sidecar:
