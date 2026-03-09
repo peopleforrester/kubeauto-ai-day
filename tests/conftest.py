@@ -2,10 +2,9 @@
 # ABOUTME: Provides Kubernetes client, AWS clients, and namespace configuration.
 
 import pytest
-from typing import Optional
 
 from kubernetes import client, config
-from kubernetes.client import CoreV1Api, ApiClient
+from kubernetes.client import CoreV1Api
 import boto3
 
 
@@ -99,7 +98,7 @@ def boto_eks() -> boto3.client:
 @pytest.fixture(scope="session")
 def expected_namespaces() -> list[str]:
     """Return the list of namespaces the IDP platform requires."""
-    return ["platform", "argocd", "monitoring", "backstage", "apps", "security"]
+    return ["platform", "argocd", "monitoring", "backstage", "apps", "security", "kyverno", "cert-manager"]
 
 
 @pytest.fixture(scope="session")

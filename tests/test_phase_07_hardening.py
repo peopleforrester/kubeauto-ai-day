@@ -6,7 +6,7 @@ import subprocess
 from typing import Any
 
 import pytest
-from kubernetes import client
+from kubernetes import client, config
 from kubernetes.client import CoreV1Api, AppsV1Api, CustomObjectsApi
 
 MONITORING_NS = "monitoring"
