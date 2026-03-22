@@ -49,6 +49,8 @@ configs:
             clientSecret: $dex.github.clientSecret
 
   rbac:
+    # Use email claim from OIDC token for RBAC subject matching
+    scopes: '[email, groups]'
     policy.csv: |
       # Admin role for platform team
       p, role:platform-admin, applications, *, */*, allow
