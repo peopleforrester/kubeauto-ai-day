@@ -20,6 +20,12 @@ See `methodology.md` for scoring definitions.
 | _Component 2_ | | | | | | |
 | _Component 3_ | | | | | | |
 
+<!-- EXAMPLE rows — remove before use -->
+<!-- | Namespace Structure | 9 | 0 | 2 min | 10 min | No | PSS labels correct first try; clean YAML | -->
+<!-- | OTel Collector | 6 | 3 | 15 min | 35 min | Partial | Breaking change in 0.145.0; wrong image variant; DaemonSet mode quirks | -->
+<!-- | RBAC | 9 | 0 | 3 min | 10 min | No | ClusterRoles + scoped RoleBindings correct first try | -->
+<!-- See ../spec/SCORECARD.md for a complete real-world example with 27 scored components -->
+
 ## Totals
 
 - Total AI-assisted build time: ___ hours

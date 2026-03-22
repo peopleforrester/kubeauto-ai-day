@@ -6,6 +6,8 @@ metadata:
   name: cert-manager
   namespace: argocd
   annotations:
+    # Wave 1: Installs CRDs + operator. cert-manager-issuers (wave 2) depends on this.
+    # Retry config handles CRD registration timing — webhook may take 30-60s after install.
     argocd.argoproj.io/sync-wave: "1"
   finalizers:
     - resources-finalizer.argocd.argoproj.io

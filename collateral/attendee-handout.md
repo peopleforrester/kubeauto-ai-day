@@ -40,7 +40,7 @@ The repo contains:
 | Manual estimate | 12 hours |
 | Toil reduction | 73.8% |
 | Components scored | 27/27 |
-| Zero-correction rate | 48% |
+| Zero-correction rate | 41% (11/27) |
 
 ## Use the Scorecard Template
 

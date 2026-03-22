@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 # ABOUTME: Layer 1 guardrail for propose-approve-execute and circuit breakers (Guardrails 1, 3).
 # ABOUTME: Blocks push if current phase tests don't pass.
 

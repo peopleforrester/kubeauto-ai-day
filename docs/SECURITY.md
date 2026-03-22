@@ -53,7 +53,7 @@ monitoring, security, platform, backstage, cert-manager.
 
 | Role | Scope | Permissions |
 |------|-------|-------------|
-| `platform-admin` | ClusterRole | Full access to platform namespaces |
+| `platform-admin` | ClusterRole | Full access (cluster-admin equivalent — intentional for demo; scope down for production) |
 | `developer-view` | ClusterRole | Read-only across all namespaces |
 | `apps-deployer` | Role (apps) | Create/update deployments, services, configmaps |
 
@@ -115,6 +115,22 @@ no Route53 dependency.
 
 **Coverage:** TLS on all externally-facing ingresses (ArgoCD, Backstage,
 Grafana, sample app) once domain DNS is configured.
+
+### Internal TLS — Intentional Exceptions (Demo Environment)
+
+The following services use `insecureSkipVerify: true` or equivalent for
+**internal cluster communication only**. This is an intentional design
+choice for the demo environment, not a security oversight:
+
+| Service | Setting | Reason |
+|---------|---------|--------|
+| ArgoCD repo-server | `server.insecure: true` | ALB terminates TLS at the load balancer; ArgoCD serves plain HTTP internally |
+| Backstage ArgoCD plugin | `argocd.appLocatorMethods[].instances[].url` (HTTP) | Internal cluster-local service URL, no external exposure |
+| OTel Collector | `tls.insecure: true` on exporters | Prometheus remote write target is cluster-internal |
+
+**Production recommendation:** For production deployments, enable mTLS
+between services using a service mesh (e.g., Istio, Linkerd) or configure
+cert-manager to issue internal certificates via a private CA.
 
 ## 7. OIDC Configuration — Guardrail #1
 

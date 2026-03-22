@@ -22,7 +22,7 @@ But the interesting part isn't the headline number.
 
 ## Post 2/5 — What Worked
 
-Nearly half the components (13/27) had ZERO correction cycles. AI nailed them
+11 of 27 components (41%) had ZERO correction cycles. AI nailed them
 first try:
 - RBAC, NetworkPolicies, Kyverno policies
 - Grafana dashboards, alert rules

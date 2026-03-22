@@ -2,10 +2,10 @@
 # ABOUTME: Provides Kubernetes client, AWS clients, and namespace configuration.
 
 import pytest
-from typing import Optional
+import botocore.client
 
 from kubernetes import client, config
-from kubernetes.client import CoreV1Api, ApiClient
+from kubernetes.client import CoreV1Api
 import boto3
 
 
@@ -38,7 +38,7 @@ def k8s_rbac(k8s_rbac_v1: client.RbacAuthorizationV1Api) -> client.RbacAuthoriza
 
 
 @pytest.fixture(scope="session")
-def boto_ec2() -> boto3.client:
+def boto_ec2() -> botocore.client.BaseClient:
     """Return an EC2 client for security group assertions."""
     return boto3.client("ec2", region_name="us-west-2")
 
@@ -85,13 +85,13 @@ def k8s_networking_v1() -> client.NetworkingV1Api:
 
 
 @pytest.fixture(scope="session")
-def boto_secrets_manager() -> boto3.client:
+def boto_secrets_manager() -> botocore.client.BaseClient:
     """Return a Secrets Manager client for ESO test assertions."""
     return boto3.client("secretsmanager", region_name="us-west-2")
 
 
 @pytest.fixture(scope="session")
-def boto_eks() -> boto3.client:
+def boto_eks() -> botocore.client.BaseClient:
     """Return an EKS client for cluster configuration assertions."""
     return boto3.client("eks", region_name="us-west-2")
 
@@ -99,7 +99,7 @@ def boto_eks() -> boto3.client:
 @pytest.fixture(scope="session")
 def expected_namespaces() -> list[str]:
     """Return the list of namespaces the IDP platform requires."""
-    return ["platform", "argocd", "monitoring", "backstage", "apps", "security"]
+    return ["platform", "argocd", "monitoring", "backstage", "apps", "security", "kyverno", "cert-manager"]
 
 
 @pytest.fixture(scope="session")
