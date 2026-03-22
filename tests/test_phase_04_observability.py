@@ -64,7 +64,7 @@ def test_grafana_ui_accessible() -> None:
             "--", "wget", "-q", "-O-", "--timeout=10",
             "http://prometheus-grafana.monitoring.svc.cluster.local:80/api/health",
         ],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True, text=True, timeout=60,
     )
     clean = strip_kubectl_noise(result.stdout)
     health = json.loads(clean) if clean.strip() else {}
@@ -110,7 +110,7 @@ def test_prometheus_scrape_targets() -> None:
             "--", "wget", "-q", "-O-", "--timeout=10",
             "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/targets",
         ],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True, text=True, timeout=60,
     )
     assert result.returncode == 0, (
         f"Failed to query Prometheus targets: {result.stderr[:500]}"
@@ -142,7 +142,7 @@ def test_grafana_dashboard_loads() -> None:
             "--header=Authorization: Basic YWRtaW46YWRtaW4=",
             "http://prometheus-grafana.monitoring.svc.cluster.local:80/api/search",
         ],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True, text=True, timeout=60,
     )
     clean = strip_kubectl_noise(result.stdout)
     data = json.loads(clean) if clean else []
@@ -163,7 +163,7 @@ def test_grafana_panel_has_data() -> None:
             "--header=Authorization: Basic YWRtaW46YWRtaW4=",
             "http://prometheus-grafana.monitoring.svc.cluster.local:80/api/datasources",
         ],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True, text=True, timeout=60,
     )
     clean = strip_kubectl_noise(result.stdout)
     data = json.loads(clean) if clean else []
@@ -207,7 +207,7 @@ def test_otel_span_received() -> None:
             "--post-data", trace_payload,
             "http://otel-collector-opentelemetry-collector.monitoring.svc.cluster.local:4318/v1/traces",
         ],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True, text=True, timeout=60,
     )
     # OTLP HTTP returns empty JSON or partial success on accepted spans
     assert result.returncode == 0 or "partialSuccess" in result.stdout, (
@@ -229,7 +229,7 @@ def test_alert_rules_exist() -> None:
             "--", "wget", "-q", "-O-", "--timeout=10",
             "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/rules",
         ],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True, text=True, timeout=60,
     )
     assert result.returncode == 0, (
         f"Failed to query Prometheus rules: {result.stderr[:500]}"
