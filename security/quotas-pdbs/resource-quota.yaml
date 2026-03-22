@@ -1,5 +1,5 @@
 # ABOUTME: ResourceQuota for apps namespace to limit resource consumption.
-# ABOUTME: Caps at 10 pods, 4 CPU, 8Gi memory to prevent runaway workloads.
+# ABOUTME: Caps at 20 pods, 8 CPU, 16Gi memory to support multi-team demo apps.
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -9,8 +9,8 @@ metadata:
     app.kubernetes.io/part-of: kubeauto-idp
 spec:
   hard:
-    pods: "10"
-    requests.cpu: "4"
-    requests.memory: 8Gi
-    limits.cpu: "8"
-    limits.memory: 16Gi
+    pods: "20"
+    requests.cpu: "8"
+    requests.memory: 16Gi
+    limits.cpu: "16"
+    limits.memory: 32Gi

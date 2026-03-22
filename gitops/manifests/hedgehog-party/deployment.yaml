@@ -1,0 +1,74 @@
+# ABOUTME: Kubernetes Deployment for the hedgehog-party demo application.
+# ABOUTME: Kyverno-compliant with security contexts, resource limits, and health probes.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hedgehog-party
+  namespace: apps
+  labels:
+    app: hedgehog-party
+    version: "2.0.2"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hedgehog-party
+  template:
+    metadata:
+      labels:
+        app: hedgehog-party
+        version: "2.0.2"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: hedgehog-party
+          image: 598274344262.dkr.ecr.us-west-2.amazonaws.com/kubeauto-unicorn-party:2.0.2
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - "ALL"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+            - name: tmp
+              mountPath: /tmp
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+      volumes:
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}

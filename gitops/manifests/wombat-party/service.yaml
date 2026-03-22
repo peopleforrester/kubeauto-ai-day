@@ -1,0 +1,19 @@
+# ABOUTME: Service for the wombat-party demo application.
+# ABOUTME: ClusterIP service exposing port 80 targeting container port 8080.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wombat-party
+  namespace: apps
+  labels:
+    app: wombat-party
+spec:
+  type: ClusterIP
+  selector:
+    app: wombat-party
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP

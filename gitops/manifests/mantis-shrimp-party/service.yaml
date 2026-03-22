@@ -1,0 +1,19 @@
+# ABOUTME: Service for the mantis-shrimp-party demo application.
+# ABOUTME: ClusterIP service exposing port 80 targeting container port 8080.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mantis-shrimp-party
+  namespace: apps
+  labels:
+    app: mantis-shrimp-party
+spec:
+  type: ClusterIP
+  selector:
+    app: mantis-shrimp-party
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
