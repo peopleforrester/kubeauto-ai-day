@@ -14,8 +14,14 @@ fi
 if [ -f "$CLAUDE_PROJECT_DIR/gitops/bootstrap/app-of-apps.yaml" ]; then
     BLOCKED_NS="platform|argocd|monitoring|backstage|apps|security"
     if echo "$COMMAND" | grep -qE "kubectl\s+(apply|create|replace).*-n\s+($BLOCKED_NS)"; then
-        echo "{\"decision\": \"block\", \"reason\": \"[Guardrail 1: Propose-Approve-Execute] After Phase 2, all resources must be deployed via ArgoCD GitOps. Write manifests to gitops/apps/ and let ArgoCD sync them.\"}" >&2
-        exit 2
+        # Allow runtime token operations that cannot go through GitOps
+        # (SA tokens are generated post-deploy and contain cluster-specific values)
+        if echo "$COMMAND" | grep -qE "kubectl\s+create\s+token"; then
+            : # allowed — token generation is a runtime operation
+        else
+            echo "{\"decision\": \"block\", \"reason\": \"[Guardrail 1: Propose-Approve-Execute] After Phase 2, all resources must be deployed via ArgoCD GitOps. Write manifests to gitops/apps/ and let ArgoCD sync them.\"}" >&2
+            exit 2
+        fi
     fi
 fi
 
