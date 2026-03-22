@@ -5,8 +5,8 @@
     "ai_tool": "Claude Code (Opus)",
     "platform": "EKS 1.34 on AWS",
     "total_components_planned": 27,
-    "total_components_scored": 26,
-    "components_deferred": 1
+    "total_components_scored": 27,
+    "components_deferred": 0
   },
   "components": [
     {
@@ -303,8 +303,8 @@
     "components_partially_shifted": 5,
     "components_fully_shifted": 0,
     "components_faster_from_scratch": 0,
-    "zero_correction_components": 13,
-    "one_correction_components": 9,
+    "zero_correction_components": 11,
+    "one_correction_components": 10,
     "two_correction_components": 3,
     "three_correction_components": 3
   }

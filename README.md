@@ -20,7 +20,7 @@ The platform is real. The scorecard is honest. The methodology is reusable.
 | Manual estimate | 12 hours |
 | Toil reduction | 73.8% |
 | Components scored | 27/27 |
-| Zero-correction rate | 48% |
+| Zero-correction rate | 41% (11/27) |
 | Average quality score | 8.0/10 |
 
 Full scorecard: [`spec/SCORECARD.md`](spec/SCORECARD.md)
@@ -126,7 +126,7 @@ See [`docs/SETUP.md`](docs/SETUP.md) for step-by-step instructions.
 ## Key Findings
 
 1. **AI reduces IDP build toil by ~74%** — but the remaining 26% is harder toil
-2. **48% of components had zero corrections** — AI excels at boilerplate
+2. **41% of components had zero corrections** — AI excels at boilerplate
 3. **Version currency is AI's #1 weakness** — stale chart versions, deprecated APIs
 4. **TDD catches AI mistakes fast** — write the test first, always
 5. **Skill files/context are essential** — generic prompts get generic errors
@@ -139,4 +139,4 @@ Apache 2.0. See [LICENSE](LICENSE).
 
 Michael Forrester — [KodeKloud](https://kodekloud.com)
 
-Built for KubeAuto Day Europe 2026, London.
+Built for KubeAuto Day Europe 2026, Amsterdam.

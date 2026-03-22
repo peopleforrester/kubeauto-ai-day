@@ -47,7 +47,7 @@ providing component patterns and known pitfalls.
 | Net toil reduction | 73.8% |
 | Total correction cycles | 25 |
 | Average quality score | 8.0/10 |
-| Components with zero corrections | 13/27 (48%) |
+| Components with zero corrections | 11/27 (41%) |
 | Components where AI shifted toil | 5/27 (19%) |
 | Components where manual would be faster | 0/27 |
 
@@ -60,7 +60,7 @@ it is more nuanced than any vendor pitch will tell you.
 Namespace definitions, RBAC manifests, NetworkPolicies, Kyverno policies,
 Grafana dashboards, alert rules, PDBs, documentation. These are well-defined
 patterns with clear inputs and outputs. AI produced correct output on the
-first try in 13 of 26 components.
+first try in 11 of 27 components.
 
 **Boilerplate reduction:**
 ArgoCD Application manifests are 90% boilerplate. Once the AI understood the
@@ -103,7 +103,7 @@ AI doesn't read chart templates — it guesses from values files.
 
 ## The Five Components Where Toil Shifted
 
-For 5 of 26 components, AI "partially shifted" toil rather than purely
+For 5 of 27 components, AI "partially shifted" toil rather than purely
 reducing it:
 
 1. **EKS Cluster** — Module v21 variable renames

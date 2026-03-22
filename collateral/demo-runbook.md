@@ -10,6 +10,25 @@ Pre-requisites:
 
 ---
 
+## LIVE DEMO — Platform in Action (Slide 8, 2 min)
+
+Single connected pipeline for stage presentation:
+
+1. **Backstage** → Open https://backstage.ai-enhanced-devops.com → Run deploy-service template
+2. **ArgoCD** → Switch to https://test1.ai-enhanced-devops.com → Show new Application syncing
+3. **Kyverno** → `kubectl get clusterpolicyreport -o wide` → Service passes all 6 policies
+4. **Grafana** → `kubectl port-forward svc/prometheus-grafana -n monitoring 3000:80` → Open Platform Overview dashboard → New service appears
+
+**Fallback if live demo fails:** Use screenshots in `collateral/screenshots/`, acknowledge it's real infra, move to next slide.
+
+---
+
+## EXTENDED DEMOS — Per-Component (for post-talk cluster access)
+
+The sections below provide detailed per-component demos beyond the 2-minute stage demo.
+
+---
+
 ## 1. Platform Health Check (2 min)
 
 ```bash

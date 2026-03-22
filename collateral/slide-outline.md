@@ -1,4 +1,4 @@
-# KubeAuto Day Europe 2026 — Slide Outline
+# KubeAuto Day Europe 2026 — Slide Outline (v15)
 
 ## Talk Title
 
@@ -24,11 +24,9 @@ Speaker: Michael Forrester, Principal Training Architect — KodeKloud
 
 ## Slide 3: It Gets Worse
 
-Five data points:
-- −1.5% delivery throughput (DORA 2025)
+Three data points:
 - −7.2% stability (DORA 2025)
 - 1% of companies "AI mature" (2025 AI at Work Report)
-- 46% of devs don't trust AI output (Stack Overflow 2025)
 - 30% of platform teams don't measure (State of Platform Engineering Vol. 4)
 
 ## Slide 4: The Question
@@ -77,22 +75,18 @@ Four steps: Write the test → AI implements → Verify on live infra → Score 
 
 "The scorecard is the artifact. Not the platform."
 
-## Slide 8: Live Demo — GitOps in Action
+## Slide 8: Platform in Action — LIVE DEMO
 
-- 27 synced apps, drift detection, 30-second self-heal
-- LIVE DEMO
+Single connected pipeline: Backstage → ArgoCD → Kyverno → Grafana
 
-## Slide 9: Live Demo — Security Stack
+- Deploy a service via Backstage template
+- Watch ArgoCD sync the new Application
+- Kyverno validates against 6 policies
+- Service appears in Grafana Platform Overview dashboard
 
-- Kyverno blocks bad pods, Falco catches runtime threats, ESO syncs secrets
-- LIVE DEMO
+LIVE DEMO (2 min)
 
-## Slide 10: Live Demo — Developer Portal
-
-- Backstage catalog, deploy-service template, Kyverno-compliant output
-- LIVE DEMO
-
-## Slide 11: METR vs This Experiment
+## Slide 9: METR vs This Experiment
 
 | | METR Study (2025) | This Experiment (2026) |
 |---|---|---|
@@ -104,7 +98,7 @@ Four steps: Write the test → AI implements → Verify on live infra → Score 
 
 "The difference isn't the AI. It's the constraints."
 
-## Slide 12: Correction Cycle Distribution
+## Slide 10: Correction Cycle Distribution
 
 - 0 corrections: 11 components (41%)
 - 1 correction: 10 components (37%)
@@ -113,7 +107,7 @@ Four steps: Write the test → AI implements → Verify on live infra → Score 
 
 78% worked in 0–1 cycles. The 3-cycle outliers tell the real story.
 
-## Slide 13: Same Root Cause. Every Time.
+## Slide 11: Same Root Cause. Every Time.
 
 | Component | Cycles | Root Cause |
 |-----------|--------|------------|
@@ -124,7 +118,7 @@ Four steps: Write the test → AI implements → Verify on live infra → Score 
 
 "Version currency. Syntactically correct YAML for the wrong version of the software."
 
-## Slide 14: The Four Constraints
+## Slide 12: The Four Constraints
 
 > AI didn't make me 19% slower. AI made me 73.8% faster.
 
@@ -135,7 +129,7 @@ Four steps: Write the test → AI implements → Verify on live infra → Score 
 
 "AI is phenomenal at boring. Infrastructure should be boring. That's the point."
 
-## Slide 15: What 73.8% Doesn't Tell You
+## Slide 13: What 73.8% Doesn't Tell You
 
 Three honest caveats:
 - **60+ hours** of invisible investment came first (skill files, hooks, state
@@ -147,7 +141,7 @@ Three honest caveats:
 
 "Every impressive number has a denominator. Now you know mine."
 
-## Slide 16: Three-Layer Guardrails
+## Slide 14: Three-Layer Guardrails
 
 ```
 Layer 1: Git Hooks
@@ -167,24 +161,24 @@ Layer 3: Kubernetes
 
 "Catch problems at the cheapest possible point."
 
-## Slide 17: The Eight Guardrails
+## Slide 15: The Eight Guardrails
+
+Expanded walkthrough with 4 incident stories delivered on stage.
 
 | # | Guardrail | Implementation |
 |---|-----------|----------------|
 | 1 | Propose-Approve-Execute | ArgoCD GitOps |
 | 2 | Blast Radius Limits | RBAC + Quotas + NetworkPolicies |
-| 3 | Stop Hooks & Circuit Breakers | Kyverno + Falco |
+| 3 | Stop Hooks & Circuit Breakers | Kyverno + Falco + bubblewrap |
 | 4 | Assume Misunderstanding | Schema validation + TDD |
 | 5 | Immutable Audit Trail | OTel + K8s audit + git log |
 | 6 | Automated Rollback | ArgoCD self-heal (<30s) |
 | 7 | Secrets & Credential Isolation | ESO + Pod Identity |
 | 8 | Supply Chain Validation | Kyverno image registry allowlist |
 
-**NOTE:** Slide currently says "Sigstore" for #8 but only image registry
-allowlisting is implemented. Either fix slide to say "image registry
-allowlist" or implement cosign verification before the talk.
+**Principle (delivered on stage):** "Don't use probabilistic AI to enforce deterministic requirements."
 
-## Slide 18: Honest Boundaries
+## Slide 16: Honest Boundaries
 
 Three conditions that made this work:
 1. **Greenfield** — no existing tribal knowledge, no org decisions baked in
@@ -192,7 +186,7 @@ Three conditions that made this work:
 3. **Constrained agent, not autocomplete** — skill files, pinned versions,
    TDD, guardrails. Remove any of these and the 73.8% collapses.
 
-## Slide 19: The Platform Is a Demo. The Scorecard Is the Evidence.
+## Slide 17: The Platform Is a Demo. The Scorecard Is the Evidence.
 
 > The industry has a measurement problem. We have vendor surveys that say
 > +55%. We have METR saying −19%. We have developers who believe +20%
@@ -200,7 +194,7 @@ Three conditions that made this work:
 
 "We need more data points. Not more demos."
 
-## Slide 20: Your Turn
+## Slide 18: Your Turn
 
 - `github.com/peopleforrester/kubeauto-ai-day`
 - Full platform code, 59 tests, 27 scored components
@@ -210,7 +204,7 @@ Three conditions that made this work:
 - `scorecard/methodology.md`
 - "Cluster is live until tomorrow. Go break things."
 
-## Slide 21: Q&A / Contact
+## Slide 19: Q&A / Contact
 
 - Michael Forrester, Principal Training Architect — KodeKloud
 - "Teaching 100,000+ engineers how to build this stuff."
@@ -220,30 +214,29 @@ Three conditions that made this work:
 
 ---
 
-## Errata to Fix in Slides
+## Appendix Slides (20–22)
 
-These items were found during validation against repo data:
+Citation slides for audience reference. Not presented on stage.
 
-1. **Slide 11**: "12:08 manual" should be **12:05** (SCORECARD.md says 725 min = 12h 5m)
-2. **Slide 12**: Correction breakdown is wrong. Actual counts from scorecard rows:
-   - 0 corrections: **11** components (41%) — slide says 13 (48%)
-   - 1 correction: **10** components (37%) — slide says 9 (33%)
-   - 2 corrections: 3 (11%) — correct
-   - 3 corrections: 3 (11%) — correct
-   - Also update the "81% worked in 0–1 cycles" line to **78%** (21/27)
-3. **Slide 17**: Guardrail #8 says "Sigstore" but only Kyverno image registry
-   allowlisting is deployed. Change to "Kyverno image registry allowlist"
-   unless cosign verification is added before the talk.
+- Slide 20: METR Study details, methodology, and full citation
+- Slide 21: DORA 2025 AI findings, Stack Overflow 2025 survey data
+- Slide 22: State of Platform Engineering Vol. 4, AI at Work Report
+
+---
 
 ## Notes for Speaker
 
-- Total talk time: ~27 min target for 30-minute slot
-- 21 slides (was 19 in original outline)
+- Total slides: 19 content + 3 appendix citations = 22 total
+- Page numbers shown as X/19 (appendix unnumbered)
+- Target talk time: ~24:30 for 30-minute slot
+- Timing: Setup 3 min, Demo 2 min, Guardrails 6 min, Scorecard analysis 8 min, Caveats + CTA 5 min
 - Demo buffer: have screenshots as fallback if live demo fails
 - Key talking points:
   - This is about measurement, not advocacy
   - The scorecard template is the takeaway
   - "Toil shifted" is the nuanced finding
   - Version currency is AI's biggest weakness
-  - The caveats slide (#15) builds trust — don't skip it
-  - The METR comparison (#11) is the argumentative core
+  - The caveats slide (#13) builds trust — don't skip it
+  - The METR comparison (#9) is the argumentative core
+  - Guardrails deep dive (#15) now includes 4 incident stories and the withheld principle
+  - DORA throughput and Stack Overflow distrust data moved to appendix citations (Q&A-ready)
