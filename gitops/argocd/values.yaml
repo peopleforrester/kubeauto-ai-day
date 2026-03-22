@@ -59,7 +59,9 @@ configs:
       p, role:platform-admin, exec, *, */*, allow
 
       # GitHub users get admin (ArgoCD 3.x subject format)
+      # Dex may return email or username depending on GitHub account settings
       g, peopleforrester, role:platform-admin
+      g, michaelrishiforrester@gmail.com, role:platform-admin
       g, WiggityWhitney, role:platform-admin
 
       # Read-only role for observers
