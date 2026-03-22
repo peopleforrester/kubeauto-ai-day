@@ -257,8 +257,9 @@ uv run pytest tests/ -v
 kubectl port-forward svc/argocd-server -n argocd 8080:443
 
 # Grafana (Observability)
-kubectl port-forward svc/prometheus-grafana -n monitoring 3000:80
-# Default creds: admin / prom-operator
+# Via ALB: https://grafana.ai-enhanced-devops.com
+# Via port-forward: kubectl port-forward svc/prometheus-grafana -n monitoring 3000:80
+# Default creds: admin / admin
 
 # Backstage (Developer Portal)
 kubectl port-forward svc/backstage -n backstage 7007:7007

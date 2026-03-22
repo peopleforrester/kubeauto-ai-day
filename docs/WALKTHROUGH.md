@@ -1111,7 +1111,7 @@ The scorecard now includes a guardrail coverage column:
 ### Production Hardening
 - [x] cert-manager with Let's Encrypt ClusterIssuers (staging + production)
 - [x] ALB Ingress for ArgoCD with ACM TLS certificate
-- [x] ArgoCD accessible at `https://test1.ai-enhanced-devops.com`
+- [x] ArgoCD accessible at `https://argocd.ai-enhanced-devops.com`
 - [x] GitHub OIDC via Dex (peopleforrester = platform-admin)
 - [x] Resource quotas (10 pods, 4 CPU, 8Gi in apps)
 - [x] PodDisruptionBudgets for sample-app and ArgoCD
@@ -1120,7 +1120,7 @@ The scorecard now includes a guardrail coverage column:
 
 ### Remaining Items
 - [ ] **Build actual slides** from `collateral/slide-outline.md` (PowerPoint/Google Slides)
-- [ ] **QR codes** for repo, scorecard, `https://test1.ai-enhanced-devops.com`
+- [ ] **QR codes** for repo, scorecard, `https://argocd.ai-enhanced-devops.com`
 - [ ] **Demo runbook 3x end-to-end** without intervention
 - [ ] **Practice run with timer** (target 27 min for 30-min slot)
 - [ ] **OIDC test with second account**

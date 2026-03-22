@@ -29,7 +29,7 @@ data:
         - platform
         - cncf
       links:
-        - url: https://test1.ai-enhanced-devops.com
+        - url: https://argocd.ai-enhanced-devops.com
           title: ArgoCD Dashboard
           icon: dashboard
         - url: https://backstage.ai-enhanced-devops.com
@@ -80,7 +80,7 @@ data:
         - cncf-graduated
         - argocd
       links:
-        - url: https://test1.ai-enhanced-devops.com
+        - url: https://argocd.ai-enhanced-devops.com
           title: ArgoCD UI
           icon: dashboard
     spec:
@@ -374,7 +374,7 @@ data:
         - rest
         - argocd
       links:
-        - url: https://test1.ai-enhanced-devops.com/swagger-ui
+        - url: https://argocd.ai-enhanced-devops.com/swagger-ui
           title: Swagger UI
     spec:
       type: openapi
@@ -388,7 +388,7 @@ data:
           version: v3.3.0
           description: ArgoCD REST API for GitOps application management
         servers:
-          - url: https://test1.ai-enhanced-devops.com/api/v1
+          - url: https://argocd.ai-enhanced-devops.com/api/v1
         paths:
           /applications:
             get:
