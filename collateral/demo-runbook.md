@@ -129,7 +129,7 @@ kubectl get clustersecretstore -n platform
 
 # Show the ExternalSecret and synced Secret
 kubectl get externalsecret -n apps
-kubectl get secret kubeauto-test-secret -n apps -o jsonpath='{.data.test-key}' | base64 -d
+kubectl get secret test-secret -n apps -o jsonpath='{.data.username}' | base64 -d
 echo
 ```
 
@@ -141,12 +141,13 @@ Manager. The secret value never appears in Git — only the reference does."
 ## 7. Observability Stack (3 min)
 
 ```bash
-# Show Prometheus scrape targets
+# Show Prometheus scrape targets (count)
 kubectl run prom-check --rm -i --restart=Never \
-  --image=busybox:latest -n monitoring -- \
+  --image=busybox:latest -n default -- \
   wget -q -O- --timeout=5 \
   'http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/targets' \
-  | python3 -c "import sys,json; targets=json.load(sys.stdin)['data']['activeTargets']; print(f'{len(targets)} active scrape targets')"
+  2>/dev/null | sed 's/pod "prom-check" deleted//' | \
+  python3 -c "import sys,json; targets=json.load(sys.stdin)['data']['activeTargets']; print(f'{len(targets)} active scrape targets')"
 
 # Show OTel Collector is forwarding metrics
 kubectl get pods -n monitoring -l app.kubernetes.io/name=opentelemetry-collector
@@ -169,17 +170,13 @@ write. We have 4 custom alert rules for production scenarios."
 # Show Backstage is running
 kubectl get pods -n backstage
 
-# Query the catalog API
-kubectl run bs-check --rm -i --restart=Never \
-  --image=busybox:latest -n backstage -- \
-  wget -q -O- --timeout=5 \
-  'http://backstage.backstage.svc.cluster.local:7007/api/catalog/entities?filter=kind=component'
+# Backstage API requires GitHub OAuth — use the browser UI instead:
+# https://backstage.ai-enhanced-devops.com
+# Navigate to: Catalog → Components, then Templates
 
-# Show software templates available
-kubectl run bs-templates --rm -i --restart=Never \
-  --image=busybox:latest -n backstage -- \
-  wget -q -O- --timeout=5 \
-  'http://backstage.backstage.svc.cluster.local:7007/api/catalog/entities?filter=kind=template'
+# Show the template skeleton deployed as a running service
+kubectl get deployment templated-test-svc -n apps
+kubectl get pods -n apps -l app=templated-test-svc
 ```
 
 **Talking point:** "Backstage provides a single pane of glass for the platform.
@@ -198,8 +195,8 @@ kubectl get deployment templated-test-svc -n apps
 kubectl get pods -n apps -l app=templated-test-svc
 
 # Verify it passed Kyverno
-kubectl run kyverno-check --image=nginx:1.27 -n apps --dry-run=server \
-  --overrides='{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":1000,"fsGroup":1000},"containers":[{"name":"check","image":"nginx:1.27","ports":[{"containerPort":8080}],"resources":{"requests":{"cpu":"100m","memory":"128Mi"},"limits":{"cpu":"500m","memory":"256Mi"}},"readinessProbe":{"httpGet":{"path":"/","port":8080},"initialDelaySeconds":5},"livenessProbe":{"httpGet":{"path":"/","port":8080},"initialDelaySeconds":10},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}}]},"metadata":{"labels":{"app":"check","version":"v1.0.0"}}}'
+kubectl run kyverno-check --image=docker.io/library/nginx:1.27 -n apps --dry-run=server \
+  --overrides='{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":1000,"fsGroup":1000},"containers":[{"name":"check","image":"docker.io/library/nginx:1.27","ports":[{"containerPort":8080}],"resources":{"requests":{"cpu":"100m","memory":"128Mi"},"limits":{"cpu":"500m","memory":"256Mi"}},"readinessProbe":{"httpGet":{"path":"/","port":8080},"initialDelaySeconds":5},"livenessProbe":{"httpGet":{"path":"/","port":8080},"initialDelaySeconds":10},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}}]},"metadata":{"labels":{"app":"check","version":"v1.0.0"}}}'
 ```
 
 **Talking point:** "The template skeleton produces resources that are
