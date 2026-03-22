@@ -103,16 +103,16 @@ run "kubectl get service sample-app -n apps -o jsonpath='{.spec.ports[0].name}' 
 pause 5 "ArgoCD detected the drift and reverted it. Annotation-based tracking."
 
 # ─────────────────────────────────────────────────────────────────────
-section "4/4  RUNTIME SECURITY — Falco detects /etc write via eBPF" 1
+section "4/4  RUNTIME SECURITY — Falco detects sensitive file read via eBPF" 1
 # ─────────────────────────────────────────────────────────────────────
 
 POD=$(kubectl get pods -n apps -l app=sample-app -o jsonpath='{.items[0].metadata.name}')
-echo -e "${DIM}  Writing to /etc inside a running container...${NC}"
-run "kubectl exec -n apps $POD -- sh -c 'touch /etc/demo-marker'"
+echo -e "${DIM}  Reading process environment from inside a running container...${NC}"
+run "kubectl exec -n apps $POD -- sh -c 'cat /proc/1/environ > /dev/null'"
 
 pause 5 "Waiting for Falco to process the syscall..."
 
-run "kubectl logs -n security -l app.kubernetes.io/name=falco -c falco --tail=10 --since=15s 2>/dev/null | grep -o '\"rule\":\"[^\"]*\"' | head -3"
+run "kubectl logs -n security -l app.kubernetes.io/name=falco -c falco --tail=20 --since=15s 2>/dev/null | grep sample-app | grep -o '\"rule\":\"[^\"]*\"' | head -3"
 
 pause 5 "eBPF-level detection. No agent in the container. No sidecar."
 
