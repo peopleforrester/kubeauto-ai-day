@@ -1,0 +1,383 @@
+# ABOUTME: ConfigMap containing themed HTML5 Canvas animation for wombat-party.
+# ABOUTME: Mounted into nginx container to replace default index.html.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wombat-party-html
+  namespace: apps
+  labels:
+    app: wombat-party
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wombat Party at KubeAuto Day Europe 2026</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { overflow: hidden; background: #100800; }
+      canvas { display: block; }
+      #stats {
+        position: fixed; top: 10px; left: 10px;
+        color: #d4a060; font-family: monospace; font-size: 14px;
+        background: rgba(16,8,0,0.7); padding: 8px 12px; border-radius: 6px;
+        border: 1px solid #8a6030; z-index: 10;
+      }
+      #instructions {
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        color: #d4a060; font-family: monospace; font-size: 13px;
+        background: rgba(16,8,0,0.8); padding: 12px 20px; border-radius: 8px;
+        border: 1px solid #8a6030; text-align: center; z-index: 10;
+        transition: opacity 1s;
+      }
+    </style>
+    </head>
+    <body>
+    <div id="stats"></div>
+    <div id="instructions">
+      Click: Cube Burst! | Hold: Dusty Stream | Space: Chaos Mode<br>
+      Wombats follow your cursor across the outback
+    </div>
+    <canvas id="c"></canvas>
+    <script>
+    (function() {
+      var canvas = document.getElementById('c');
+      var ctx = canvas.getContext('2d');
+      var W, H;
+      var mouse = { x: 0, y: 0 };
+      var mouseDown = false;
+      var chaosMode = false;
+      var wombats = [];
+      var particles = [];
+      var cubeCount = 0;
+      var stars = [];
+      var PARTICLE_CAP = 2000;
+
+      var earthyColors = ['#c19a6b','#a0522d','#cd853f','#d2691e','#deb887','#c8907a','#b87333','#8b7355'];
+      var cubeColors = ['#6b4423','#8b6914','#a0522d','#d2b48c','#c19a6b'];
+
+      // Southern Cross constellation coordinates (relative)
+      var southernCross = [
+        {rx: 0.55, ry: 0.25}, {rx: 0.58, ry: 0.35},
+        {rx: 0.52, ry: 0.30}, {rx: 0.62, ry: 0.30},
+        {rx: 0.57, ry: 0.42}
+      ];
+
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        initStars();
+        var count = Math.min(14, Math.max(6, Math.floor((W * H) / 70000)));
+        while (wombats.length < count) wombats.push(createWombat());
+        while (wombats.length > count) wombats.pop();
+      }
+
+      function initStars() {
+        stars = [];
+        // Regular stars
+        for (var i = 0; i < 100; i++) {
+          stars.push({
+            x: Math.random() * W, y: Math.random() * H * 0.6,
+            size: Math.random() * 1.5 + 0.5,
+            pulse: Math.random() * Math.PI * 2,
+            speed: Math.random() * 0.01 + 0.003,
+            bright: false
+          });
+        }
+        // Southern Cross
+        for (var i = 0; i < southernCross.length; i++) {
+          stars.push({
+            x: southernCross[i].rx * W, y: southernCross[i].ry * H,
+            size: 2.5,
+            pulse: Math.random() * Math.PI * 2,
+            speed: 0.008,
+            bright: true
+          });
+        }
+      }
+
+      function createWombat() {
+        return {
+          x: Math.random() * W, y: Math.random() * H,
+          vx: 0, vy: 0,
+          size: 22 + Math.random() * 8,
+          color: earthyColors[Math.floor(Math.random() * earthyColors.length)],
+          angle: Math.random() * Math.PI * 2,
+          waddle: Math.random() * Math.PI * 2,
+          legPhase: Math.random() * Math.PI * 2,
+          poopTimer: Math.random() * 60 + 30,
+          eyeBlink: 0
+        };
+      }
+
+      function drawWombat(w) {
+        ctx.save();
+        ctx.translate(w.x, w.y);
+        var moveAngle = Math.atan2(w.vy, w.vx);
+        var speed = Math.sqrt(w.vx * w.vx + w.vy * w.vy);
+        if (speed > 0.5) w.angle = moveAngle;
+        ctx.rotate(w.angle);
+
+        var sz = w.size;
+        var waddleY = Math.sin(w.waddle) * 2;
+
+        // Stubby legs
+        var legOff = Math.sin(w.legPhase) * 3;
+        ctx.fillStyle = '#5a3a20';
+        ctx.fillRect(-sz * 0.5, sz * 0.35, 8, 8 + legOff);
+        ctx.fillRect(sz * 0.15, sz * 0.35, 8, 8 - legOff);
+        ctx.fillRect(-sz * 0.5, -sz * 0.35 - 8 + legOff, 8, 8);
+        ctx.fillRect(sz * 0.15, -sz * 0.35 - 8 - legOff, 8, 8);
+
+        // Chunky body (wide rounded rectangle)
+        ctx.beginPath();
+        var bw = sz * 1.1;
+        var bh = sz * 0.7;
+        var r = sz * 0.3;
+        ctx.moveTo(-bw/2 + r, -bh/2 + waddleY);
+        ctx.arcTo(bw/2, -bh/2 + waddleY, bw/2, bh/2 + waddleY, r);
+        ctx.arcTo(bw/2, bh/2 + waddleY, -bw/2, bh/2 + waddleY, r);
+        ctx.arcTo(-bw/2, bh/2 + waddleY, -bw/2, -bh/2 + waddleY, r);
+        ctx.arcTo(-bw/2, -bh/2 + waddleY, bw/2, -bh/2 + waddleY, r);
+        ctx.closePath();
+        ctx.fillStyle = w.color;
+        ctx.fill();
+
+        // Head
+        ctx.beginPath();
+        ctx.ellipse(sz * 0.55, waddleY, sz * 0.35, sz * 0.32, 0, 0, Math.PI * 2);
+        ctx.fillStyle = w.color;
+        ctx.fill();
+
+        // Ears
+        for (var side = -1; side <= 1; side += 2) {
+          ctx.beginPath();
+          ctx.arc(sz * 0.6, side * sz * 0.35 + waddleY, sz * 0.12, 0, Math.PI * 2);
+          ctx.fillStyle = w.color;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(sz * 0.6, side * sz * 0.35 + waddleY, sz * 0.07, 0, Math.PI * 2);
+          ctx.fillStyle = '#c8907a';
+          ctx.fill();
+        }
+
+        // Eyes
+        if (w.eyeBlink <= 0) {
+          ctx.beginPath();
+          ctx.arc(sz * 0.65, -sz * 0.1 + waddleY, 2.5, 0, Math.PI * 2);
+          ctx.arc(sz * 0.65, sz * 0.1 + waddleY, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#1a0a00';
+          ctx.fill();
+          // Eye shine
+          ctx.beginPath();
+          ctx.arc(sz * 0.67, -sz * 0.12 + waddleY, 1, 0, Math.PI * 2);
+          ctx.arc(sz * 0.67, sz * 0.08 + waddleY, 1, 0, Math.PI * 2);
+          ctx.fillStyle = '#fff';
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = '#1a0a00';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(sz * 0.60, -sz * 0.1 + waddleY);
+          ctx.lineTo(sz * 0.70, -sz * 0.1 + waddleY);
+          ctx.moveTo(sz * 0.60, sz * 0.1 + waddleY);
+          ctx.lineTo(sz * 0.70, sz * 0.1 + waddleY);
+          ctx.stroke();
+        }
+
+        // Nose
+        ctx.beginPath();
+        ctx.ellipse(sz * 0.85, waddleY, 4, 3, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#3a2010';
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      function spawnCube(x, y, burst) {
+        if (particles.length >= PARTICLE_CAP) return;
+        var c = cubeColors[Math.floor(Math.random() * cubeColors.length)];
+        var spd = burst ? (Math.random() * 5 + 2) : (Math.random() * 1 + 0.3);
+        var ang = Math.random() * Math.PI * 2;
+        particles.push({
+          x: x, y: y,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd,
+          life: 1,
+          decay: 0.005 + Math.random() * 0.008,
+          size: 3 + Math.random() * 5,
+          color: c,
+          rotation: Math.random() * Math.PI * 0.5,
+          rotSpeed: (Math.random() - 0.5) * 0.05,
+          type: 'cube'
+        });
+        cubeCount++;
+      }
+
+      function spawnDust(x, y) {
+        if (particles.length >= PARTICLE_CAP) return;
+        particles.push({
+          x: x, y: y,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2 - 0.5,
+          life: 1,
+          decay: 0.015 + Math.random() * 0.015,
+          size: 3 + Math.random() * 4,
+          color: 'rgba(210,180,140,',
+          type: 'dust'
+        });
+      }
+
+      function cubeBurst(x, y) {
+        for (var i = 0; i < 25; i++) spawnCube(x, y, true);
+        for (var i = 0; i < 10; i++) spawnDust(x, y);
+      }
+
+      function update() {
+        var tx = chaosMode ? Math.random() * W : mouse.x;
+        var ty = chaosMode ? Math.random() * H : mouse.y;
+
+        for (var i = 0; i < wombats.length; i++) {
+          var w = wombats[i];
+          var dx = tx - w.x;
+          var dy = ty - w.y;
+          var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          var force = chaosMode ? 0.35 : 0.12;
+          w.vx += (dx / dist) * force;
+          w.vy += (dy / dist) * force;
+          w.vx *= 0.91;
+          w.vy *= 0.91;
+          w.x += w.vx;
+          w.y += w.vy;
+          var speed = Math.sqrt(w.vx * w.vx + w.vy * w.vy);
+          w.waddle += speed * 0.12;
+          w.legPhase += speed * 0.15;
+
+          if (Math.random() < 0.005) w.eyeBlink = 12;
+          if (w.eyeBlink > 0) w.eyeBlink--;
+
+          // Poop cubes trail
+          w.poopTimer--;
+          if (w.poopTimer <= 0 && speed > 0.5) {
+            spawnCube(w.x - w.vx * 3, w.y - w.vy * 3, false);
+            w.poopTimer = 20 + Math.random() * 40;
+          }
+
+          if (w.x < 0) w.x = W;
+          if (w.x > W) w.x = 0;
+          if (w.y < 0) w.y = H;
+          if (w.y > H) w.y = 0;
+
+          if (Math.random() < 0.05) spawnDust(w.x + (Math.random()-0.5)*20, w.y + w.size * 0.4);
+        }
+
+        if (mouseDown) {
+          for (var j = 0; j < 3; j++) spawnCube(mouse.x + (Math.random()-0.5)*30, mouse.y + (Math.random()-0.5)*30, false);
+          for (var j = 0; j < 2; j++) spawnDust(mouse.x + (Math.random()-0.5)*40, mouse.y + (Math.random()-0.5)*40);
+        }
+
+        for (var i = particles.length - 1; i >= 0; i--) {
+          var p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.03;
+          p.vx *= 0.99;
+          p.life -= p.decay;
+          if (p.rotation !== undefined) p.rotation += p.rotSpeed;
+          if (p.life <= 0) particles.splice(i, 1);
+        }
+      }
+
+      function draw() {
+        // Gradient sky
+        var grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, '#0a0510');
+        grad.addColorStop(0.4, '#100800');
+        grad.addColorStop(1, '#1a1008');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+
+        // Stars
+        for (var i = 0; i < stars.length; i++) {
+          var s = stars[i];
+          s.pulse += s.speed;
+          var alpha = s.bright ? (0.7 + Math.sin(s.pulse) * 0.3) : (0.3 + Math.sin(s.pulse) * 0.25);
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,240,200,' + Math.max(0, alpha).toFixed(2) + ')';
+          ctx.fill();
+          if (s.bright) {
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.size * 3, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,240,200,' + (alpha * 0.1).toFixed(3) + ')';
+            ctx.fill();
+          }
+        }
+
+        // Ground
+        ctx.fillStyle = '#1a1008';
+        ctx.fillRect(0, H * 0.85, W, H * 0.15);
+        ctx.fillStyle = '#221810';
+        ctx.fillRect(0, H * 0.85, W, 2);
+
+        // Particles
+        for (var i = 0; i < particles.length; i++) {
+          var p = particles[i];
+          ctx.globalAlpha = p.life;
+          if (p.type === 'cube') {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(-p.size/2, -p.size/2, p.size, p.size);
+            ctx.restore();
+          } else {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = p.color + (p.life * 0.4).toFixed(2) + ')';
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+
+        // Wombats
+        for (var i = 0; i < wombats.length; i++) drawWombat(wombats[i]);
+
+        document.getElementById('stats').textContent =
+          wombats.length + ' wombats | ' + particles.length + ' particles | ' + cubeCount + ' cubes';
+      }
+
+      function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', resize);
+      canvas.addEventListener('mousemove', function(e) { mouse.x = e.clientX; mouse.y = e.clientY; });
+      canvas.addEventListener('mousedown', function(e) { mouseDown = true; cubeBurst(e.clientX, e.clientY); });
+      canvas.addEventListener('mouseup', function() { mouseDown = false; });
+      canvas.addEventListener('touchmove', function(e) { e.preventDefault(); mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }, {passive:false});
+      canvas.addEventListener('touchstart', function(e) { mouseDown = true; mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; cubeBurst(mouse.x, mouse.y); });
+      canvas.addEventListener('touchend', function() { mouseDown = false; });
+      window.addEventListener('keydown', function(e) { if (e.code === 'Space') { e.preventDefault(); chaosMode = !chaosMode; } });
+
+      setTimeout(function() {
+        var el = document.getElementById('instructions');
+        if (el) el.style.opacity = '0';
+        setTimeout(function() { if (el) el.style.display = 'none'; }, 1000);
+      }, 6000);
+
+      resize();
+      mouse.x = W / 2;
+      mouse.y = H / 2;
+      loop();
+    })();
+    </script>
+    </body>
+    </html>

@@ -1,0 +1,376 @@
+# ABOUTME: ConfigMap containing themed HTML5 Canvas animation for mantis-shrimp-party.
+# ABOUTME: Mounted into nginx container to replace default index.html.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mantis-shrimp-party-html
+  namespace: apps
+  labels:
+    app: mantis-shrimp-party
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mantis Shrimp Party at KubeAuto Day Europe 2026</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { overflow: hidden; background: #000a20; }
+      canvas { display: block; }
+      #stats {
+        position: fixed; top: 10px; left: 10px;
+        color: #00ffff; font-family: monospace; font-size: 14px;
+        background: rgba(0,10,32,0.7); padding: 8px 12px; border-radius: 6px;
+        border: 1px solid #0066aa; z-index: 10;
+      }
+      #instructions {
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        color: #ff00ff; font-family: monospace; font-size: 13px;
+        background: rgba(0,10,32,0.8); padding: 12px 20px; border-radius: 8px;
+        border: 1px solid #0066aa; text-align: center; z-index: 10;
+        transition: opacity 1s;
+      }
+    </style>
+    </head>
+    <body>
+    <div id="stats"></div>
+    <div id="instructions">
+      Click: Mantis Punch! | Hold: Bioluminescent Stream | Space: Chaos Mode<br>
+      Mantis shrimp follow your cursor through the deep ocean
+    </div>
+    <canvas id="c"></canvas>
+    <script>
+    (function() {
+      var canvas = document.getElementById('c');
+      var ctx = canvas.getContext('2d');
+      var W, H;
+      var mouse = { x: 0, y: 0 };
+      var mouseDown = false;
+      var chaosMode = false;
+      var shrimps = [];
+      var particles = [];
+      var punchCount = 0;
+      var stars = [];
+      var shockwaves = [];
+      var PARTICLE_CAP = 2000;
+
+      var neonColors = ['#ff0080','#00ffff','#00ff40','#8000ff','#ff4000','#ffff00','#ff00ff','#0080ff'];
+
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        initStars();
+        var count = Math.min(14, Math.max(6, Math.floor((W * H) / 70000)));
+        while (shrimps.length < count) shrimps.push(createShrimp());
+        while (shrimps.length > count) shrimps.pop();
+      }
+
+      function initStars() {
+        stars = [];
+        for (var i = 0; i < 80; i++) {
+          stars.push({
+            x: Math.random() * W, y: Math.random() * H,
+            size: Math.random() * 2 + 0.5,
+            pulse: Math.random() * Math.PI * 2,
+            speed: Math.random() * 0.03 + 0.005,
+            color: neonColors[Math.floor(Math.random() * neonColors.length)]
+          });
+        }
+      }
+
+      function createShrimp() {
+        return {
+          x: Math.random() * W, y: Math.random() * H,
+          vx: 0, vy: 0,
+          size: 20 + Math.random() * 10,
+          color1: neonColors[Math.floor(Math.random() * neonColors.length)],
+          color2: neonColors[Math.floor(Math.random() * neonColors.length)],
+          color3: neonColors[Math.floor(Math.random() * neonColors.length)],
+          angle: Math.random() * Math.PI * 2,
+          swimPhase: Math.random() * Math.PI * 2,
+          clubPhase: Math.random() * Math.PI * 2
+        };
+      }
+
+      function drawShrimp(s) {
+        ctx.save();
+        ctx.translate(s.x, s.y);
+        var moveAngle = Math.atan2(s.vy, s.vx);
+        var speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
+        if (speed > 0.5) s.angle = moveAngle;
+        ctx.rotate(s.angle);
+
+        var sz = s.size;
+
+        // Fan tail
+        ctx.beginPath();
+        ctx.moveTo(-sz * 1.2, 0);
+        ctx.lineTo(-sz * 1.8, -sz * 0.4);
+        ctx.lineTo(-sz * 1.6, 0);
+        ctx.lineTo(-sz * 1.8, sz * 0.4);
+        ctx.closePath();
+        ctx.fillStyle = s.color3;
+        ctx.globalAlpha = 0.8;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Segmented body
+        for (var i = 3; i >= 0; i--) {
+          var segX = -sz * 0.4 * i + sz * 0.2;
+          var segW = sz * 0.35;
+          var segH = sz * 0.3 - i * 1;
+          var sway = Math.sin(s.swimPhase + i * 0.5) * 2;
+          ctx.beginPath();
+          ctx.ellipse(segX, sway, segW, segH, 0, 0, Math.PI * 2);
+          ctx.fillStyle = i % 2 === 0 ? s.color1 : s.color2;
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+
+        // Club appendages
+        var clubAngle = Math.sin(s.clubPhase) * 0.3;
+        for (var side = -1; side <= 1; side += 2) {
+          ctx.save();
+          ctx.translate(sz * 0.5, side * sz * 0.15);
+          ctx.rotate(clubAngle * side);
+          // Arm
+          ctx.fillStyle = s.color1;
+          ctx.fillRect(0, -2, sz * 0.5, 4);
+          // Club head
+          ctx.beginPath();
+          ctx.arc(sz * 0.5, 0, sz * 0.12, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(sz * 0.5, 0, sz * 0.1, 0, Math.PI * 2);
+          ctx.fillStyle = s.color2;
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Stalked eyes
+        for (var side = -1; side <= 1; side += 2) {
+          ctx.beginPath();
+          ctx.moveTo(sz * 0.4, side * sz * 0.1);
+          ctx.lineTo(sz * 0.7, side * sz * 0.3);
+          ctx.strokeStyle = s.color1;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(sz * 0.7, side * sz * 0.3, 3.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#000';
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(sz * 0.7, side * sz * 0.3, 2, 0, Math.PI * 2);
+          ctx.fillStyle = s.color3;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(sz * 0.72, side * sz * 0.28, 1, 0, Math.PI * 2);
+          ctx.fillStyle = '#fff';
+          ctx.fill();
+        }
+
+        // Glow effect
+        ctx.beginPath();
+        ctx.ellipse(0, 0, sz * 0.8, sz * 0.5, 0, 0, Math.PI * 2);
+        var glow = ctx.createRadialGradient(0, 0, 0, 0, 0, sz * 0.8);
+        glow.addColorStop(0, s.color1.replace(')', ',0.1)').replace('rgb', 'rgba').replace('#', ''));
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = 'rgba(' + hexToRgb(s.color1) + ',0.08)';
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      function hexToRgb(hex) {
+        var r = parseInt(hex.slice(1,3),16);
+        var g = parseInt(hex.slice(3,5),16);
+        var b = parseInt(hex.slice(5,7),16);
+        return r+','+g+','+b;
+      }
+
+      function spawnBubble(x, y, burst) {
+        if (particles.length >= PARTICLE_CAP) return;
+        var spd = burst ? (Math.random() * 5 + 2) : (Math.random() * 1.5 + 0.3);
+        var ang = Math.random() * Math.PI * 2;
+        particles.push({
+          x: x, y: y,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd - 0.5,
+          life: 1,
+          decay: 0.006 + Math.random() * 0.01,
+          size: 2 + Math.random() * 5,
+          color: neonColors[Math.floor(Math.random() * neonColors.length)],
+          type: 'bubble'
+        });
+      }
+
+      function spawnBioFlash(x, y) {
+        if (particles.length >= PARTICLE_CAP) return;
+        particles.push({
+          x: x, y: y,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          life: 1,
+          decay: 0.03 + Math.random() * 0.02,
+          size: 8 + Math.random() * 12,
+          color: neonColors[Math.floor(Math.random() * neonColors.length)],
+          type: 'flash'
+        });
+      }
+
+      function mantisPunch(x, y) {
+        punchCount++;
+        shockwaves.push({ x: x, y: y, radius: 5, maxRadius: 120, life: 1 });
+        for (var i = 0; i < 40; i++) spawnBubble(x, y, true);
+        for (var i = 0; i < 5; i++) spawnBioFlash(x, y);
+      }
+
+      function update() {
+        var tx = chaosMode ? Math.random() * W : mouse.x;
+        var ty = chaosMode ? Math.random() * H : mouse.y;
+
+        for (var i = 0; i < shrimps.length; i++) {
+          var s = shrimps[i];
+          var dx = tx - s.x;
+          var dy = ty - s.y;
+          var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          var force = chaosMode ? 0.45 : 0.18;
+          s.vx += (dx / dist) * force;
+          s.vy += (dy / dist) * force;
+          s.vx *= 0.93;
+          s.vy *= 0.93;
+          s.x += s.vx;
+          s.y += s.vy;
+          s.swimPhase += 0.08;
+          s.clubPhase += 0.06;
+
+          if (s.x < 0) s.x = W;
+          if (s.x > W) s.x = 0;
+          if (s.y < 0) s.y = H;
+          if (s.y > H) s.y = 0;
+
+          if (Math.random() < 0.1) spawnBubble(s.x - s.vx * 2, s.y - s.vy * 2, false);
+        }
+
+        if (mouseDown) {
+          for (var j = 0; j < 4; j++) spawnBubble(mouse.x + (Math.random()-0.5)*40, mouse.y + (Math.random()-0.5)*40, false);
+          for (var j = 0; j < 2; j++) spawnBioFlash(mouse.x + (Math.random()-0.5)*50, mouse.y + (Math.random()-0.5)*50);
+        }
+
+        for (var i = particles.length - 1; i >= 0; i--) {
+          var p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy -= 0.01;
+          p.vx *= 0.99;
+          p.life -= p.decay;
+          if (p.life <= 0) particles.splice(i, 1);
+        }
+
+        for (var i = shockwaves.length - 1; i >= 0; i--) {
+          var sw = shockwaves[i];
+          sw.radius += 4;
+          sw.life -= 0.025;
+          if (sw.life <= 0) shockwaves.splice(i, 1);
+        }
+      }
+
+      function draw() {
+        ctx.fillStyle = '#000a20';
+        ctx.fillRect(0, 0, W, H);
+
+        // Bioluminescent dots
+        var t = Date.now() * 0.001;
+        for (var i = 0; i < stars.length; i++) {
+          var s = stars[i];
+          s.pulse += s.speed;
+          var alpha = 0.2 + Math.sin(s.pulse) * 0.3;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(' + hexToRgb(s.color) + ',' + Math.max(0, alpha).toFixed(2) + ')';
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.size * 4, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(' + hexToRgb(s.color) + ',' + (Math.max(0, alpha) * 0.08).toFixed(3) + ')';
+          ctx.fill();
+        }
+
+        // Shockwaves
+        for (var i = 0; i < shockwaves.length; i++) {
+          var sw = shockwaves[i];
+          ctx.beginPath();
+          ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255,255,255,' + (sw.life * 0.6).toFixed(2) + ')';
+          ctx.lineWidth = 3 * sw.life;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(sw.x, sw.y, sw.radius * 0.7, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(0,255,255,' + (sw.life * 0.3).toFixed(2) + ')';
+          ctx.lineWidth = 2 * sw.life;
+          ctx.stroke();
+        }
+
+        // Particles
+        for (var i = 0; i < particles.length; i++) {
+          var p = particles[i];
+          ctx.globalAlpha = p.life;
+          if (p.type === 'bubble') {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(p.x - p.size * 0.3, p.y - p.size * 0.3, p.size * 0.3, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.fill();
+          } else {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(' + hexToRgb(p.color) + ',0.3)';
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+
+        // Shrimps
+        for (var i = 0; i < shrimps.length; i++) drawShrimp(shrimps[i]);
+
+        document.getElementById('stats').textContent =
+          shrimps.length + ' shrimp | ' + particles.length + ' particles | ' + punchCount + ' punches';
+      }
+
+      function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', resize);
+      canvas.addEventListener('mousemove', function(e) { mouse.x = e.clientX; mouse.y = e.clientY; });
+      canvas.addEventListener('mousedown', function(e) { mouseDown = true; mantisPunch(e.clientX, e.clientY); });
+      canvas.addEventListener('mouseup', function() { mouseDown = false; });
+      canvas.addEventListener('touchmove', function(e) { e.preventDefault(); mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }, {passive:false});
+      canvas.addEventListener('touchstart', function(e) { mouseDown = true; mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; mantisPunch(mouse.x, mouse.y); });
+      canvas.addEventListener('touchend', function() { mouseDown = false; });
+      window.addEventListener('keydown', function(e) { if (e.code === 'Space') { e.preventDefault(); chaosMode = !chaosMode; } });
+
+      setTimeout(function() {
+        var el = document.getElementById('instructions');
+        if (el) el.style.opacity = '0';
+        setTimeout(function() { if (el) el.style.display = 'none'; }, 1000);
+      }, 6000);
+
+      resize();
+      mouse.x = W / 2;
+      mouse.y = H / 2;
+      loop();
+    })();
+    </script>
+    </body>
+    </html>

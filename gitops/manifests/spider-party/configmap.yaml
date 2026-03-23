@@ -1,0 +1,444 @@
+# ABOUTME: ConfigMap containing themed HTML5 Canvas animation for spider-party.
+# ABOUTME: Mounted into nginx container to replace default index.html.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spider-party-html
+  namespace: apps
+  labels:
+    app: spider-party
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spider Party at KubeAuto Day Europe 2026</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { overflow: hidden; background: #050510; }
+      canvas { display: block; }
+      #stats {
+        position: fixed; top: 10px; left: 10px;
+        color: #a0a0c0; font-family: monospace; font-size: 14px;
+        background: rgba(5,5,16,0.7); padding: 8px 12px; border-radius: 6px;
+        border: 1px solid #303060; z-index: 10;
+      }
+      #instructions {
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        color: #a0a0c0; font-family: monospace; font-size: 13px;
+        background: rgba(5,5,16,0.8); padding: 12px 20px; border-radius: 8px;
+        border: 1px solid #303060; text-align: center; z-index: 10;
+        transition: opacity 1s;
+      }
+    </style>
+    </head>
+    <body>
+    <div id="stats"></div>
+    <div id="instructions">
+      Click: Silk Burst | Hold: Thread Stream | Space: Chaos Mode<br>
+      Spiders follow your cursor through the moonlit web
+    </div>
+    <canvas id="c"></canvas>
+    <script>
+    (function() {
+      var canvas = document.getElementById('c');
+      var ctx = canvas.getContext('2d');
+      var W, H;
+      var mouse = { x: 0, y: 0 };
+      var mouseDown = false;
+      var chaosMode = false;
+      var spiders = [];
+      var particles = [];
+      var webSegments = [];
+      var webCount = 0;
+      var stars = [];
+      var PARTICLE_CAP = 2000;
+      var WEB_CAP = 200;
+
+      var spiderColors = ['#1a1a2e','#16213e','#0f3460','#2c2c3e','#1a0a20','#200a20'];
+      var accentColors = ['#4a4a6a','#6060a0','#8080b0','#c0c0d0'];
+
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        initStars();
+        var count = Math.min(14, Math.max(6, Math.floor((W * H) / 70000)));
+        while (spiders.length < count) spiders.push(createSpider());
+        while (spiders.length > count) spiders.pop();
+      }
+
+      function initStars() {
+        stars = [];
+        for (var i = 0; i < 80; i++) {
+          stars.push({
+            x: Math.random() * W, y: Math.random() * H,
+            size: Math.random() * 1.5 + 0.3,
+            pulse: Math.random() * Math.PI * 2,
+            speed: Math.random() * 0.008 + 0.002
+          });
+        }
+      }
+
+      function createSpider() {
+        return {
+          x: Math.random() * W, y: Math.random() * H,
+          vx: 0, vy: 0,
+          size: 10 + Math.random() * 6,
+          color: spiderColors[Math.floor(Math.random() * spiderColors.length)],
+          angle: Math.random() * Math.PI * 2,
+          legPhase: Math.random() * Math.PI * 2,
+          webTimer: Math.random() * 100 + 50,
+          trail: [],
+          trailTimer: 0
+        };
+      }
+
+      function drawSpider(s) {
+        ctx.save();
+        ctx.translate(s.x, s.y);
+        var moveAngle = Math.atan2(s.vy, s.vx);
+        var speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
+        if (speed > 0.3) s.angle = moveAngle;
+        ctx.rotate(s.angle);
+
+        var sz = s.size;
+
+        // 8 legs in alternating pairs
+        var legLen1 = sz * 1.8;
+        var legLen2 = sz * 1.2;
+        for (var i = 0; i < 8; i++) {
+          var side = i < 4 ? 1 : -1;
+          var idx = i % 4;
+          var baseAngle = (idx - 1.5) * 0.4 * side;
+          var phase = ((i % 2 === 0) ? 1 : -1) * Math.sin(s.legPhase) * 0.15;
+
+          ctx.save();
+          ctx.rotate(Math.PI / 2 * side + baseAngle + phase);
+
+          // Upper leg segment
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(sz * 0.8, -sz * 0.6);
+          ctx.strokeStyle = s.color;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Lower leg segment
+          ctx.beginPath();
+          ctx.moveTo(sz * 0.8, -sz * 0.6);
+          ctx.lineTo(sz * 1.4, sz * 0.1);
+          ctx.strokeStyle = s.color;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          // Foot dot
+          ctx.beginPath();
+          ctx.arc(sz * 1.4, sz * 0.1, 1, 0, Math.PI * 2);
+          ctx.fillStyle = '#606080';
+          ctx.fill();
+
+          ctx.restore();
+        }
+
+        // Abdomen (larger back section)
+        ctx.beginPath();
+        ctx.ellipse(-sz * 0.4, 0, sz * 0.7, sz * 0.55, 0, 0, Math.PI * 2);
+        ctx.fillStyle = s.color;
+        ctx.fill();
+        // Abdomen pattern
+        ctx.beginPath();
+        ctx.ellipse(-sz * 0.4, 0, sz * 0.4, sz * 0.25, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(80,80,120,0.2)';
+        ctx.fill();
+
+        // Cephalothorax (front section)
+        ctx.beginPath();
+        ctx.ellipse(sz * 0.25, 0, sz * 0.4, sz * 0.35, 0, 0, Math.PI * 2);
+        ctx.fillStyle = s.color;
+        ctx.fill();
+
+        // Eyes (cluster of 8)
+        var eyePositions = [
+          {x: sz*0.4, y: -sz*0.12, s: 2},
+          {x: sz*0.4, y: sz*0.12, s: 2},
+          {x: sz*0.48, y: -sz*0.06, s: 1.5},
+          {x: sz*0.48, y: sz*0.06, s: 1.5},
+          {x: sz*0.35, y: -sz*0.18, s: 1.2},
+          {x: sz*0.35, y: sz*0.18, s: 1.2},
+          {x: sz*0.45, y: -sz*0.16, s: 1},
+          {x: sz*0.45, y: sz*0.16, s: 1}
+        ];
+        for (var i = 0; i < eyePositions.length; i++) {
+          var e = eyePositions[i];
+          ctx.beginPath();
+          ctx.arc(e.x, e.y, e.s, 0, Math.PI * 2);
+          ctx.fillStyle = '#990000';
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(e.x + 0.3, e.y - 0.3, e.s * 0.4, 0, Math.PI * 2);
+          ctx.fillStyle = '#ff3333';
+          ctx.fill();
+        }
+
+        // Fangs
+        ctx.beginPath();
+        ctx.moveTo(sz * 0.55, -sz * 0.05);
+        ctx.lineTo(sz * 0.7, sz * 0.08);
+        ctx.moveTo(sz * 0.55, sz * 0.05);
+        ctx.lineTo(sz * 0.7, -sz * 0.08);
+        ctx.strokeStyle = '#404060';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        // Fang tips
+        ctx.beginPath();
+        ctx.arc(sz * 0.7, sz * 0.08, 1.2, 0, Math.PI * 2);
+        ctx.arc(sz * 0.7, -sz * 0.08, 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = '#660000';
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      function spawnSilk(x, y, burst) {
+        if (particles.length >= PARTICLE_CAP) return;
+        var spd = burst ? (Math.random() * 5 + 1) : (Math.random() * 1 + 0.2);
+        var ang = Math.random() * Math.PI * 2;
+        particles.push({
+          x: x, y: y,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd,
+          life: 1,
+          decay: 0.005 + Math.random() * 0.01,
+          size: 1 + Math.random() * 2,
+          color: 'rgba(200,200,220,',
+          type: 'silk'
+        });
+      }
+
+      function spawnGlow(x, y) {
+        if (particles.length >= PARTICLE_CAP) return;
+        particles.push({
+          x: x, y: y,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          life: 1,
+          decay: 0.02 + Math.random() * 0.02,
+          size: 3 + Math.random() * 4,
+          color: accentColors[Math.floor(Math.random() * accentColors.length)],
+          type: 'glow'
+        });
+      }
+
+      function silkBurst(x, y) {
+        for (var i = 0; i < 25; i++) spawnSilk(x, y, true);
+        for (var i = 0; i < 8; i++) spawnGlow(x, y);
+      }
+
+      function trySpinWeb(spider) {
+        for (var j = 0; j < spiders.length; j++) {
+          if (spiders[j] === spider) continue;
+          var dx = spiders[j].x - spider.x;
+          var dy = spiders[j].y - spider.y;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 200 && dist > 30) {
+            if (webSegments.length >= WEB_CAP) webSegments.shift();
+            webSegments.push({
+              x1: spider.x, y1: spider.y,
+              x2: spiders[j].x, y2: spiders[j].y,
+              life: 1,
+              decay: 0.002
+            });
+            webCount++;
+            break;
+          }
+        }
+      }
+
+      function update() {
+        var tx = chaosMode ? Math.random() * W : mouse.x;
+        var ty = chaosMode ? Math.random() * H : mouse.y;
+
+        for (var i = 0; i < spiders.length; i++) {
+          var s = spiders[i];
+          var dx = tx - s.x;
+          var dy = ty - s.y;
+          var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          var force = chaosMode ? 0.4 : 0.15;
+          s.vx += (dx / dist) * force;
+          s.vy += (dy / dist) * force;
+          s.vx *= 0.93;
+          s.vy *= 0.93;
+          s.x += s.vx;
+          s.y += s.vy;
+          var speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
+          s.legPhase += speed * 0.2;
+
+          // Silk trail
+          s.trailTimer--;
+          if (s.trailTimer <= 0 && speed > 0.5) {
+            s.trail.push({ x: s.x, y: s.y });
+            if (s.trail.length > 30) s.trail.shift();
+            s.trailTimer = 3;
+          }
+
+          // Web spinning
+          s.webTimer--;
+          if (s.webTimer <= 0) {
+            trySpinWeb(s);
+            s.webTimer = 60 + Math.random() * 100;
+          }
+
+          if (s.x < 0) s.x = W;
+          if (s.x > W) s.x = 0;
+          if (s.y < 0) s.y = H;
+          if (s.y > H) s.y = 0;
+
+          if (Math.random() < 0.08) spawnSilk(s.x - s.vx * 2, s.y - s.vy * 2, false);
+        }
+
+        if (mouseDown) {
+          for (var j = 0; j < 3; j++) spawnSilk(mouse.x + (Math.random()-0.5)*30, mouse.y + (Math.random()-0.5)*30, false);
+          for (var j = 0; j < 2; j++) spawnGlow(mouse.x + (Math.random()-0.5)*40, mouse.y + (Math.random()-0.5)*40);
+        }
+
+        for (var i = particles.length - 1; i >= 0; i--) {
+          var p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.01;
+          p.vx *= 0.99;
+          p.life -= p.decay;
+          if (p.life <= 0) particles.splice(i, 1);
+        }
+
+        for (var i = webSegments.length - 1; i >= 0; i--) {
+          webSegments[i].life -= webSegments[i].decay;
+          if (webSegments[i].life <= 0) webSegments.splice(i, 1);
+        }
+      }
+
+      function draw() {
+        ctx.fillStyle = '#050510';
+        ctx.fillRect(0, 0, W, H);
+
+        // Moonlight glow (upper right)
+        var moonX = W * 0.8;
+        var moonY = H * 0.15;
+        var moonGrad = ctx.createRadialGradient(moonX, moonY, 20, moonX, moonY, 300);
+        moonGrad.addColorStop(0, 'rgba(200,200,240,0.15)');
+        moonGrad.addColorStop(0.3, 'rgba(150,150,200,0.05)');
+        moonGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = moonGrad;
+        ctx.fillRect(0, 0, W, H);
+        // Moon disc
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, 25, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(220,220,240,0.6)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, 22, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(200,200,230,0.3)';
+        ctx.fill();
+
+        // Stars
+        for (var i = 0; i < stars.length; i++) {
+          var st = stars[i];
+          st.pulse += st.speed;
+          var alpha = 0.3 + Math.sin(st.pulse) * 0.3;
+          ctx.beginPath();
+          ctx.arc(st.x, st.y, st.size, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(180,180,220,' + Math.max(0, alpha).toFixed(2) + ')';
+          ctx.fill();
+        }
+
+        // Web segments
+        for (var i = 0; i < webSegments.length; i++) {
+          var ws = webSegments[i];
+          ctx.beginPath();
+          ctx.moveTo(ws.x1, ws.y1);
+          ctx.lineTo(ws.x2, ws.y2);
+          ctx.strokeStyle = 'rgba(200,200,220,' + (ws.life * 0.3).toFixed(2) + ')';
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+          // Dew drops on web
+          var mx = (ws.x1 + ws.x2) / 2;
+          var my = (ws.y1 + ws.y2) / 2;
+          ctx.beginPath();
+          ctx.arc(mx, my, 1.5, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(200,200,240,' + (ws.life * 0.4).toFixed(2) + ')';
+          ctx.fill();
+        }
+
+        // Spider silk trails
+        for (var i = 0; i < spiders.length; i++) {
+          var s = spiders[i];
+          if (s.trail.length > 1) {
+            ctx.beginPath();
+            ctx.moveTo(s.trail[0].x, s.trail[0].y);
+            for (var j = 1; j < s.trail.length; j++) {
+              ctx.lineTo(s.trail[j].x, s.trail[j].y);
+            }
+            ctx.lineTo(s.x, s.y);
+            ctx.strokeStyle = 'rgba(200,200,220,0.12)';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+
+        // Particles
+        for (var i = 0; i < particles.length; i++) {
+          var p = particles[i];
+          ctx.globalAlpha = p.life;
+          if (p.type === 'silk') {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = p.color + (p.life * 0.5).toFixed(2) + ')';
+            ctx.fill();
+          } else {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life * 0.5;
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+
+        // Spiders
+        for (var i = 0; i < spiders.length; i++) drawSpider(spiders[i]);
+
+        document.getElementById('stats').textContent =
+          spiders.length + ' spiders | ' + particles.length + ' particles | ' + webCount + ' web segments';
+      }
+
+      function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', resize);
+      canvas.addEventListener('mousemove', function(e) { mouse.x = e.clientX; mouse.y = e.clientY; });
+      canvas.addEventListener('mousedown', function(e) { mouseDown = true; silkBurst(e.clientX, e.clientY); });
+      canvas.addEventListener('mouseup', function() { mouseDown = false; });
+      canvas.addEventListener('touchmove', function(e) { e.preventDefault(); mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }, {passive:false});
+      canvas.addEventListener('touchstart', function(e) { mouseDown = true; mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; silkBurst(mouse.x, mouse.y); });
+      canvas.addEventListener('touchend', function() { mouseDown = false; });
+      window.addEventListener('keydown', function(e) { if (e.code === 'Space') { e.preventDefault(); chaosMode = !chaosMode; } });
+
+      setTimeout(function() {
+        var el = document.getElementById('instructions');
+        if (el) el.style.opacity = '0';
+        setTimeout(function() { if (el) el.style.display = 'none'; }, 1000);
+      }, 6000);
+
+      resize();
+      mouse.x = W / 2;
+      mouse.y = H / 2;
+      loop();
+    })();
+    </script>
+    </body>
+    </html>
