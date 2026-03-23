@@ -37,346 +37,384 @@ data:
     <body>
     <div id="stats"></div>
     <div id="instructions">
-      Click: Cube Burst! | Hold: Dusty Stream | Space: Chaos Mode<br>
+      Click: Glitter Bomb | Hold: Sparkle Stream | Space: Chaos Mode<br>
       Wombats follow your cursor across the outback
     </div>
     <canvas id="c"></canvas>
     <script>
-    (function() {
-      var canvas = document.getElementById('c');
-      var ctx = canvas.getContext('2d');
-      var W, H;
-      var mouse = { x: 0, y: 0 };
-      var mouseDown = false;
-      var chaosMode = false;
-      var wombats = [];
-      var particles = [];
-      var cubeCount = 0;
-      var stars = [];
-      var PARTICLE_CAP = 2000;
+    const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+    let W,H,frame=0;
+    const mouse={x:0,y:0};
+    let mouseDown=false,mouseHoldTime=0,chaosMode=false;
+    const creatures=[],particles=[],rainbowBeams=[],stars=[];
+    const COLORS=['#8B7355','#A0522D','#D2B48C','#CD853F','#DEB887','#C4A882','#987654','#B5651D','#E8D5B7','#C9B896'];
+    const BG='#100800';
+    let cubeCount=0;
+    function hsl(h,s,l){return `hsl(${h},${s}%,${l}%)`;}
 
-      var earthyColors = ['#c19a6b','#a0522d','#cd853f','#d2691e','#deb887','#c8907a','#b87333','#8b7355'];
-      var cubeColors = ['#6b4423','#8b6914','#a0522d','#d2b48c','#c19a6b'];
-
-      // Southern Cross constellation coordinates (relative)
-      var southernCross = [
-        {rx: 0.55, ry: 0.25}, {rx: 0.58, ry: 0.35},
-        {rx: 0.52, ry: 0.30}, {rx: 0.62, ry: 0.30},
-        {rx: 0.57, ry: 0.42}
-      ];
-
-      function resize() {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-        initStars();
-        var count = Math.min(14, Math.max(6, Math.floor((W * H) / 70000)));
-        while (wombats.length < count) wombats.push(createWombat());
-        while (wombats.length > count) wombats.pop();
+    class Particle {
+      constructor(x,y,vx,vy,color,type){
+        this.x=x;this.y=y;this.vx=vx;this.vy=vy;this.color=color;this.type=type;
+        this.life=1;this.size=type==='sparkle'?Math.random()*3+1:type==='cube'?Math.random()*4+3:Math.random()*4+2;
+        this.rotation=Math.random()*Math.PI*2;
+        this.rotSpeed=(Math.random()-0.5)*0.05;
       }
-
-      function initStars() {
-        stars = [];
-        // Regular stars
-        for (var i = 0; i < 100; i++) {
-          stars.push({
-            x: Math.random() * W, y: Math.random() * H * 0.6,
-            size: Math.random() * 1.5 + 0.5,
-            pulse: Math.random() * Math.PI * 2,
-            speed: Math.random() * 0.01 + 0.003,
-            bright: false
-          });
+      update(){
+        this.x+=this.vx;this.y+=this.vy;
+        this.vy+=0.03;this.vx*=0.99;this.vy*=0.99;
+        this.life-=this.type==='sparkle'?0.025:this.type==='cube'?0.008:0.015;
+        this.rotation+=this.rotSpeed;
+      }
+      draw(){
+        if(this.life<=0)return;
+        ctx.globalAlpha=this.life;
+        if(this.type==='cube'){
+          ctx.save();
+          ctx.translate(this.x,this.y);
+          ctx.rotate(this.rotation);
+          ctx.fillStyle=this.color;
+          ctx.fillRect(-this.size/2,-this.size/2,this.size,this.size);
+          ctx.strokeStyle='rgba(0,0,0,0.3)';
+          ctx.lineWidth=0.5;
+          ctx.strokeRect(-this.size/2,-this.size/2,this.size,this.size);
+          ctx.restore();
+        } else if(this.type==='sparkle'){
+          ctx.beginPath();
+          ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+          ctx.fillStyle=this.color;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(this.x,this.y-this.size*2);ctx.lineTo(this.x,this.y+this.size*2);
+          ctx.moveTo(this.x-this.size*2,this.y);ctx.lineTo(this.x+this.size*2,this.y);
+          ctx.strokeStyle=this.color;ctx.lineWidth=0.5;ctx.stroke();
+        } else {
+          ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+          ctx.fillStyle=this.color;ctx.fill();
         }
-        // Southern Cross
-        for (var i = 0; i < southernCross.length; i++) {
-          stars.push({
-            x: southernCross[i].rx * W, y: southernCross[i].ry * H,
-            size: 2.5,
-            pulse: Math.random() * Math.PI * 2,
-            speed: 0.008,
-            bright: true
-          });
+        ctx.globalAlpha=1;
+      }
+    }
+
+    class Creature {
+      constructor(){
+        this.x=Math.random()*W;
+        this.y=Math.random()*H*0.8+H*0.1;
+        this.vx=(Math.random()-0.5)*6;
+        this.vy=(Math.random()-0.5)*6;
+        this.size=Math.random()*20+25;
+        this.rot=0;this.rotSpd=0;
+        this.hue=Math.random()*360;
+        this.phase=Math.random()*Math.PI*2;
+        this.bobSpd=0.02+Math.random()*0.02;
+        this.sparkT=0;this.trail=[];
+        this.wild=Math.random();
+        this.spinning=false;this.spinT=0;
+        this.shootT=0;this.glow=0;
+        this.wingPh=0;this.wingSp=0.08+Math.random()*0.04;
+        this.facingRight=true;
+        this.waddle=Math.random()*Math.PI*2;
+        this.legPhase=Math.random()*Math.PI*2;
+        this.eyeBlink=0;
+        this.poopTimer=Math.random()*60+30;
+        this.bodyColor=COLORS[Math.floor(Math.random()*COLORS.length)];
+      }
+      update(){
+        const t=frame*0.016;
+        this.phase+=this.bobSpd;
+        this.wingPh+=this.wingSp;
+        this.hue=(this.hue+0.5)%360;
+        this.glow=Math.sin(t*2+this.phase)*0.3+0.7;
+
+        const dx=mouse.x-this.x,dy=mouse.y-this.y,dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist>10){
+          const f=chaosMode?0.3:0.1;
+          this.vx+=(dx/dist)*f;
+          this.vy+=(dy/dist)*f;
+        }
+        if(chaosMode){
+          this.vx+=(Math.random()-0.5)*2;
+          this.vy+=(Math.random()-0.5)*2;
+          if(Math.random()<0.05)this.spinning=true;
+        }
+        this.vx+=Math.sin(t*0.7+this.phase)*0.12*(1+this.wild);
+        this.vy+=Math.cos(t*0.5+this.phase)*0.12*(1+this.wild);
+        const max=chaosMode?18:10;
+        this.vx*=0.98;this.vy*=0.98;
+        const spd=Math.sqrt(this.vx*this.vx+this.vy*this.vy);
+        if(spd>max){this.vx=(this.vx/spd)*max;this.vy=(this.vy/spd)*max;}
+        this.x+=this.vx;
+        this.y+=this.vy+Math.sin(this.phase)*0.8;
+        if(Math.abs(this.vx)>0.3)this.facingRight=this.vx>0;
+
+        const m=this.size;
+        if(this.x<m){this.x=m;this.vx=Math.abs(this.vx)*0.8;}
+        if(this.x>W-m){this.x=W-m;this.vx=-Math.abs(this.vx)*0.8;}
+        if(this.y<m+60){this.y=m+60;this.vy=Math.abs(this.vy)*0.8;}
+        if(this.y>H-m){this.y=H-m;this.vy=-Math.abs(this.vy)*0.8;}
+
+        if(this.spinning){
+          this.spinT++;this.rotSpd+=0.3;
+          if(this.spinT>60){this.spinning=false;this.spinT=0;}
+        } else {
+          this.rotSpd*=0.9;
+          if(spd>0.5){
+            const tr=Math.atan2(this.vy,this.vx);
+            let d=tr-this.rot;
+            while(d>Math.PI)d-=Math.PI*2;
+            while(d<-Math.PI)d+=Math.PI*2;
+            this.rotSpd+=d*0.05;
+          }
+        }
+        this.rot+=this.rotSpd;
+
+        this.trail.push({x:this.x,y:this.y,hue:this.hue,life:1});
+        if(this.trail.length>35)this.trail.shift();
+        this.trail.forEach(p=>p.life-=0.028);
+
+        this.sparkT++;
+        if(this.sparkT>(chaosMode?2:5)){
+          this.sparkT=0;
+          const a=Math.random()*Math.PI*2,r=Math.random()*this.size*1.5;
+          particles.push(new Particle(this.x+Math.cos(a)*r,this.y+Math.sin(a)*r,(Math.random()-0.5)*2,(Math.random()-0.5)*2-1,hsl(this.hue,100,70),'sparkle'));
+        }
+
+        this.shootT++;
+        const si=chaosMode?60:180;
+        if(this.shootT>si&&Math.random()<0.02){
+          this.shootT=0;
+          const a=this.facingRight?0:Math.PI;
+          rainbowBeams.push({x:this.x+Math.cos(a)*this.size,y:this.y+Math.sin(a)*this.size,angle:a+(Math.random()-0.5)*0.5,life:1,length:0,maxLen:150+Math.random()*200,hOff:this.hue});
+        }
+        if(!this.spinning&&Math.random()<(chaosMode?0.01:0.001))this.spinning=true;
+
+        this.waddle+=spd*0.12;
+        this.legPhase+=spd*0.15;
+        if(Math.random()<0.005)this.eyeBlink=12;
+        if(this.eyeBlink>0)this.eyeBlink--;
+
+        // Poop cubes trail (wombats poop cubes!)
+        this.poopTimer--;
+        if(this.poopTimer<=0&&spd>0.5){
+          const cubeColors=['#6b4423','#8b6914','#a0522d','#d2b48c','#c19a6b'];
+          particles.push(new Particle(this.x-this.vx*3,this.y-this.vy*3,(Math.random()-0.5)*0.5,(Math.random()-0.5)*0.5,cubeColors[Math.floor(Math.random()*cubeColors.length)],'cube'));
+          cubeCount++;
+          this.poopTimer=20+Math.random()*40;
         }
       }
+      draw(){
+        // Trail
+        for(let i=0;i<this.trail.length-1;i++){
+          const p=this.trail[i];
+          if(p.life<=0)continue;
+          ctx.globalAlpha=p.life*0.25;
+          ctx.beginPath();
+          ctx.arc(p.x,p.y,this.size*0.25*p.life,0,Math.PI*2);
+          ctx.fillStyle=COLORS[i%COLORS.length];
+          ctx.fill();
+        }
+        ctx.globalAlpha=1;
 
-      function createWombat() {
-        return {
-          x: Math.random() * W, y: Math.random() * H,
-          vx: 0, vy: 0,
-          size: 22 + Math.random() * 8,
-          color: earthyColors[Math.floor(Math.random() * earthyColors.length)],
-          angle: Math.random() * Math.PI * 2,
-          waddle: Math.random() * Math.PI * 2,
-          legPhase: Math.random() * Math.PI * 2,
-          poopTimer: Math.random() * 60 + 30,
-          eyeBlink: 0
-        };
-      }
-
-      function drawWombat(w) {
         ctx.save();
-        ctx.translate(w.x, w.y);
-        var moveAngle = Math.atan2(w.vy, w.vx);
-        var speed = Math.sqrt(w.vx * w.vx + w.vy * w.vy);
-        if (speed > 0.5) w.angle = moveAngle;
-        ctx.rotate(w.angle);
+        ctx.translate(this.x,this.y);
+        ctx.rotate(this.rot);
 
-        var sz = w.size;
-        var waddleY = Math.sin(w.waddle) * 2;
+        const sz=this.size;
+        const flip=this.facingRight?1:-1;
+        const waddleY=Math.sin(this.waddle)*2;
 
-        // Stubby legs
-        var legOff = Math.sin(w.legPhase) * 3;
-        ctx.fillStyle = '#5a3a20';
-        ctx.fillRect(-sz * 0.5, sz * 0.35, 8, 8 + legOff);
-        ctx.fillRect(sz * 0.15, sz * 0.35, 8, 8 - legOff);
-        ctx.fillRect(-sz * 0.5, -sz * 0.35 - 8 + legOff, 8, 8);
-        ctx.fillRect(sz * 0.15, -sz * 0.35 - 8 - legOff, 8, 8);
+        // Stubby flat legs
+        const legOff=Math.sin(this.legPhase)*3;
+        ctx.fillStyle='#5a3a20';
+        ctx.beginPath();ctx.ellipse(-sz*0.35*flip,sz*0.4,5,6+legOff*0.5,0,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.ellipse(sz*0.15*flip,sz*0.4,5,6-legOff*0.5,0,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.ellipse(-sz*0.35*flip,-sz*0.4,5,6-legOff*0.5,0,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.ellipse(sz*0.15*flip,-sz*0.4,5,6+legOff*0.5,0,0,Math.PI*2);ctx.fill();
 
-        // Chunky body (wide rounded rectangle)
+        // Wide chunky rounded body
+        const bw=sz*0.7,bh=sz*0.5,r=sz*0.25;
         ctx.beginPath();
-        var bw = sz * 1.1;
-        var bh = sz * 0.7;
-        var r = sz * 0.3;
-        ctx.moveTo(-bw/2 + r, -bh/2 + waddleY);
-        ctx.arcTo(bw/2, -bh/2 + waddleY, bw/2, bh/2 + waddleY, r);
-        ctx.arcTo(bw/2, bh/2 + waddleY, -bw/2, bh/2 + waddleY, r);
-        ctx.arcTo(-bw/2, bh/2 + waddleY, -bw/2, -bh/2 + waddleY, r);
-        ctx.arcTo(-bw/2, -bh/2 + waddleY, bw/2, -bh/2 + waddleY, r);
+        ctx.moveTo(-bw+r,-bh+waddleY);
+        ctx.arcTo(bw,-bh+waddleY,bw,bh+waddleY,r);
+        ctx.arcTo(bw,bh+waddleY,-bw,bh+waddleY,r);
+        ctx.arcTo(-bw,bh+waddleY,-bw,-bh+waddleY,r);
+        ctx.arcTo(-bw,-bh+waddleY,bw,-bh+waddleY,r);
         ctx.closePath();
-        ctx.fillStyle = w.color;
+        ctx.fillStyle=this.bodyColor;
+        ctx.fill();
+
+        // Glow
+        ctx.beginPath();
+        ctx.arc(0,waddleY,sz*0.6,0,Math.PI*2);
+        const grd=ctx.createRadialGradient(0,waddleY,sz*0.2,0,waddleY,sz*0.6);
+        grd.addColorStop(0,`hsla(${this.hue},40%,50%,${this.glow*0.1})`);
+        grd.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=grd;
         ctx.fill();
 
         // Head
         ctx.beginPath();
-        ctx.ellipse(sz * 0.55, waddleY, sz * 0.35, sz * 0.32, 0, 0, Math.PI * 2);
-        ctx.fillStyle = w.color;
+        ctx.ellipse(sz*0.45*flip,waddleY,sz*0.28,sz*0.25,0,0,Math.PI*2);
+        ctx.fillStyle=this.bodyColor;
         ctx.fill();
 
-        // Ears
-        for (var side = -1; side <= 1; side += 2) {
+        // Small round ears
+        for(let side=-1;side<=1;side+=2){
           ctx.beginPath();
-          ctx.arc(sz * 0.6, side * sz * 0.35 + waddleY, sz * 0.12, 0, Math.PI * 2);
-          ctx.fillStyle = w.color;
+          ctx.arc(sz*0.5*flip,side*sz*0.28+waddleY,sz*0.1,0,Math.PI*2);
+          ctx.fillStyle=this.bodyColor;
           ctx.fill();
           ctx.beginPath();
-          ctx.arc(sz * 0.6, side * sz * 0.35 + waddleY, sz * 0.07, 0, Math.PI * 2);
-          ctx.fillStyle = '#c8907a';
+          ctx.arc(sz*0.5*flip,side*sz*0.28+waddleY,sz*0.06,0,Math.PI*2);
+          ctx.fillStyle='#c8907a';
           ctx.fill();
         }
 
         // Eyes
-        if (w.eyeBlink <= 0) {
+        if(this.eyeBlink<=0){
           ctx.beginPath();
-          ctx.arc(sz * 0.65, -sz * 0.1 + waddleY, 2.5, 0, Math.PI * 2);
-          ctx.arc(sz * 0.65, sz * 0.1 + waddleY, 2.5, 0, Math.PI * 2);
-          ctx.fillStyle = '#1a0a00';
+          ctx.arc(sz*0.55*flip,-sz*0.08+waddleY,2.5,0,Math.PI*2);
+          ctx.fillStyle='#1a0a00';
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(sz*0.55*flip,sz*0.08+waddleY,2.5,0,Math.PI*2);
+          ctx.fillStyle='#1a0a00';
           ctx.fill();
           // Eye shine
           ctx.beginPath();
-          ctx.arc(sz * 0.67, -sz * 0.12 + waddleY, 1, 0, Math.PI * 2);
-          ctx.arc(sz * 0.67, sz * 0.08 + waddleY, 1, 0, Math.PI * 2);
-          ctx.fillStyle = '#fff';
+          ctx.arc(sz*0.57*flip,-sz*0.09+waddleY,1,0,Math.PI*2);
+          ctx.fillStyle='#fff';
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(sz*0.57*flip,sz*0.07+waddleY,1,0,Math.PI*2);
+          ctx.fillStyle='#fff';
           ctx.fill();
         } else {
-          ctx.strokeStyle = '#1a0a00';
-          ctx.lineWidth = 1.5;
+          ctx.strokeStyle='#1a0a00';ctx.lineWidth=1.5;
           ctx.beginPath();
-          ctx.moveTo(sz * 0.60, -sz * 0.1 + waddleY);
-          ctx.lineTo(sz * 0.70, -sz * 0.1 + waddleY);
-          ctx.moveTo(sz * 0.60, sz * 0.1 + waddleY);
-          ctx.lineTo(sz * 0.70, sz * 0.1 + waddleY);
+          ctx.moveTo(sz*0.50*flip,-sz*0.08+waddleY);ctx.lineTo(sz*0.60*flip,-sz*0.08+waddleY);
+          ctx.moveTo(sz*0.50*flip,sz*0.08+waddleY);ctx.lineTo(sz*0.60*flip,sz*0.08+waddleY);
           ctx.stroke();
         }
 
-        // Nose
+        // Round nose
         ctx.beginPath();
-        ctx.ellipse(sz * 0.85, waddleY, 4, 3, 0, 0, Math.PI * 2);
-        ctx.fillStyle = '#3a2010';
+        ctx.ellipse(sz*0.7*flip,waddleY,4,3,0,0,Math.PI*2);
+        ctx.fillStyle='#3a2010';
         ctx.fill();
 
         ctx.restore();
       }
+    }
 
-      function spawnCube(x, y, burst) {
-        if (particles.length >= PARTICLE_CAP) return;
-        var c = cubeColors[Math.floor(Math.random() * cubeColors.length)];
-        var spd = burst ? (Math.random() * 5 + 2) : (Math.random() * 1 + 0.3);
-        var ang = Math.random() * Math.PI * 2;
-        particles.push({
-          x: x, y: y,
-          vx: Math.cos(ang) * spd,
-          vy: Math.sin(ang) * spd,
-          life: 1,
-          decay: 0.005 + Math.random() * 0.008,
-          size: 3 + Math.random() * 5,
-          color: c,
-          rotation: Math.random() * Math.PI * 0.5,
-          rotSpeed: (Math.random() - 0.5) * 0.05,
-          type: 'cube'
-        });
-        cubeCount++;
+    function glitterBomb(x,y){
+      for(let i=0;i<50;i++){
+        const a=Math.random()*Math.PI*2,s=Math.random()*8+2;
+        particles.push(new Particle(x,y,Math.cos(a)*s,Math.sin(a)*s-2,COLORS[Math.floor(Math.random()*COLORS.length)],'burst'));
       }
-
-      function spawnDust(x, y) {
-        if (particles.length >= PARTICLE_CAP) return;
-        particles.push({
-          x: x, y: y,
-          vx: (Math.random() - 0.5) * 2,
-          vy: (Math.random() - 0.5) * 2 - 0.5,
-          life: 1,
-          decay: 0.015 + Math.random() * 0.015,
-          size: 3 + Math.random() * 4,
-          color: 'rgba(210,180,140,',
-          type: 'dust'
-        });
+      for(let i=0;i<20;i++){
+        const a=Math.random()*Math.PI*2,s=Math.random()*4+1;
+        particles.push(new Particle(x,y,Math.cos(a)*s,Math.sin(a)*s,hsl(Math.random()*360,100,70),'sparkle'));
       }
+    }
 
-      function cubeBurst(x, y) {
-        for (var i = 0; i < 25; i++) spawnCube(x, y, true);
-        for (var i = 0; i < 10; i++) spawnDust(x, y);
-      }
-
-      function update() {
-        var tx = chaosMode ? Math.random() * W : mouse.x;
-        var ty = chaosMode ? Math.random() * H : mouse.y;
-
-        for (var i = 0; i < wombats.length; i++) {
-          var w = wombats[i];
-          var dx = tx - w.x;
-          var dy = ty - w.y;
-          var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          var force = chaosMode ? 0.35 : 0.12;
-          w.vx += (dx / dist) * force;
-          w.vy += (dy / dist) * force;
-          w.vx *= 0.91;
-          w.vy *= 0.91;
-          w.x += w.vx;
-          w.y += w.vy;
-          var speed = Math.sqrt(w.vx * w.vx + w.vy * w.vy);
-          w.waddle += speed * 0.12;
-          w.legPhase += speed * 0.15;
-
-          if (Math.random() < 0.005) w.eyeBlink = 12;
-          if (w.eyeBlink > 0) w.eyeBlink--;
-
-          // Poop cubes trail
-          w.poopTimer--;
-          if (w.poopTimer <= 0 && speed > 0.5) {
-            spawnCube(w.x - w.vx * 3, w.y - w.vy * 3, false);
-            w.poopTimer = 20 + Math.random() * 40;
-          }
-
-          if (w.x < 0) w.x = W;
-          if (w.x > W) w.x = 0;
-          if (w.y < 0) w.y = H;
-          if (w.y > H) w.y = 0;
-
-          if (Math.random() < 0.05) spawnDust(w.x + (Math.random()-0.5)*20, w.y + w.size * 0.4);
+    function drawRainbowBeams(){
+      for(let i=rainbowBeams.length-1;i>=0;i--){
+        const b=rainbowBeams[i];
+        b.length=Math.min(b.length+12,b.maxLen);
+        b.life-=0.012;
+        if(b.life<=0){rainbowBeams.splice(i,1);continue;}
+        const ex=b.x+Math.cos(b.angle)*b.length,ey=b.y+Math.sin(b.angle)*b.length;
+        for(let s=0;s<6;s++){
+          const off=(s-2.5)*3;
+          const px=Math.sin(b.angle)*off,py=-Math.cos(b.angle)*off;
+          ctx.beginPath();ctx.moveTo(b.x+px,b.y+py);ctx.lineTo(ex+px,ey+py);
+          ctx.strokeStyle=`hsla(${(b.hOff+s*60)%360},100%,60%,${b.life*0.6})`;
+          ctx.lineWidth=2;ctx.stroke();
         }
-
-        if (mouseDown) {
-          for (var j = 0; j < 3; j++) spawnCube(mouse.x + (Math.random()-0.5)*30, mouse.y + (Math.random()-0.5)*30, false);
-          for (var j = 0; j < 2; j++) spawnDust(mouse.x + (Math.random()-0.5)*40, mouse.y + (Math.random()-0.5)*40);
-        }
-
-        for (var i = particles.length - 1; i >= 0; i--) {
-          var p = particles[i];
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy += 0.03;
-          p.vx *= 0.99;
-          p.life -= p.decay;
-          if (p.rotation !== undefined) p.rotation += p.rotSpeed;
-          if (p.life <= 0) particles.splice(i, 1);
+        if(Math.random()<0.3){
+          particles.push(new Particle(ex+(Math.random()-0.5)*10,ey+(Math.random()-0.5)*10,(Math.random()-0.5)*3,(Math.random()-0.5)*3,hsl((b.hOff+Math.random()*120)%360,100,70),'sparkle'));
         }
       }
+    }
 
-      function draw() {
-        // Gradient sky
-        var grad = ctx.createLinearGradient(0, 0, 0, H);
-        grad.addColorStop(0, '#0a0510');
-        grad.addColorStop(0.4, '#100800');
-        grad.addColorStop(1, '#1a1008');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, W, H);
+    function handleMouseHold(){
+      if(!mouseDown)return;
+      mouseHoldTime++;
+      const intensity=Math.min(mouseHoldTime/30,1);
+      const count=Math.floor(intensity*5)+1;
+      for(let i=0;i<count;i++){
+        const a=Math.random()*Math.PI*2,r=Math.random()*30*intensity;
+        particles.push(new Particle(mouse.x+Math.cos(a)*r,mouse.y+Math.sin(a)*r,(Math.random()-0.5)*3,(Math.random()-0.5)*3-1,COLORS[Math.floor(Math.random()*COLORS.length)],'sparkle'));
+      }
+    }
 
-        // Stars
-        for (var i = 0; i < stars.length; i++) {
-          var s = stars[i];
-          s.pulse += s.speed;
-          var alpha = s.bright ? (0.7 + Math.sin(s.pulse) * 0.3) : (0.3 + Math.sin(s.pulse) * 0.25);
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255,240,200,' + Math.max(0, alpha).toFixed(2) + ')';
+    function drawBackground(){
+      const grad=ctx.createLinearGradient(0,0,0,H);
+      grad.addColorStop(0,'#0a0510');
+      grad.addColorStop(0.4,BG);
+      grad.addColorStop(1,'#1a1008');
+      ctx.fillStyle=grad;
+      ctx.fillRect(0,0,W,H);
+      for(const s of stars){
+        s.pulse+=s.speed;
+        const a=0.3+Math.sin(s.pulse)*0.3;
+        ctx.beginPath();ctx.arc(s.x,s.y,s.size,0,Math.PI*2);
+        ctx.fillStyle=`rgba(255,240,200,${Math.max(0,a).toFixed(2)})`;
+        ctx.fill();
+        if(s.bright){
+          ctx.beginPath();ctx.arc(s.x,s.y,s.size*3,0,Math.PI*2);
+          ctx.fillStyle=`rgba(255,240,200,${(a*0.1).toFixed(3)})`;
           ctx.fill();
-          if (s.bright) {
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.size * 3, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,240,200,' + (alpha * 0.1).toFixed(3) + ')';
-            ctx.fill();
-          }
         }
-
-        // Ground
-        ctx.fillStyle = '#1a1008';
-        ctx.fillRect(0, H * 0.85, W, H * 0.15);
-        ctx.fillStyle = '#221810';
-        ctx.fillRect(0, H * 0.85, W, 2);
-
-        // Particles
-        for (var i = 0; i < particles.length; i++) {
-          var p = particles[i];
-          ctx.globalAlpha = p.life;
-          if (p.type === 'cube') {
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.rotate(p.rotation);
-            ctx.fillStyle = p.color;
-            ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
-            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-            ctx.lineWidth = 0.5;
-            ctx.strokeRect(-p.size/2, -p.size/2, p.size, p.size);
-            ctx.restore();
-          } else {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = p.color + (p.life * 0.4).toFixed(2) + ')';
-            ctx.fill();
-          }
-          ctx.globalAlpha = 1;
-        }
-
-        // Wombats
-        for (var i = 0; i < wombats.length; i++) drawWombat(wombats[i]);
-
-        document.getElementById('stats').textContent =
-          wombats.length + ' wombats | ' + particles.length + ' particles | ' + cubeCount + ' cubes';
       }
+    }
 
-      function loop() {
-        update();
-        draw();
-        requestAnimationFrame(loop);
+    // Southern Cross constellation
+    const southernCross=[{rx:0.55,ry:0.25},{rx:0.58,ry:0.35},{rx:0.52,ry:0.30},{rx:0.62,ry:0.30},{rx:0.57,ry:0.42}];
+
+    function initStars(){
+      stars.length=0;
+      for(let i=0;i<100;i++){
+        stars.push({x:Math.random()*W,y:Math.random()*H*0.6,size:Math.random()*1.5+0.5,pulse:Math.random()*Math.PI*2,speed:Math.random()*0.01+0.003,bright:false});
       }
+      for(const sc of southernCross){
+        stars.push({x:sc.rx*W,y:sc.ry*H,size:2.5,pulse:Math.random()*Math.PI*2,speed:0.008,bright:true});
+      }
+    }
 
-      window.addEventListener('resize', resize);
-      canvas.addEventListener('mousemove', function(e) { mouse.x = e.clientX; mouse.y = e.clientY; });
-      canvas.addEventListener('mousedown', function(e) { mouseDown = true; cubeBurst(e.clientX, e.clientY); });
-      canvas.addEventListener('mouseup', function() { mouseDown = false; });
-      canvas.addEventListener('touchmove', function(e) { e.preventDefault(); mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }, {passive:false});
-      canvas.addEventListener('touchstart', function(e) { mouseDown = true; mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; cubeBurst(mouse.x, mouse.y); });
-      canvas.addEventListener('touchend', function() { mouseDown = false; });
-      window.addEventListener('keydown', function(e) { if (e.code === 'Space') { e.preventDefault(); chaosMode = !chaosMode; } });
+    function resize(){
+      W=canvas.width=innerWidth;H=canvas.height=innerHeight;
+      initStars();
+      const count=Math.min(14,Math.max(6,Math.floor((W*H)/70000)));
+      while(creatures.length<count)creatures.push(new Creature());
+      while(creatures.length>count)creatures.pop();
+    }
 
-      setTimeout(function() {
-        var el = document.getElementById('instructions');
-        if (el) el.style.opacity = '0';
-        setTimeout(function() { if (el) el.style.display = 'none'; }, 1000);
-      }, 6000);
+    window.addEventListener('resize',resize);
+    canvas.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+    canvas.addEventListener('mousedown',e=>{mouseDown=true;mouseHoldTime=0;glitterBomb(e.clientX,e.clientY);});
+    canvas.addEventListener('mouseup',()=>{mouseDown=false;mouseHoldTime=0;});
+    canvas.addEventListener('touchmove',e=>{e.preventDefault();mouse.x=e.touches[0].clientX;mouse.y=e.touches[0].clientY;},{passive:false});
+    canvas.addEventListener('touchstart',e=>{mouseDown=true;mouseHoldTime=0;mouse.x=e.touches[0].clientX;mouse.y=e.touches[0].clientY;glitterBomb(mouse.x,mouse.y);});
+    canvas.addEventListener('touchend',()=>{mouseDown=false;mouseHoldTime=0;});
+    window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();chaosMode=!chaosMode;}});
 
-      resize();
-      mouse.x = W / 2;
-      mouse.y = H / 2;
-      loop();
+    setTimeout(()=>{const el=document.getElementById('instructions');if(el){el.style.opacity='0';setTimeout(()=>{if(el)el.style.display='none';},1000);}},6000);
+
+    resize();
+    mouse.x=W/2;mouse.y=H/2;
+
+    (function loop(){
+      frame++;
+      drawBackground();
+      handleMouseHold();
+      for(const c of creatures){c.update();c.draw();}
+      drawRainbowBeams();
+      for(let i=particles.length-1;i>=0;i--){particles[i].update();particles[i].draw();if(particles[i].life<=0)particles.splice(i,1);}
+      while(particles.length>2000)particles.shift();
+      document.getElementById('stats').textContent=
+        creatures.length+' wombats | '+particles.length+' particles | '+cubeCount+' cubes | '+(chaosMode?'CHAOS':'chill');
+      requestAnimationFrame(loop);
     })();
     </script>
     </body>

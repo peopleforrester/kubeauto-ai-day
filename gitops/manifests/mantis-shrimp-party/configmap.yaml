@@ -37,339 +37,349 @@ data:
     <body>
     <div id="stats"></div>
     <div id="instructions">
-      Click: Mantis Punch! | Hold: Bioluminescent Stream | Space: Chaos Mode<br>
-      Mantis shrimp follow your cursor through the deep ocean
+      Click: Glitter Bomb | Hold: Sparkle Stream | Space: Chaos Mode<br>
+      Shrimp follow your cursor through the deep ocean
     </div>
     <canvas id="c"></canvas>
     <script>
-    (function() {
-      var canvas = document.getElementById('c');
-      var ctx = canvas.getContext('2d');
-      var W, H;
-      var mouse = { x: 0, y: 0 };
-      var mouseDown = false;
-      var chaosMode = false;
-      var shrimps = [];
-      var particles = [];
-      var punchCount = 0;
-      var stars = [];
-      var shockwaves = [];
-      var PARTICLE_CAP = 2000;
+    const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+    let W,H,frame=0;
+    const mouse={x:0,y:0};
+    let mouseDown=false,mouseHoldTime=0,chaosMode=false;
+    const creatures=[],particles=[],rainbowBeams=[],stars=[];
+    const COLORS=['#ff0080','#ff00ff','#00ffff','#00ff00','#ff4400','#7b00ff','#00ff87','#ff69b4','#00e5ff','#ffef00'];
+    const BG='#000a20';
+    function hsl(h,s,l){return `hsl(${h},${s}%,${l}%)`;}
 
-      var neonColors = ['#ff0080','#00ffff','#00ff40','#8000ff','#ff4000','#ffff00','#ff00ff','#0080ff'];
-
-      function resize() {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-        initStars();
-        var count = Math.min(14, Math.max(6, Math.floor((W * H) / 70000)));
-        while (shrimps.length < count) shrimps.push(createShrimp());
-        while (shrimps.length > count) shrimps.pop();
+    class Particle {
+      constructor(x,y,vx,vy,color,type){
+        this.x=x;this.y=y;this.vx=vx;this.vy=vy;this.color=color;this.type=type;
+        this.life=1;this.size=type==='sparkle'?Math.random()*3+1:Math.random()*4+2;
       }
-
-      function initStars() {
-        stars = [];
-        for (var i = 0; i < 80; i++) {
-          stars.push({
-            x: Math.random() * W, y: Math.random() * H,
-            size: Math.random() * 2 + 0.5,
-            pulse: Math.random() * Math.PI * 2,
-            speed: Math.random() * 0.03 + 0.005,
-            color: neonColors[Math.floor(Math.random() * neonColors.length)]
-          });
+      update(){
+        this.x+=this.vx;this.y+=this.vy;
+        this.vy+=0.03;this.vx*=0.99;this.vy*=0.99;
+        this.life-=this.type==='sparkle'?0.025:0.015;
+      }
+      draw(){
+        if(this.life<=0)return;
+        ctx.globalAlpha=this.life;
+        if(this.type==='sparkle'){
+          ctx.beginPath();
+          ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+          ctx.fillStyle=this.color;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(this.x,this.y-this.size*2);ctx.lineTo(this.x,this.y+this.size*2);
+          ctx.moveTo(this.x-this.size*2,this.y);ctx.lineTo(this.x+this.size*2,this.y);
+          ctx.strokeStyle=this.color;ctx.lineWidth=0.5;ctx.stroke();
+        } else {
+          ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+          ctx.fillStyle=this.color;ctx.fill();
         }
+        ctx.globalAlpha=1;
       }
+    }
 
-      function createShrimp() {
-        return {
-          x: Math.random() * W, y: Math.random() * H,
-          vx: 0, vy: 0,
-          size: 20 + Math.random() * 10,
-          color1: neonColors[Math.floor(Math.random() * neonColors.length)],
-          color2: neonColors[Math.floor(Math.random() * neonColors.length)],
-          color3: neonColors[Math.floor(Math.random() * neonColors.length)],
-          angle: Math.random() * Math.PI * 2,
-          swimPhase: Math.random() * Math.PI * 2,
-          clubPhase: Math.random() * Math.PI * 2
-        };
+    class Creature {
+      constructor(){
+        this.x=Math.random()*W;
+        this.y=Math.random()*H*0.8+H*0.1;
+        this.vx=(Math.random()-0.5)*6;
+        this.vy=(Math.random()-0.5)*6;
+        this.size=Math.random()*20+25;
+        this.rot=0;this.rotSpd=0;
+        this.hue=Math.random()*360;
+        this.phase=Math.random()*Math.PI*2;
+        this.bobSpd=0.02+Math.random()*0.02;
+        this.sparkT=0;this.trail=[];
+        this.wild=Math.random();
+        this.spinning=false;this.spinT=0;
+        this.shootT=0;this.glow=0;
+        this.wingPh=0;this.wingSp=0.08+Math.random()*0.04;
+        this.facingRight=true;
+        this.swimPhase=Math.random()*Math.PI*2;
+        this.clubPhase=Math.random()*Math.PI*2;
+        this.color1=COLORS[Math.floor(Math.random()*COLORS.length)];
+        this.color2=COLORS[Math.floor(Math.random()*COLORS.length)];
+        this.color3=COLORS[Math.floor(Math.random()*COLORS.length)];
       }
+      update(){
+        const t=frame*0.016;
+        this.phase+=this.bobSpd;
+        this.wingPh+=this.wingSp;
+        this.hue=(this.hue+0.5)%360;
+        this.glow=Math.sin(t*2+this.phase)*0.3+0.7;
 
-      function drawShrimp(s) {
+        const dx=mouse.x-this.x,dy=mouse.y-this.y,dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist>10){
+          const f=chaosMode?0.3:0.1;
+          this.vx+=(dx/dist)*f;
+          this.vy+=(dy/dist)*f;
+        }
+        if(chaosMode){
+          this.vx+=(Math.random()-0.5)*2;
+          this.vy+=(Math.random()-0.5)*2;
+          if(Math.random()<0.05)this.spinning=true;
+        }
+        this.vx+=Math.sin(t*0.7+this.phase)*0.12*(1+this.wild);
+        this.vy+=Math.cos(t*0.5+this.phase)*0.12*(1+this.wild);
+        const max=chaosMode?18:10;
+        this.vx*=0.98;this.vy*=0.98;
+        const spd=Math.sqrt(this.vx*this.vx+this.vy*this.vy);
+        if(spd>max){this.vx=(this.vx/spd)*max;this.vy=(this.vy/spd)*max;}
+        this.x+=this.vx;
+        this.y+=this.vy+Math.sin(this.phase)*0.8;
+        if(Math.abs(this.vx)>0.3)this.facingRight=this.vx>0;
+
+        const m=this.size;
+        if(this.x<m){this.x=m;this.vx=Math.abs(this.vx)*0.8;}
+        if(this.x>W-m){this.x=W-m;this.vx=-Math.abs(this.vx)*0.8;}
+        if(this.y<m+60){this.y=m+60;this.vy=Math.abs(this.vy)*0.8;}
+        if(this.y>H-m){this.y=H-m;this.vy=-Math.abs(this.vy)*0.8;}
+
+        if(this.spinning){
+          this.spinT++;this.rotSpd+=0.3;
+          if(this.spinT>60){this.spinning=false;this.spinT=0;}
+        } else {
+          this.rotSpd*=0.9;
+          if(spd>0.5){
+            const tr=Math.atan2(this.vy,this.vx);
+            let d=tr-this.rot;
+            while(d>Math.PI)d-=Math.PI*2;
+            while(d<-Math.PI)d+=Math.PI*2;
+            this.rotSpd+=d*0.05;
+          }
+        }
+        this.rot+=this.rotSpd;
+
+        this.trail.push({x:this.x,y:this.y,hue:this.hue,life:1});
+        if(this.trail.length>35)this.trail.shift();
+        this.trail.forEach(p=>p.life-=0.028);
+
+        this.sparkT++;
+        if(this.sparkT>(chaosMode?2:5)){
+          this.sparkT=0;
+          const a=Math.random()*Math.PI*2,r=Math.random()*this.size*1.5;
+          particles.push(new Particle(this.x+Math.cos(a)*r,this.y+Math.sin(a)*r,(Math.random()-0.5)*2,(Math.random()-0.5)*2-1,hsl(this.hue,100,70),'sparkle'));
+        }
+
+        this.shootT++;
+        const si=chaosMode?60:180;
+        if(this.shootT>si&&Math.random()<0.02){
+          this.shootT=0;
+          const a=this.facingRight?0:Math.PI;
+          rainbowBeams.push({x:this.x+Math.cos(a)*this.size,y:this.y+Math.sin(a)*this.size,angle:a+(Math.random()-0.5)*0.5,life:1,length:0,maxLen:150+Math.random()*200,hOff:this.hue});
+        }
+        if(!this.spinning&&Math.random()<(chaosMode?0.01:0.001))this.spinning=true;
+
+        this.swimPhase+=0.08;
+        this.clubPhase+=0.06;
+      }
+      draw(){
+        // Trail
+        for(let i=0;i<this.trail.length-1;i++){
+          const p=this.trail[i];
+          if(p.life<=0)continue;
+          ctx.globalAlpha=p.life*0.3;
+          ctx.beginPath();
+          ctx.arc(p.x,p.y,this.size*0.3*p.life,0,Math.PI*2);
+          ctx.fillStyle=COLORS[i%COLORS.length];
+          ctx.fill();
+        }
+        ctx.globalAlpha=1;
+
         ctx.save();
-        ctx.translate(s.x, s.y);
-        var moveAngle = Math.atan2(s.vy, s.vx);
-        var speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
-        if (speed > 0.5) s.angle = moveAngle;
-        ctx.rotate(s.angle);
+        ctx.translate(this.x,this.y);
+        ctx.rotate(this.rot);
 
-        var sz = s.size;
+        const sz=this.size;
+        const flip=this.facingRight?1:-1;
+
+        // Bioluminescent glow
+        ctx.beginPath();
+        ctx.ellipse(0,0,sz*0.9,sz*0.6,0,0,Math.PI*2);
+        const grd=ctx.createRadialGradient(0,0,sz*0.2,0,0,sz*0.9);
+        grd.addColorStop(0,`hsla(${this.hue},100%,60%,${this.glow*0.15})`);
+        grd.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=grd;
+        ctx.fill();
 
         // Fan tail
         ctx.beginPath();
-        ctx.moveTo(-sz * 1.2, 0);
-        ctx.lineTo(-sz * 1.8, -sz * 0.4);
-        ctx.lineTo(-sz * 1.6, 0);
-        ctx.lineTo(-sz * 1.8, sz * 0.4);
+        ctx.moveTo(-sz*0.7*flip,0);
+        ctx.lineTo(-sz*1.1*flip,-sz*0.35);
+        ctx.quadraticCurveTo(-sz*1.3*flip,0,-sz*1.1*flip,sz*0.35);
         ctx.closePath();
-        ctx.fillStyle = s.color3;
-        ctx.globalAlpha = 0.8;
+        ctx.fillStyle=this.color3;
+        ctx.globalAlpha=0.8;
         ctx.fill();
-        ctx.globalAlpha = 1;
+        ctx.globalAlpha=1;
 
-        // Segmented body
-        for (var i = 3; i >= 0; i--) {
-          var segX = -sz * 0.4 * i + sz * 0.2;
-          var segW = sz * 0.35;
-          var segH = sz * 0.3 - i * 1;
-          var sway = Math.sin(s.swimPhase + i * 0.5) * 2;
+        // Segmented body (4 overlapping ellipses, decreasing in size)
+        for(let i=3;i>=0;i--){
+          const segX=(-sz*0.25*i+sz*0.15)*flip;
+          const segW=sz*0.28-i*1.5;
+          const segH=sz*0.22-i*1;
+          const sway=Math.sin(this.swimPhase+i*0.5)*2;
           ctx.beginPath();
-          ctx.ellipse(segX, sway, segW, segH, 0, 0, Math.PI * 2);
-          ctx.fillStyle = i % 2 === 0 ? s.color1 : s.color2;
+          ctx.ellipse(segX,sway,segW,segH,0,0,Math.PI*2);
+          ctx.fillStyle=i%2===0?this.color1:this.color2;
           ctx.fill();
-          ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-          ctx.lineWidth = 0.5;
+          ctx.strokeStyle='rgba(255,255,255,0.25)';
+          ctx.lineWidth=0.5;
           ctx.stroke();
         }
 
-        // Club appendages
-        var clubAngle = Math.sin(s.clubPhase) * 0.3;
-        for (var side = -1; side <= 1; side += 2) {
+        // Club appendages (the mantis shrimp's signature weapon)
+        const clubAngle=Math.sin(this.clubPhase)*0.3;
+        for(let side=-1;side<=1;side+=2){
           ctx.save();
-          ctx.translate(sz * 0.5, side * sz * 0.15);
-          ctx.rotate(clubAngle * side);
+          ctx.translate(sz*0.4*flip,side*sz*0.12);
+          ctx.rotate(clubAngle*side*flip);
           // Arm
-          ctx.fillStyle = s.color1;
-          ctx.fillRect(0, -2, sz * 0.5, 4);
+          ctx.fillStyle=this.color1;
+          ctx.fillRect(0,-2,sz*0.4*flip,4);
           // Club head
           ctx.beginPath();
-          ctx.arc(sz * 0.5, 0, sz * 0.12, 0, Math.PI * 2);
-          ctx.fillStyle = '#ffffff';
+          ctx.arc(sz*0.4*flip,0,sz*0.1,0,Math.PI*2);
+          ctx.fillStyle='#ffffff';
           ctx.fill();
           ctx.beginPath();
-          ctx.arc(sz * 0.5, 0, sz * 0.1, 0, Math.PI * 2);
-          ctx.fillStyle = s.color2;
+          ctx.arc(sz*0.4*flip,0,sz*0.08,0,Math.PI*2);
+          ctx.fillStyle=this.color2;
           ctx.fill();
           ctx.restore();
         }
 
         // Stalked eyes
-        for (var side = -1; side <= 1; side += 2) {
+        for(let side=-1;side<=1;side+=2){
+          // Eye stalk
           ctx.beginPath();
-          ctx.moveTo(sz * 0.4, side * sz * 0.1);
-          ctx.lineTo(sz * 0.7, side * sz * 0.3);
-          ctx.strokeStyle = s.color1;
-          ctx.lineWidth = 2;
+          ctx.moveTo(sz*0.3*flip,side*sz*0.08);
+          ctx.lineTo(sz*0.55*flip,side*sz*0.25);
+          ctx.strokeStyle=this.color1;
+          ctx.lineWidth=2;
           ctx.stroke();
+          // Eye ball
           ctx.beginPath();
-          ctx.arc(sz * 0.7, side * sz * 0.3, 3.5, 0, Math.PI * 2);
-          ctx.fillStyle = '#000';
+          ctx.arc(sz*0.55*flip,side*sz*0.25,4,0,Math.PI*2);
+          ctx.fillStyle='#000';
           ctx.fill();
+          // Eye color
           ctx.beginPath();
-          ctx.arc(sz * 0.7, side * sz * 0.3, 2, 0, Math.PI * 2);
-          ctx.fillStyle = s.color3;
+          ctx.arc(sz*0.55*flip,side*sz*0.25,2.5,0,Math.PI*2);
+          ctx.fillStyle=this.color3;
           ctx.fill();
+          // Eye highlight
           ctx.beginPath();
-          ctx.arc(sz * 0.72, side * sz * 0.28, 1, 0, Math.PI * 2);
-          ctx.fillStyle = '#fff';
+          ctx.arc(sz*0.56*flip,side*sz*0.23,1,0,Math.PI*2);
+          ctx.fillStyle='#fff';
           ctx.fill();
         }
-
-        // Glow effect
-        ctx.beginPath();
-        ctx.ellipse(0, 0, sz * 0.8, sz * 0.5, 0, 0, Math.PI * 2);
-        var glow = ctx.createRadialGradient(0, 0, 0, 0, 0, sz * 0.8);
-        glow.addColorStop(0, s.color1.replace(')', ',0.1)').replace('rgb', 'rgba').replace('#', ''));
-        glow.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = 'rgba(' + hexToRgb(s.color1) + ',0.08)';
-        ctx.fill();
 
         ctx.restore();
       }
+    }
 
-      function hexToRgb(hex) {
-        var r = parseInt(hex.slice(1,3),16);
-        var g = parseInt(hex.slice(3,5),16);
-        var b = parseInt(hex.slice(5,7),16);
-        return r+','+g+','+b;
+    function glitterBomb(x,y){
+      for(let i=0;i<50;i++){
+        const a=Math.random()*Math.PI*2,s=Math.random()*8+2;
+        particles.push(new Particle(x,y,Math.cos(a)*s,Math.sin(a)*s-2,COLORS[Math.floor(Math.random()*COLORS.length)],'burst'));
       }
-
-      function spawnBubble(x, y, burst) {
-        if (particles.length >= PARTICLE_CAP) return;
-        var spd = burst ? (Math.random() * 5 + 2) : (Math.random() * 1.5 + 0.3);
-        var ang = Math.random() * Math.PI * 2;
-        particles.push({
-          x: x, y: y,
-          vx: Math.cos(ang) * spd,
-          vy: Math.sin(ang) * spd - 0.5,
-          life: 1,
-          decay: 0.006 + Math.random() * 0.01,
-          size: 2 + Math.random() * 5,
-          color: neonColors[Math.floor(Math.random() * neonColors.length)],
-          type: 'bubble'
-        });
+      for(let i=0;i<20;i++){
+        const a=Math.random()*Math.PI*2,s=Math.random()*4+1;
+        particles.push(new Particle(x,y,Math.cos(a)*s,Math.sin(a)*s,hsl(Math.random()*360,100,70),'sparkle'));
       }
+    }
 
-      function spawnBioFlash(x, y) {
-        if (particles.length >= PARTICLE_CAP) return;
-        particles.push({
-          x: x, y: y,
-          vx: (Math.random() - 0.5) * 2,
-          vy: (Math.random() - 0.5) * 2,
-          life: 1,
-          decay: 0.03 + Math.random() * 0.02,
-          size: 8 + Math.random() * 12,
-          color: neonColors[Math.floor(Math.random() * neonColors.length)],
-          type: 'flash'
-        });
-      }
-
-      function mantisPunch(x, y) {
-        punchCount++;
-        shockwaves.push({ x: x, y: y, radius: 5, maxRadius: 120, life: 1 });
-        for (var i = 0; i < 40; i++) spawnBubble(x, y, true);
-        for (var i = 0; i < 5; i++) spawnBioFlash(x, y);
-      }
-
-      function update() {
-        var tx = chaosMode ? Math.random() * W : mouse.x;
-        var ty = chaosMode ? Math.random() * H : mouse.y;
-
-        for (var i = 0; i < shrimps.length; i++) {
-          var s = shrimps[i];
-          var dx = tx - s.x;
-          var dy = ty - s.y;
-          var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          var force = chaosMode ? 0.45 : 0.18;
-          s.vx += (dx / dist) * force;
-          s.vy += (dy / dist) * force;
-          s.vx *= 0.93;
-          s.vy *= 0.93;
-          s.x += s.vx;
-          s.y += s.vy;
-          s.swimPhase += 0.08;
-          s.clubPhase += 0.06;
-
-          if (s.x < 0) s.x = W;
-          if (s.x > W) s.x = 0;
-          if (s.y < 0) s.y = H;
-          if (s.y > H) s.y = 0;
-
-          if (Math.random() < 0.1) spawnBubble(s.x - s.vx * 2, s.y - s.vy * 2, false);
+    function drawRainbowBeams(){
+      for(let i=rainbowBeams.length-1;i>=0;i--){
+        const b=rainbowBeams[i];
+        b.length=Math.min(b.length+12,b.maxLen);
+        b.life-=0.012;
+        if(b.life<=0){rainbowBeams.splice(i,1);continue;}
+        const ex=b.x+Math.cos(b.angle)*b.length,ey=b.y+Math.sin(b.angle)*b.length;
+        for(let s=0;s<6;s++){
+          const off=(s-2.5)*3;
+          const px=Math.sin(b.angle)*off,py=-Math.cos(b.angle)*off;
+          ctx.beginPath();ctx.moveTo(b.x+px,b.y+py);ctx.lineTo(ex+px,ey+py);
+          ctx.strokeStyle=`hsla(${(b.hOff+s*60)%360},100%,60%,${b.life*0.6})`;
+          ctx.lineWidth=2;ctx.stroke();
         }
-
-        if (mouseDown) {
-          for (var j = 0; j < 4; j++) spawnBubble(mouse.x + (Math.random()-0.5)*40, mouse.y + (Math.random()-0.5)*40, false);
-          for (var j = 0; j < 2; j++) spawnBioFlash(mouse.x + (Math.random()-0.5)*50, mouse.y + (Math.random()-0.5)*50);
-        }
-
-        for (var i = particles.length - 1; i >= 0; i--) {
-          var p = particles[i];
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy -= 0.01;
-          p.vx *= 0.99;
-          p.life -= p.decay;
-          if (p.life <= 0) particles.splice(i, 1);
-        }
-
-        for (var i = shockwaves.length - 1; i >= 0; i--) {
-          var sw = shockwaves[i];
-          sw.radius += 4;
-          sw.life -= 0.025;
-          if (sw.life <= 0) shockwaves.splice(i, 1);
+        if(Math.random()<0.3){
+          particles.push(new Particle(ex+(Math.random()-0.5)*10,ey+(Math.random()-0.5)*10,(Math.random()-0.5)*3,(Math.random()-0.5)*3,hsl((b.hOff+Math.random()*120)%360,100,70),'sparkle'));
         }
       }
+    }
 
-      function draw() {
-        ctx.fillStyle = '#000a20';
-        ctx.fillRect(0, 0, W, H);
-
-        // Bioluminescent dots
-        var t = Date.now() * 0.001;
-        for (var i = 0; i < stars.length; i++) {
-          var s = stars[i];
-          s.pulse += s.speed;
-          var alpha = 0.2 + Math.sin(s.pulse) * 0.3;
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(' + hexToRgb(s.color) + ',' + Math.max(0, alpha).toFixed(2) + ')';
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, s.size * 4, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(' + hexToRgb(s.color) + ',' + (Math.max(0, alpha) * 0.08).toFixed(3) + ')';
-          ctx.fill();
-        }
-
-        // Shockwaves
-        for (var i = 0; i < shockwaves.length; i++) {
-          var sw = shockwaves[i];
-          ctx.beginPath();
-          ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(255,255,255,' + (sw.life * 0.6).toFixed(2) + ')';
-          ctx.lineWidth = 3 * sw.life;
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.arc(sw.x, sw.y, sw.radius * 0.7, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(0,255,255,' + (sw.life * 0.3).toFixed(2) + ')';
-          ctx.lineWidth = 2 * sw.life;
-          ctx.stroke();
-        }
-
-        // Particles
-        for (var i = 0; i < particles.length; i++) {
-          var p = particles[i];
-          ctx.globalAlpha = p.life;
-          if (p.type === 'bubble') {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.strokeStyle = p.color;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(p.x - p.size * 0.3, p.y - p.size * 0.3, p.size * 0.3, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,255,255,0.4)';
-            ctx.fill();
-          } else {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(' + hexToRgb(p.color) + ',0.3)';
-            ctx.fill();
-          }
-          ctx.globalAlpha = 1;
-        }
-
-        // Shrimps
-        for (var i = 0; i < shrimps.length; i++) drawShrimp(shrimps[i]);
-
-        document.getElementById('stats').textContent =
-          shrimps.length + ' shrimp | ' + particles.length + ' particles | ' + punchCount + ' punches';
+    function handleMouseHold(){
+      if(!mouseDown)return;
+      mouseHoldTime++;
+      const intensity=Math.min(mouseHoldTime/30,1);
+      const count=Math.floor(intensity*5)+1;
+      for(let i=0;i<count;i++){
+        const a=Math.random()*Math.PI*2,r=Math.random()*30*intensity;
+        particles.push(new Particle(mouse.x+Math.cos(a)*r,mouse.y+Math.sin(a)*r,(Math.random()-0.5)*3,(Math.random()-0.5)*3-1,COLORS[Math.floor(Math.random()*COLORS.length)],'sparkle'));
       }
+    }
 
-      function loop() {
-        update();
-        draw();
-        requestAnimationFrame(loop);
+    function drawBackground(){
+      ctx.fillStyle=BG;
+      ctx.fillRect(0,0,W,H);
+      const t=frame*0.016;
+      for(const s of stars){
+        s.pulse+=s.speed;
+        const a=0.3+Math.sin(s.pulse)*0.4;
+        ctx.beginPath();ctx.arc(s.x,s.y,s.size,0,Math.PI*2);
+        ctx.fillStyle=`rgba(0,200,255,${Math.max(0,a).toFixed(2)})`;
+        ctx.fill();
+        ctx.beginPath();ctx.arc(s.x,s.y,s.size*4,0,Math.PI*2);
+        ctx.fillStyle=`rgba(0,200,255,${(Math.max(0,a)*0.08).toFixed(2)})`;
+        ctx.fill();
       }
+    }
 
-      window.addEventListener('resize', resize);
-      canvas.addEventListener('mousemove', function(e) { mouse.x = e.clientX; mouse.y = e.clientY; });
-      canvas.addEventListener('mousedown', function(e) { mouseDown = true; mantisPunch(e.clientX, e.clientY); });
-      canvas.addEventListener('mouseup', function() { mouseDown = false; });
-      canvas.addEventListener('touchmove', function(e) { e.preventDefault(); mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }, {passive:false});
-      canvas.addEventListener('touchstart', function(e) { mouseDown = true; mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; mantisPunch(mouse.x, mouse.y); });
-      canvas.addEventListener('touchend', function() { mouseDown = false; });
-      window.addEventListener('keydown', function(e) { if (e.code === 'Space') { e.preventDefault(); chaosMode = !chaosMode; } });
+    function initStars(){
+      stars.length=0;
+      for(let i=0;i<80;i++){
+        stars.push({x:Math.random()*W,y:Math.random()*H,size:Math.random()*2+0.5,pulse:Math.random()*Math.PI*2,speed:Math.random()*0.02+0.005});
+      }
+    }
 
-      setTimeout(function() {
-        var el = document.getElementById('instructions');
-        if (el) el.style.opacity = '0';
-        setTimeout(function() { if (el) el.style.display = 'none'; }, 1000);
-      }, 6000);
+    function resize(){
+      W=canvas.width=innerWidth;H=canvas.height=innerHeight;
+      initStars();
+      const count=Math.min(14,Math.max(6,Math.floor((W*H)/70000)));
+      while(creatures.length<count)creatures.push(new Creature());
+      while(creatures.length>count)creatures.pop();
+    }
 
-      resize();
-      mouse.x = W / 2;
-      mouse.y = H / 2;
-      loop();
+    window.addEventListener('resize',resize);
+    canvas.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+    canvas.addEventListener('mousedown',e=>{mouseDown=true;mouseHoldTime=0;glitterBomb(e.clientX,e.clientY);});
+    canvas.addEventListener('mouseup',()=>{mouseDown=false;mouseHoldTime=0;});
+    canvas.addEventListener('touchmove',e=>{e.preventDefault();mouse.x=e.touches[0].clientX;mouse.y=e.touches[0].clientY;},{passive:false});
+    canvas.addEventListener('touchstart',e=>{mouseDown=true;mouseHoldTime=0;mouse.x=e.touches[0].clientX;mouse.y=e.touches[0].clientY;glitterBomb(mouse.x,mouse.y);});
+    canvas.addEventListener('touchend',()=>{mouseDown=false;mouseHoldTime=0;});
+    window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();chaosMode=!chaosMode;}});
+
+    setTimeout(()=>{const el=document.getElementById('instructions');if(el){el.style.opacity='0';setTimeout(()=>{if(el)el.style.display='none';},1000);}},6000);
+
+    resize();
+    mouse.x=W/2;mouse.y=H/2;
+
+    (function loop(){
+      frame++;
+      drawBackground();
+      handleMouseHold();
+      for(const c of creatures){c.update();c.draw();}
+      drawRainbowBeams();
+      for(let i=particles.length-1;i>=0;i--){particles[i].update();particles[i].draw();if(particles[i].life<=0)particles.splice(i,1);}
+      while(particles.length>2000)particles.shift();
+      document.getElementById('stats').textContent=
+        creatures.length+' shrimp | '+particles.length+' particles | '+rainbowBeams.length+' beams | '+(chaosMode?'CHAOS':'chill');
+      requestAnimationFrame(loop);
     })();
     </script>
     </body>

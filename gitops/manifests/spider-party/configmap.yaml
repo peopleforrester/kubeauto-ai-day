@@ -37,106 +37,245 @@ data:
     <body>
     <div id="stats"></div>
     <div id="instructions">
-      Click: Silk Burst | Hold: Thread Stream | Space: Chaos Mode<br>
+      Click: Glitter Bomb | Hold: Sparkle Stream | Space: Chaos Mode<br>
       Spiders follow your cursor through the moonlit web
     </div>
     <canvas id="c"></canvas>
     <script>
-    (function() {
-      var canvas = document.getElementById('c');
-      var ctx = canvas.getContext('2d');
-      var W, H;
-      var mouse = { x: 0, y: 0 };
-      var mouseDown = false;
-      var chaosMode = false;
-      var spiders = [];
-      var particles = [];
-      var webSegments = [];
-      var webCount = 0;
-      var stars = [];
-      var PARTICLE_CAP = 2000;
-      var WEB_CAP = 200;
+    const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+    let W,H,frame=0;
+    const mouse={x:0,y:0};
+    let mouseDown=false,mouseHoldTime=0,chaosMode=false;
+    const creatures=[],particles=[],rainbowBeams=[],stars=[];
+    const COLORS=['#2d1b4e','#4a2d7a','#6b3fa0','#8b5cc7','#c0c0c0','#808080','#660000','#990000','#cc0000','#dda0dd'];
+    const BG='#050510';
+    let webCount=0;
+    const webSegments=[];
+    const WEB_CAP=200;
+    function hsl(h,s,l){return `hsl(${h},${s}%,${l}%)`;}
 
-      var spiderColors = ['#1a1a2e','#16213e','#0f3460','#2c2c3e','#1a0a20','#200a20'];
-      var accentColors = ['#4a4a6a','#6060a0','#8080b0','#c0c0d0'];
-
-      function resize() {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-        initStars();
-        var count = Math.min(14, Math.max(6, Math.floor((W * H) / 70000)));
-        while (spiders.length < count) spiders.push(createSpider());
-        while (spiders.length > count) spiders.pop();
+    class Particle {
+      constructor(x,y,vx,vy,color,type){
+        this.x=x;this.y=y;this.vx=vx;this.vy=vy;this.color=color;this.type=type;
+        this.life=1;this.size=type==='sparkle'?Math.random()*3+1:Math.random()*4+2;
       }
+      update(){
+        this.x+=this.vx;this.y+=this.vy;
+        this.vy+=0.03;this.vx*=0.99;this.vy*=0.99;
+        this.life-=this.type==='sparkle'?0.025:this.type==='silk'?0.008:0.015;
+      }
+      draw(){
+        if(this.life<=0)return;
+        ctx.globalAlpha=this.life;
+        if(this.type==='sparkle'){
+          ctx.beginPath();
+          ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+          ctx.fillStyle=this.color;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(this.x,this.y-this.size*2);ctx.lineTo(this.x,this.y+this.size*2);
+          ctx.moveTo(this.x-this.size*2,this.y);ctx.lineTo(this.x+this.size*2,this.y);
+          ctx.strokeStyle=this.color;ctx.lineWidth=0.5;ctx.stroke();
+        } else if(this.type==='silk'){
+          ctx.beginPath();
+          ctx.arc(this.x,this.y,this.size*0.5,0,Math.PI*2);
+          ctx.fillStyle='rgba(200,200,220,'+(this.life*0.5).toFixed(2)+')';
+          ctx.fill();
+        } else {
+          ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+          ctx.fillStyle=this.color;ctx.fill();
+        }
+        ctx.globalAlpha=1;
+      }
+    }
 
-      function initStars() {
-        stars = [];
-        for (var i = 0; i < 80; i++) {
-          stars.push({
-            x: Math.random() * W, y: Math.random() * H,
-            size: Math.random() * 1.5 + 0.3,
-            pulse: Math.random() * Math.PI * 2,
-            speed: Math.random() * 0.008 + 0.002
-          });
+    class Creature {
+      constructor(){
+        this.x=Math.random()*W;
+        this.y=Math.random()*H*0.8+H*0.1;
+        this.vx=(Math.random()-0.5)*6;
+        this.vy=(Math.random()-0.5)*6;
+        this.size=Math.random()*20+25;
+        this.rot=0;this.rotSpd=0;
+        this.hue=Math.random()*360;
+        this.phase=Math.random()*Math.PI*2;
+        this.bobSpd=0.02+Math.random()*0.02;
+        this.sparkT=0;this.trail=[];
+        this.wild=Math.random();
+        this.spinning=false;this.spinT=0;
+        this.shootT=0;this.glow=0;
+        this.wingPh=0;this.wingSp=0.08+Math.random()*0.04;
+        this.facingRight=true;
+        this.legPhase=Math.random()*Math.PI*2;
+        this.bodyColor=COLORS[Math.floor(Math.random()*4)];
+        this.webTimer=Math.random()*100+50;
+        this.silkTrail=[];
+        this.silkTimer=0;
+      }
+      update(){
+        const t=frame*0.016;
+        this.phase+=this.bobSpd;
+        this.wingPh+=this.wingSp;
+        this.hue=(this.hue+0.5)%360;
+        this.glow=Math.sin(t*2+this.phase)*0.3+0.7;
+
+        const dx=mouse.x-this.x,dy=mouse.y-this.y,dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist>10){
+          const f=chaosMode?0.3:0.1;
+          this.vx+=(dx/dist)*f;
+          this.vy+=(dy/dist)*f;
+        }
+        if(chaosMode){
+          this.vx+=(Math.random()-0.5)*2;
+          this.vy+=(Math.random()-0.5)*2;
+          if(Math.random()<0.05)this.spinning=true;
+        }
+        this.vx+=Math.sin(t*0.7+this.phase)*0.12*(1+this.wild);
+        this.vy+=Math.cos(t*0.5+this.phase)*0.12*(1+this.wild);
+        const max=chaosMode?18:10;
+        this.vx*=0.98;this.vy*=0.98;
+        const spd=Math.sqrt(this.vx*this.vx+this.vy*this.vy);
+        if(spd>max){this.vx=(this.vx/spd)*max;this.vy=(this.vy/spd)*max;}
+        this.x+=this.vx;
+        this.y+=this.vy+Math.sin(this.phase)*0.8;
+        if(Math.abs(this.vx)>0.3)this.facingRight=this.vx>0;
+
+        const m=this.size;
+        if(this.x<m){this.x=m;this.vx=Math.abs(this.vx)*0.8;}
+        if(this.x>W-m){this.x=W-m;this.vx=-Math.abs(this.vx)*0.8;}
+        if(this.y<m+60){this.y=m+60;this.vy=Math.abs(this.vy)*0.8;}
+        if(this.y>H-m){this.y=H-m;this.vy=-Math.abs(this.vy)*0.8;}
+
+        if(this.spinning){
+          this.spinT++;this.rotSpd+=0.3;
+          if(this.spinT>60){this.spinning=false;this.spinT=0;}
+        } else {
+          this.rotSpd*=0.9;
+          if(spd>0.5){
+            const tr=Math.atan2(this.vy,this.vx);
+            let d=tr-this.rot;
+            while(d>Math.PI)d-=Math.PI*2;
+            while(d<-Math.PI)d+=Math.PI*2;
+            this.rotSpd+=d*0.05;
+          }
+        }
+        this.rot+=this.rotSpd;
+
+        this.trail.push({x:this.x,y:this.y,hue:this.hue,life:1});
+        if(this.trail.length>35)this.trail.shift();
+        this.trail.forEach(p=>p.life-=0.028);
+
+        this.sparkT++;
+        if(this.sparkT>(chaosMode?2:5)){
+          this.sparkT=0;
+          const a=Math.random()*Math.PI*2,r=Math.random()*this.size*1.5;
+          particles.push(new Particle(this.x+Math.cos(a)*r,this.y+Math.sin(a)*r,(Math.random()-0.5)*2,(Math.random()-0.5)*2-1,hsl(this.hue,100,70),'sparkle'));
+        }
+
+        this.shootT++;
+        const si=chaosMode?60:180;
+        if(this.shootT>si&&Math.random()<0.02){
+          this.shootT=0;
+          const a=this.facingRight?0:Math.PI;
+          rainbowBeams.push({x:this.x+Math.cos(a)*this.size,y:this.y+Math.sin(a)*this.size,angle:a+(Math.random()-0.5)*0.5,life:1,length:0,maxLen:150+Math.random()*200,hOff:this.hue});
+        }
+        if(!this.spinning&&Math.random()<(chaosMode?0.01:0.001))this.spinning=true;
+
+        this.legPhase+=spd*0.2;
+
+        // Silk trail
+        this.silkTimer--;
+        if(this.silkTimer<=0&&spd>0.5){
+          this.silkTrail.push({x:this.x,y:this.y});
+          if(this.silkTrail.length>30)this.silkTrail.shift();
+          this.silkTimer=3;
+        }
+
+        // Web spinning between nearby spiders
+        this.webTimer--;
+        if(this.webTimer<=0){
+          for(const other of creatures){
+            if(other===this)continue;
+            const ddx=other.x-this.x,ddy=other.y-this.y;
+            const dd=Math.sqrt(ddx*ddx+ddy*ddy);
+            if(dd<200&&dd>30){
+              if(webSegments.length>=WEB_CAP)webSegments.shift();
+              webSegments.push({x1:this.x,y1:this.y,x2:other.x,y2:other.y,life:1,decay:0.002});
+              webCount++;
+              break;
+            }
+          }
+          this.webTimer=60+Math.random()*100;
+        }
+
+        // Silk particles behind spider
+        if(Math.random()<0.08){
+          particles.push(new Particle(this.x-this.vx*2,this.y-this.vy*2,(Math.random()-0.5)*0.5,(Math.random()-0.5)*0.5,'rgba(200,200,220,0.5)','silk'));
         }
       }
+      draw(){
+        // Silk trail lines
+        if(this.silkTrail.length>1){
+          ctx.beginPath();
+          ctx.moveTo(this.silkTrail[0].x,this.silkTrail[0].y);
+          for(let j=1;j<this.silkTrail.length;j++){
+            ctx.lineTo(this.silkTrail[j].x,this.silkTrail[j].y);
+          }
+          ctx.lineTo(this.x,this.y);
+          ctx.strokeStyle='rgba(200,200,220,0.12)';
+          ctx.lineWidth=0.5;
+          ctx.stroke();
+        }
 
-      function createSpider() {
-        return {
-          x: Math.random() * W, y: Math.random() * H,
-          vx: 0, vy: 0,
-          size: 10 + Math.random() * 6,
-          color: spiderColors[Math.floor(Math.random() * spiderColors.length)],
-          angle: Math.random() * Math.PI * 2,
-          legPhase: Math.random() * Math.PI * 2,
-          webTimer: Math.random() * 100 + 50,
-          trail: [],
-          trailTimer: 0
-        };
-      }
+        // Sparkle trail
+        for(let i=0;i<this.trail.length-1;i++){
+          const p=this.trail[i];
+          if(p.life<=0)continue;
+          ctx.globalAlpha=p.life*0.2;
+          ctx.beginPath();
+          ctx.arc(p.x,p.y,this.size*0.2*p.life,0,Math.PI*2);
+          ctx.fillStyle=COLORS[i%COLORS.length];
+          ctx.fill();
+        }
+        ctx.globalAlpha=1;
 
-      function drawSpider(s) {
         ctx.save();
-        ctx.translate(s.x, s.y);
-        var moveAngle = Math.atan2(s.vy, s.vx);
-        var speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
-        if (speed > 0.3) s.angle = moveAngle;
-        ctx.rotate(s.angle);
+        ctx.translate(this.x,this.y);
+        ctx.rotate(this.rot);
 
-        var sz = s.size;
+        const sz=this.size;
+        const flip=this.facingRight?1:-1;
 
-        // 8 legs in alternating pairs
-        var legLen1 = sz * 1.8;
-        var legLen2 = sz * 1.2;
-        for (var i = 0; i < 8; i++) {
-          var side = i < 4 ? 1 : -1;
-          var idx = i % 4;
-          var baseAngle = (idx - 1.5) * 0.4 * side;
-          var phase = ((i % 2 === 0) ? 1 : -1) * Math.sin(s.legPhase) * 0.15;
+        // 8 legs with knee joints, alternating gait
+        for(let i=0;i<8;i++){
+          const side=i<4?1:-1;
+          const idx=i%4;
+          const baseAngle=(idx-1.5)*0.35*side;
+          const phase=((i%2===0)?1:-1)*Math.sin(this.legPhase)*0.15;
 
           ctx.save();
-          ctx.rotate(Math.PI / 2 * side + baseAngle + phase);
+          ctx.rotate(Math.PI/2*side+baseAngle+phase);
 
-          // Upper leg segment
+          // Upper leg
           ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.lineTo(sz * 0.8, -sz * 0.6);
-          ctx.strokeStyle = s.color;
-          ctx.lineWidth = 2;
+          ctx.moveTo(0,0);
+          ctx.lineTo(sz*0.55,-sz*0.45);
+          ctx.strokeStyle=this.bodyColor;
+          ctx.lineWidth=2;
           ctx.stroke();
 
-          // Lower leg segment
+          // Lower leg (from knee down)
           ctx.beginPath();
-          ctx.moveTo(sz * 0.8, -sz * 0.6);
-          ctx.lineTo(sz * 1.4, sz * 0.1);
-          ctx.strokeStyle = s.color;
-          ctx.lineWidth = 1.5;
+          ctx.moveTo(sz*0.55,-sz*0.45);
+          ctx.lineTo(sz*0.95,sz*0.05);
+          ctx.strokeStyle=this.bodyColor;
+          ctx.lineWidth=1.5;
           ctx.stroke();
 
-          // Foot dot
+          // Foot
           ctx.beginPath();
-          ctx.arc(sz * 1.4, sz * 0.1, 1, 0, Math.PI * 2);
-          ctx.fillStyle = '#606080';
+          ctx.arc(sz*0.95,sz*0.05,1,0,Math.PI*2);
+          ctx.fillStyle='#606080';
           ctx.fill();
 
           ctx.restore();
@@ -144,300 +283,193 @@ data:
 
         // Abdomen (larger back section)
         ctx.beginPath();
-        ctx.ellipse(-sz * 0.4, 0, sz * 0.7, sz * 0.55, 0, 0, Math.PI * 2);
-        ctx.fillStyle = s.color;
+        ctx.ellipse(-sz*0.25*flip,0,sz*0.4,sz*0.35,0,0,Math.PI*2);
+        ctx.fillStyle=this.bodyColor;
         ctx.fill();
-        // Abdomen pattern
+        // Abdomen markings
         ctx.beginPath();
-        ctx.ellipse(-sz * 0.4, 0, sz * 0.4, sz * 0.25, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(80,80,120,0.2)';
+        ctx.ellipse(-sz*0.25*flip,0,sz*0.22,sz*0.15,0,0,Math.PI*2);
+        ctx.fillStyle='rgba(100,80,140,0.2)';
         ctx.fill();
 
         // Cephalothorax (front section)
         ctx.beginPath();
-        ctx.ellipse(sz * 0.25, 0, sz * 0.4, sz * 0.35, 0, 0, Math.PI * 2);
-        ctx.fillStyle = s.color;
+        ctx.ellipse(sz*0.15*flip,0,sz*0.28,sz*0.24,0,0,Math.PI*2);
+        ctx.fillStyle=this.bodyColor;
         ctx.fill();
 
-        // Eyes (cluster of 8)
-        var eyePositions = [
-          {x: sz*0.4, y: -sz*0.12, s: 2},
-          {x: sz*0.4, y: sz*0.12, s: 2},
-          {x: sz*0.48, y: -sz*0.06, s: 1.5},
-          {x: sz*0.48, y: sz*0.06, s: 1.5},
-          {x: sz*0.35, y: -sz*0.18, s: 1.2},
-          {x: sz*0.35, y: sz*0.18, s: 1.2},
-          {x: sz*0.45, y: -sz*0.16, s: 1},
-          {x: sz*0.45, y: sz*0.16, s: 1}
+        // Glow
+        ctx.beginPath();
+        ctx.arc(0,0,sz*0.5,0,Math.PI*2);
+        const grd=ctx.createRadialGradient(0,0,sz*0.15,0,0,sz*0.5);
+        grd.addColorStop(0,`hsla(${this.hue},60%,40%,${this.glow*0.1})`);
+        grd.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=grd;
+        ctx.fill();
+
+        // 8 eyes cluster
+        const eyePositions=[
+          {x:sz*0.28*flip,y:-sz*0.09,s:2.2},
+          {x:sz*0.28*flip,y:sz*0.09,s:2.2},
+          {x:sz*0.34*flip,y:-sz*0.04,s:1.6},
+          {x:sz*0.34*flip,y:sz*0.04,s:1.6},
+          {x:sz*0.24*flip,y:-sz*0.14,s:1.3},
+          {x:sz*0.24*flip,y:sz*0.14,s:1.3},
+          {x:sz*0.32*flip,y:-sz*0.12,s:1},
+          {x:sz*0.32*flip,y:sz*0.12,s:1}
         ];
-        for (var i = 0; i < eyePositions.length; i++) {
-          var e = eyePositions[i];
+        for(const e of eyePositions){
           ctx.beginPath();
-          ctx.arc(e.x, e.y, e.s, 0, Math.PI * 2);
-          ctx.fillStyle = '#990000';
+          ctx.arc(e.x,e.y,e.s,0,Math.PI*2);
+          ctx.fillStyle='#990000';
           ctx.fill();
           ctx.beginPath();
-          ctx.arc(e.x + 0.3, e.y - 0.3, e.s * 0.4, 0, Math.PI * 2);
-          ctx.fillStyle = '#ff3333';
+          ctx.arc(e.x+0.3*flip,e.y-0.3,e.s*0.4,0,Math.PI*2);
+          ctx.fillStyle='#ff3333';
           ctx.fill();
         }
 
         // Fangs
         ctx.beginPath();
-        ctx.moveTo(sz * 0.55, -sz * 0.05);
-        ctx.lineTo(sz * 0.7, sz * 0.08);
-        ctx.moveTo(sz * 0.55, sz * 0.05);
-        ctx.lineTo(sz * 0.7, -sz * 0.08);
-        ctx.strokeStyle = '#404060';
-        ctx.lineWidth = 1.5;
+        ctx.moveTo(sz*0.38*flip,-sz*0.04);
+        ctx.lineTo(sz*0.5*flip,sz*0.06);
+        ctx.moveTo(sz*0.38*flip,sz*0.04);
+        ctx.lineTo(sz*0.5*flip,-sz*0.06);
+        ctx.strokeStyle='#404060';
+        ctx.lineWidth=1.5;
         ctx.stroke();
-        // Fang tips
         ctx.beginPath();
-        ctx.arc(sz * 0.7, sz * 0.08, 1.2, 0, Math.PI * 2);
-        ctx.arc(sz * 0.7, -sz * 0.08, 1.2, 0, Math.PI * 2);
-        ctx.fillStyle = '#660000';
+        ctx.arc(sz*0.5*flip,sz*0.06,1.2,0,Math.PI*2);
+        ctx.arc(sz*0.5*flip,-sz*0.06,1.2,0,Math.PI*2);
+        ctx.fillStyle='#660000';
         ctx.fill();
 
         ctx.restore();
       }
+    }
 
-      function spawnSilk(x, y, burst) {
-        if (particles.length >= PARTICLE_CAP) return;
-        var spd = burst ? (Math.random() * 5 + 1) : (Math.random() * 1 + 0.2);
-        var ang = Math.random() * Math.PI * 2;
-        particles.push({
-          x: x, y: y,
-          vx: Math.cos(ang) * spd,
-          vy: Math.sin(ang) * spd,
-          life: 1,
-          decay: 0.005 + Math.random() * 0.01,
-          size: 1 + Math.random() * 2,
-          color: 'rgba(200,200,220,',
-          type: 'silk'
-        });
+    function glitterBomb(x,y){
+      for(let i=0;i<50;i++){
+        const a=Math.random()*Math.PI*2,s=Math.random()*8+2;
+        particles.push(new Particle(x,y,Math.cos(a)*s,Math.sin(a)*s-2,COLORS[Math.floor(Math.random()*COLORS.length)],'burst'));
       }
-
-      function spawnGlow(x, y) {
-        if (particles.length >= PARTICLE_CAP) return;
-        particles.push({
-          x: x, y: y,
-          vx: (Math.random() - 0.5) * 2,
-          vy: (Math.random() - 0.5) * 2,
-          life: 1,
-          decay: 0.02 + Math.random() * 0.02,
-          size: 3 + Math.random() * 4,
-          color: accentColors[Math.floor(Math.random() * accentColors.length)],
-          type: 'glow'
-        });
+      for(let i=0;i<20;i++){
+        const a=Math.random()*Math.PI*2,s=Math.random()*4+1;
+        particles.push(new Particle(x,y,Math.cos(a)*s,Math.sin(a)*s,hsl(Math.random()*360,100,70),'sparkle'));
       }
+    }
 
-      function silkBurst(x, y) {
-        for (var i = 0; i < 25; i++) spawnSilk(x, y, true);
-        for (var i = 0; i < 8; i++) spawnGlow(x, y);
-      }
-
-      function trySpinWeb(spider) {
-        for (var j = 0; j < spiders.length; j++) {
-          if (spiders[j] === spider) continue;
-          var dx = spiders[j].x - spider.x;
-          var dy = spiders[j].y - spider.y;
-          var dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 200 && dist > 30) {
-            if (webSegments.length >= WEB_CAP) webSegments.shift();
-            webSegments.push({
-              x1: spider.x, y1: spider.y,
-              x2: spiders[j].x, y2: spiders[j].y,
-              life: 1,
-              decay: 0.002
-            });
-            webCount++;
-            break;
-          }
+    function drawRainbowBeams(){
+      for(let i=rainbowBeams.length-1;i>=0;i--){
+        const b=rainbowBeams[i];
+        b.length=Math.min(b.length+12,b.maxLen);
+        b.life-=0.012;
+        if(b.life<=0){rainbowBeams.splice(i,1);continue;}
+        const ex=b.x+Math.cos(b.angle)*b.length,ey=b.y+Math.sin(b.angle)*b.length;
+        for(let s=0;s<6;s++){
+          const off=(s-2.5)*3;
+          const px=Math.sin(b.angle)*off,py=-Math.cos(b.angle)*off;
+          ctx.beginPath();ctx.moveTo(b.x+px,b.y+py);ctx.lineTo(ex+px,ey+py);
+          ctx.strokeStyle=`hsla(${(b.hOff+s*60)%360},100%,60%,${b.life*0.6})`;
+          ctx.lineWidth=2;ctx.stroke();
+        }
+        if(Math.random()<0.3){
+          particles.push(new Particle(ex+(Math.random()-0.5)*10,ey+(Math.random()-0.5)*10,(Math.random()-0.5)*3,(Math.random()-0.5)*3,hsl((b.hOff+Math.random()*120)%360,100,70),'sparkle'));
         }
       }
+    }
 
-      function update() {
-        var tx = chaosMode ? Math.random() * W : mouse.x;
-        var ty = chaosMode ? Math.random() * H : mouse.y;
-
-        for (var i = 0; i < spiders.length; i++) {
-          var s = spiders[i];
-          var dx = tx - s.x;
-          var dy = ty - s.y;
-          var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          var force = chaosMode ? 0.4 : 0.15;
-          s.vx += (dx / dist) * force;
-          s.vy += (dy / dist) * force;
-          s.vx *= 0.93;
-          s.vy *= 0.93;
-          s.x += s.vx;
-          s.y += s.vy;
-          var speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
-          s.legPhase += speed * 0.2;
-
-          // Silk trail
-          s.trailTimer--;
-          if (s.trailTimer <= 0 && speed > 0.5) {
-            s.trail.push({ x: s.x, y: s.y });
-            if (s.trail.length > 30) s.trail.shift();
-            s.trailTimer = 3;
-          }
-
-          // Web spinning
-          s.webTimer--;
-          if (s.webTimer <= 0) {
-            trySpinWeb(s);
-            s.webTimer = 60 + Math.random() * 100;
-          }
-
-          if (s.x < 0) s.x = W;
-          if (s.x > W) s.x = 0;
-          if (s.y < 0) s.y = H;
-          if (s.y > H) s.y = 0;
-
-          if (Math.random() < 0.08) spawnSilk(s.x - s.vx * 2, s.y - s.vy * 2, false);
-        }
-
-        if (mouseDown) {
-          for (var j = 0; j < 3; j++) spawnSilk(mouse.x + (Math.random()-0.5)*30, mouse.y + (Math.random()-0.5)*30, false);
-          for (var j = 0; j < 2; j++) spawnGlow(mouse.x + (Math.random()-0.5)*40, mouse.y + (Math.random()-0.5)*40);
-        }
-
-        for (var i = particles.length - 1; i >= 0; i--) {
-          var p = particles[i];
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy += 0.01;
-          p.vx *= 0.99;
-          p.life -= p.decay;
-          if (p.life <= 0) particles.splice(i, 1);
-        }
-
-        for (var i = webSegments.length - 1; i >= 0; i--) {
-          webSegments[i].life -= webSegments[i].decay;
-          if (webSegments[i].life <= 0) webSegments.splice(i, 1);
-        }
+    function handleMouseHold(){
+      if(!mouseDown)return;
+      mouseHoldTime++;
+      const intensity=Math.min(mouseHoldTime/30,1);
+      const count=Math.floor(intensity*5)+1;
+      for(let i=0;i<count;i++){
+        const a=Math.random()*Math.PI*2,r=Math.random()*30*intensity;
+        particles.push(new Particle(mouse.x+Math.cos(a)*r,mouse.y+Math.sin(a)*r,(Math.random()-0.5)*3,(Math.random()-0.5)*3-1,COLORS[Math.floor(Math.random()*COLORS.length)],'sparkle'));
       }
+    }
 
-      function draw() {
-        ctx.fillStyle = '#050510';
-        ctx.fillRect(0, 0, W, H);
+    function drawBackground(){
+      ctx.fillStyle=BG;
+      ctx.fillRect(0,0,W,H);
 
-        // Moonlight glow (upper right)
-        var moonX = W * 0.8;
-        var moonY = H * 0.15;
-        var moonGrad = ctx.createRadialGradient(moonX, moonY, 20, moonX, moonY, 300);
-        moonGrad.addColorStop(0, 'rgba(200,200,240,0.15)');
-        moonGrad.addColorStop(0.3, 'rgba(150,150,200,0.05)');
-        moonGrad.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = moonGrad;
-        ctx.fillRect(0, 0, W, H);
-        // Moon disc
-        ctx.beginPath();
-        ctx.arc(moonX, moonY, 25, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(220,220,240,0.6)';
+      // Moonlight glow
+      const moonX=W*0.8,moonY=H*0.15;
+      const moonGrad=ctx.createRadialGradient(moonX,moonY,20,moonX,moonY,300);
+      moonGrad.addColorStop(0,'rgba(200,200,240,0.15)');
+      moonGrad.addColorStop(0.3,'rgba(150,150,200,0.05)');
+      moonGrad.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=moonGrad;
+      ctx.fillRect(0,0,W,H);
+      ctx.beginPath();ctx.arc(moonX,moonY,25,0,Math.PI*2);
+      ctx.fillStyle='rgba(220,220,240,0.6)';ctx.fill();
+      ctx.beginPath();ctx.arc(moonX,moonY,22,0,Math.PI*2);
+      ctx.fillStyle='rgba(200,200,230,0.3)';ctx.fill();
+
+      for(const s of stars){
+        s.pulse+=s.speed;
+        const a=0.3+Math.sin(s.pulse)*0.3;
+        ctx.beginPath();ctx.arc(s.x,s.y,s.size,0,Math.PI*2);
+        ctx.fillStyle=`rgba(180,180,220,${Math.max(0,a).toFixed(2)})`;
         ctx.fill();
-        ctx.beginPath();
-        ctx.arc(moonX, moonY, 22, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(200,200,230,0.3)';
+      }
+
+      // Web segments
+      for(let i=webSegments.length-1;i>=0;i--){
+        const ws=webSegments[i];
+        ws.life-=ws.decay;
+        if(ws.life<=0){webSegments.splice(i,1);continue;}
+        ctx.beginPath();ctx.moveTo(ws.x1,ws.y1);ctx.lineTo(ws.x2,ws.y2);
+        ctx.strokeStyle='rgba(200,200,220,'+(ws.life*0.3).toFixed(2)+')';
+        ctx.lineWidth=0.5;ctx.stroke();
+        const mx=(ws.x1+ws.x2)/2,my=(ws.y1+ws.y2)/2;
+        ctx.beginPath();ctx.arc(mx,my,1.5,0,Math.PI*2);
+        ctx.fillStyle='rgba(200,200,240,'+(ws.life*0.4).toFixed(2)+')';
         ctx.fill();
-
-        // Stars
-        for (var i = 0; i < stars.length; i++) {
-          var st = stars[i];
-          st.pulse += st.speed;
-          var alpha = 0.3 + Math.sin(st.pulse) * 0.3;
-          ctx.beginPath();
-          ctx.arc(st.x, st.y, st.size, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(180,180,220,' + Math.max(0, alpha).toFixed(2) + ')';
-          ctx.fill();
-        }
-
-        // Web segments
-        for (var i = 0; i < webSegments.length; i++) {
-          var ws = webSegments[i];
-          ctx.beginPath();
-          ctx.moveTo(ws.x1, ws.y1);
-          ctx.lineTo(ws.x2, ws.y2);
-          ctx.strokeStyle = 'rgba(200,200,220,' + (ws.life * 0.3).toFixed(2) + ')';
-          ctx.lineWidth = 0.5;
-          ctx.stroke();
-          // Dew drops on web
-          var mx = (ws.x1 + ws.x2) / 2;
-          var my = (ws.y1 + ws.y2) / 2;
-          ctx.beginPath();
-          ctx.arc(mx, my, 1.5, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(200,200,240,' + (ws.life * 0.4).toFixed(2) + ')';
-          ctx.fill();
-        }
-
-        // Spider silk trails
-        for (var i = 0; i < spiders.length; i++) {
-          var s = spiders[i];
-          if (s.trail.length > 1) {
-            ctx.beginPath();
-            ctx.moveTo(s.trail[0].x, s.trail[0].y);
-            for (var j = 1; j < s.trail.length; j++) {
-              ctx.lineTo(s.trail[j].x, s.trail[j].y);
-            }
-            ctx.lineTo(s.x, s.y);
-            ctx.strokeStyle = 'rgba(200,200,220,0.12)';
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        }
-
-        // Particles
-        for (var i = 0; i < particles.length; i++) {
-          var p = particles[i];
-          ctx.globalAlpha = p.life;
-          if (p.type === 'silk') {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = p.color + (p.life * 0.5).toFixed(2) + ')';
-            ctx.fill();
-          } else {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = p.color;
-            ctx.globalAlpha = p.life * 0.5;
-            ctx.fill();
-          }
-          ctx.globalAlpha = 1;
-        }
-
-        // Spiders
-        for (var i = 0; i < spiders.length; i++) drawSpider(spiders[i]);
-
-        document.getElementById('stats').textContent =
-          spiders.length + ' spiders | ' + particles.length + ' particles | ' + webCount + ' web segments';
       }
+    }
 
-      function loop() {
-        update();
-        draw();
-        requestAnimationFrame(loop);
+    function initStars(){
+      stars.length=0;
+      for(let i=0;i<80;i++){
+        stars.push({x:Math.random()*W,y:Math.random()*H,size:Math.random()*1.5+0.3,pulse:Math.random()*Math.PI*2,speed:Math.random()*0.008+0.002});
       }
+    }
 
-      window.addEventListener('resize', resize);
-      canvas.addEventListener('mousemove', function(e) { mouse.x = e.clientX; mouse.y = e.clientY; });
-      canvas.addEventListener('mousedown', function(e) { mouseDown = true; silkBurst(e.clientX, e.clientY); });
-      canvas.addEventListener('mouseup', function() { mouseDown = false; });
-      canvas.addEventListener('touchmove', function(e) { e.preventDefault(); mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }, {passive:false});
-      canvas.addEventListener('touchstart', function(e) { mouseDown = true; mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; silkBurst(mouse.x, mouse.y); });
-      canvas.addEventListener('touchend', function() { mouseDown = false; });
-      window.addEventListener('keydown', function(e) { if (e.code === 'Space') { e.preventDefault(); chaosMode = !chaosMode; } });
+    function resize(){
+      W=canvas.width=innerWidth;H=canvas.height=innerHeight;
+      initStars();
+      const count=Math.min(14,Math.max(6,Math.floor((W*H)/70000)));
+      while(creatures.length<count)creatures.push(new Creature());
+      while(creatures.length>count)creatures.pop();
+    }
 
-      setTimeout(function() {
-        var el = document.getElementById('instructions');
-        if (el) el.style.opacity = '0';
-        setTimeout(function() { if (el) el.style.display = 'none'; }, 1000);
-      }, 6000);
+    window.addEventListener('resize',resize);
+    canvas.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+    canvas.addEventListener('mousedown',e=>{mouseDown=true;mouseHoldTime=0;glitterBomb(e.clientX,e.clientY);});
+    canvas.addEventListener('mouseup',()=>{mouseDown=false;mouseHoldTime=0;});
+    canvas.addEventListener('touchmove',e=>{e.preventDefault();mouse.x=e.touches[0].clientX;mouse.y=e.touches[0].clientY;},{passive:false});
+    canvas.addEventListener('touchstart',e=>{mouseDown=true;mouseHoldTime=0;mouse.x=e.touches[0].clientX;mouse.y=e.touches[0].clientY;glitterBomb(mouse.x,mouse.y);});
+    canvas.addEventListener('touchend',()=>{mouseDown=false;mouseHoldTime=0;});
+    window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();chaosMode=!chaosMode;}});
 
-      resize();
-      mouse.x = W / 2;
-      mouse.y = H / 2;
-      loop();
+    setTimeout(()=>{const el=document.getElementById('instructions');if(el){el.style.opacity='0';setTimeout(()=>{if(el)el.style.display='none';},1000);}},6000);
+
+    resize();
+    mouse.x=W/2;mouse.y=H/2;
+
+    (function loop(){
+      frame++;
+      drawBackground();
+      handleMouseHold();
+      for(const c of creatures){c.update();c.draw();}
+      drawRainbowBeams();
+      for(let i=particles.length-1;i>=0;i--){particles[i].update();particles[i].draw();if(particles[i].life<=0)particles.splice(i,1);}
+      while(particles.length>2000)particles.shift();
+      document.getElementById('stats').textContent=
+        creatures.length+' spiders | '+particles.length+' particles | '+webCount+' web segments | '+(chaosMode?'CHAOS':'chill');
+      requestAnimationFrame(loop);
     })();
     </script>
     </body>
