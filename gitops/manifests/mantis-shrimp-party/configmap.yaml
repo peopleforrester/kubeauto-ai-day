@@ -177,17 +177,20 @@ data:
         this.clubPhase+=0.06;
       }
       draw(){
-        // Trail
-        for(let i=0;i<this.trail.length-1;i++){
-          const p=this.trail[i];
-          if(p.life<=0)continue;
-          ctx.globalAlpha=p.life*0.3;
+        // Trail as single path
+        if(this.trail.length>1){
           ctx.beginPath();
-          ctx.arc(p.x,p.y,this.size*0.3*p.life,0,Math.PI*2);
-          ctx.fillStyle=COLORS[i%COLORS.length];
+          for(let i=0;i<this.trail.length;i++){
+            const p=this.trail[i];
+            if(p.life<=0)continue;
+            ctx.moveTo(p.x+this.size*0.3*p.life,p.y);
+            ctx.arc(p.x,p.y,this.size*0.3*p.life,0,Math.PI*2);
+          }
+          ctx.fillStyle=this.color1;
+          ctx.globalAlpha=0.15;
           ctx.fill();
+          ctx.globalAlpha=1;
         }
-        ctx.globalAlpha=1;
 
         ctx.save();
         ctx.translate(this.x,this.y);
@@ -196,87 +199,45 @@ data:
         const sz=this.size;
         const flip=this.facingRight?1:-1;
 
-        // Bioluminescent glow
-        ctx.beginPath();
-        ctx.ellipse(0,0,sz*0.9,sz*0.6,0,0,Math.PI*2);
-        const grd=ctx.createRadialGradient(0,0,sz*0.2,0,0,sz*0.9);
-        grd.addColorStop(0,`hsla(${this.hue},100%,60%,${this.glow*0.15})`);
-        grd.addColorStop(1,'rgba(0,0,0,0)');
-        ctx.fillStyle=grd;
-        ctx.fill();
-
-        // Fan tail
+        // Fan tail (single path)
         ctx.beginPath();
         ctx.moveTo(-sz*0.7*flip,0);
         ctx.lineTo(-sz*1.1*flip,-sz*0.35);
         ctx.quadraticCurveTo(-sz*1.3*flip,0,-sz*1.1*flip,sz*0.35);
         ctx.closePath();
-        ctx.fillStyle=this.color3;
-        ctx.globalAlpha=0.8;
-        ctx.fill();
-        ctx.globalAlpha=1;
+        ctx.fillStyle=this.color3;ctx.globalAlpha=0.8;ctx.fill();ctx.globalAlpha=1;
 
-        // Segmented body (4 overlapping ellipses, decreasing in size)
-        for(let i=3;i>=0;i--){
-          const segX=(-sz*0.25*i+sz*0.15)*flip;
-          const segW=sz*0.28-i*1.5;
-          const segH=sz*0.22-i*1;
-          const sway=Math.sin(this.swimPhase+i*0.5)*2;
-          ctx.beginPath();
-          ctx.ellipse(segX,sway,segW,segH,0,0,Math.PI*2);
-          ctx.fillStyle=i%2===0?this.color1:this.color2;
-          ctx.fill();
-          ctx.strokeStyle='rgba(255,255,255,0.25)';
-          ctx.lineWidth=0.5;
-          ctx.stroke();
-        }
+        // 3 body segments (no loop — 3 ellipses)
+        ctx.beginPath();
+        ctx.ellipse(-sz*0.35*flip,0,sz*0.22,sz*0.19,0,0,Math.PI*2);
+        ctx.fillStyle=this.color2;ctx.fill();
 
-        // Club appendages (the mantis shrimp's signature weapon)
-        const clubAngle=Math.sin(this.clubPhase)*0.3;
-        for(let side=-1;side<=1;side+=2){
-          ctx.save();
-          ctx.translate(sz*0.4*flip,side*sz*0.12);
-          ctx.rotate(clubAngle*side*flip);
-          // Arm
-          ctx.fillStyle=this.color1;
-          ctx.fillRect(0,-2,sz*0.4*flip,4);
-          // Club head
-          ctx.beginPath();
-          ctx.arc(sz*0.4*flip,0,sz*0.1,0,Math.PI*2);
-          ctx.fillStyle='#ffffff';
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(sz*0.4*flip,0,sz*0.08,0,Math.PI*2);
-          ctx.fillStyle=this.color2;
-          ctx.fill();
-          ctx.restore();
-        }
+        ctx.beginPath();
+        ctx.ellipse(-sz*0.05*flip,0,sz*0.26,sz*0.21,0,0,Math.PI*2);
+        ctx.fillStyle=this.color1;ctx.fill();
 
-        // Stalked eyes
-        for(let side=-1;side<=1;side+=2){
-          // Eye stalk
-          ctx.beginPath();
-          ctx.moveTo(sz*0.3*flip,side*sz*0.08);
-          ctx.lineTo(sz*0.55*flip,side*sz*0.25);
-          ctx.strokeStyle=this.color1;
-          ctx.lineWidth=2;
-          ctx.stroke();
-          // Eye ball
-          ctx.beginPath();
-          ctx.arc(sz*0.55*flip,side*sz*0.25,4,0,Math.PI*2);
-          ctx.fillStyle='#000';
-          ctx.fill();
-          // Eye color
-          ctx.beginPath();
-          ctx.arc(sz*0.55*flip,side*sz*0.25,2.5,0,Math.PI*2);
-          ctx.fillStyle=this.color3;
-          ctx.fill();
-          // Eye highlight
-          ctx.beginPath();
-          ctx.arc(sz*0.56*flip,side*sz*0.23,1,0,Math.PI*2);
-          ctx.fillStyle='#fff';
-          ctx.fill();
-        }
+        ctx.beginPath();
+        ctx.ellipse(sz*0.2*flip,0,sz*0.24,sz*0.2,0,0,Math.PI*2);
+        ctx.fillStyle=this.color2;ctx.fill();
+
+        // Club appendages as 2 lines
+        ctx.beginPath();
+        ctx.moveTo(sz*0.4*flip,-sz*0.12);ctx.lineTo(sz*0.8*flip,-sz*0.12);
+        ctx.moveTo(sz*0.4*flip,sz*0.12);ctx.lineTo(sz*0.8*flip,sz*0.12);
+        ctx.strokeStyle=this.color1;ctx.lineWidth=3;ctx.stroke();
+
+        // Eye stalks as 2 lines
+        ctx.beginPath();
+        ctx.moveTo(sz*0.3*flip,-sz*0.08);ctx.lineTo(sz*0.55*flip,-sz*0.25);
+        ctx.moveTo(sz*0.3*flip,sz*0.08);ctx.lineTo(sz*0.55*flip,sz*0.25);
+        ctx.strokeStyle=this.color1;ctx.lineWidth=2;ctx.stroke();
+
+        // Eye balls
+        ctx.beginPath();
+        ctx.arc(sz*0.55*flip,-sz*0.25,3.5,0,Math.PI*2);
+        ctx.moveTo(sz*0.55*flip+3.5,sz*0.25);
+        ctx.arc(sz*0.55*flip,sz*0.25,3.5,0,Math.PI*2);
+        ctx.fillStyle=this.color3;ctx.fill();
 
         ctx.restore();
       }
