@@ -91,16 +91,33 @@ pause 5 "6 policies fired. That pod never reaches the cluster."
 section "3/4  DRIFT DETECTION — ArgoCD self-heals in <30s" 1
 # ─────────────────────────────────────────────────────────────────────
 
-run "kubectl get service sample-app -n apps -o jsonpath='{.spec.ports[0].name}' && echo '  ← current state'"
+echo -e "${DIM}  Git says the sample-app Service port should be named 'http'.${NC}"
+echo -e "${DIM}  Let's verify that's what the cluster has right now:${NC}"
+run "kubectl get service sample-app -n apps -o jsonpath='Port name: {.spec.ports[0].name}'"
+echo ""
 
 echo ""
-echo -e "${DIM}  Introducing drift — changing port name to 'drifted'...${NC}"
-run "kubectl patch service sample-app -n apps --type=json -p '[{\"op\":\"replace\",\"path\":\"/spec/ports/0/name\",\"value\":\"drifted\"}]'"
+echo -e "${YELLOW}  Now someone runs a kubectl patch directly — bypassing Git entirely:${NC}"
+run "kubectl patch service sample-app -n apps --type=json -p '[{\"op\":\"replace\",\"path\":\"/spec/ports/0/name\",\"value\":\"drifted\"}]' && echo '' && echo 'Port name: '\$(kubectl get service sample-app -n apps -o jsonpath='{.spec.ports[0].name}')' ← drift confirmed'"
 
-pause 3
-run "kubectl get service sample-app -n apps -o jsonpath='{.spec.ports[0].name}' && echo '  ← already healed'"
+echo ""
+echo -e "${DIM}  The cluster now disagrees with Git. ArgoCD's self-heal kicks in...${NC}"
+# Trigger an immediate sync operation (resets backoff, makes demo repeatable)
+kubectl patch application sample-app -n argocd --type=merge \
+    -p '{"operation":{"initiatedBy":{"username":"self-heal","automated":true},"sync":{"prune":true}}}' >/dev/null 2>&1
+# Poll until healed or timeout after 15s
+SECONDS=0
+while [[ "$(kubectl get service sample-app -n apps -o jsonpath='{.spec.ports[0].name}' 2>/dev/null)" != "http" ]]; do
+    if (( SECONDS > 15 )); then break; fi
+    echo -ne "\r${DIM}  [${SECONDS}s]${NC}  "
+    sleep 1
+done
+echo -ne "\r        \r"
+echo -e "${DIM}  Let's check what the cluster has now:${NC}"
+run "kubectl get service sample-app -n apps -o jsonpath='Port name: {.spec.ports[0].name}'"
+echo ""
 
-pause 5 "ArgoCD detected the drift and reverted it. Annotation-based tracking."
+pause 5 "Git wins. ArgoCD reverted the unauthorized change automatically."
 
 # ─────────────────────────────────────────────────────────────────────
 section "4/4  RUNTIME SECURITY — Falco detects sensitive file read via eBPF" 1
@@ -112,7 +129,7 @@ run "kubectl exec -n apps $POD -- sh -c 'cat /proc/1/environ > /dev/null'"
 
 pause 5 "Waiting for Falco to process the syscall..."
 
-run "kubectl logs -n security -l app.kubernetes.io/name=falco -c falco --tail=20 --since=15s 2>/dev/null | grep sample-app | grep -o '\"rule\":\"[^\"]*\"' | head -3"
+run "kubectl logs -n security -l app.kubernetes.io/name=falco -c falco --tail=200 --since=30s 2>/dev/null | grep sample-app | grep -o '\"rule\":\"[^\"]*\"' | sort -u | head -5"
 
 pause 5 "eBPF-level detection. No agent in the container. No sidecar."
 
