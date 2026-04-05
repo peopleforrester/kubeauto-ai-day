@@ -27,10 +27,10 @@ Cluster is live. Collateral (blog, slides outline, social, QR codes) committed.
 - Include demo transitions and slide pacing
 - Owner: Michael (manual task)
 
-### 4. Fix test1 DNS (Negative Cache)
-- Issue: `test1.ai-enhanced-devops.com` returns NXDOMAIN despite wildcard
+### 4. Fix argocd DNS (Negative Cache)
+- Issue: `argocd.ai-enhanced-devops.com` returns NXDOMAIN despite wildcard
 - Root cause: Negative DNS cache (SOA shows 3601s negative TTL)
-- Fix: Add explicit CNAME record in Namecheap for `test1`
+- Fix: Add explicit CNAME record in Namecheap for `argocd`
 - Owner: Michael (Namecheap admin panel)
 
 ---

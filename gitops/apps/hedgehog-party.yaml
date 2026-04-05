@@ -1,0 +1,26 @@
+# ABOUTME: ArgoCD Application for the hedgehog-party demo app owned by connected-homes-team.
+# ABOUTME: Deploys hedgehog-party manifests to the apps namespace via GitOps.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hedgehog-party
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/peopleforrester/kubeauto-ai-day.git
+    targetRevision: staging
+    path: gitops/manifests/hedgehog-party
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

@@ -15,9 +15,9 @@ Pre-requisites:
 Single connected pipeline for stage presentation:
 
 1. **Backstage** → Open https://backstage.ai-enhanced-devops.com → Run deploy-service template
-2. **ArgoCD** → Switch to https://test1.ai-enhanced-devops.com → Show new Application syncing
+2. **ArgoCD** → Switch to https://argocd.ai-enhanced-devops.com → Show new Application syncing
 3. **Kyverno** → `kubectl get clusterpolicyreport -o wide` → Service passes all 6 policies
-4. **Grafana** → `kubectl port-forward svc/prometheus-grafana -n monitoring 3000:80` → Open Platform Overview dashboard → New service appears
+4. **Grafana** → Open https://grafana.ai-enhanced-devops.com → Open Platform Overview dashboard → New service appears
 
 **Fallback if live demo fails:** Use screenshots in `collateral/screenshots/`, acknowledge it's real infra, move to next slide.
 
@@ -264,8 +264,9 @@ infrastructure — no mocks."
 
 | Service | URL |
 |---------|-----|
-| ArgoCD | https://test1.ai-enhanced-devops.com |
+| ArgoCD | https://argocd.ai-enhanced-devops.com |
 | Backstage | https://backstage.ai-enhanced-devops.com |
+| Grafana | https://grafana.ai-enhanced-devops.com |
 | Unicorn Party | https://unicorn.ai-enhanced-devops.com |
 | E-Commerce Demo | https://ecom.ai-enhanced-devops.com |
 

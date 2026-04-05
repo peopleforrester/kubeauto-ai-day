@@ -1,0 +1,26 @@
+# ABOUTME: ArgoCD Application for the mantis-shrimp-party demo app owned by advertising-team.
+# ABOUTME: Deploys mantis-shrimp-party manifests to the apps namespace via GitOps.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mantis-shrimp-party
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/peopleforrester/kubeauto-ai-day.git
+    targetRevision: staging
+    path: gitops/manifests/mantis-shrimp-party
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

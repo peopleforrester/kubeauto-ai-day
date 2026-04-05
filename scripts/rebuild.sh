@@ -342,7 +342,7 @@ echo ""
 # Get ALB hostname
 ALB_HOST=$(kubectl get ingress -n argocd -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "pending")
 echo -e "${BLUE}Platform URLs:${NC}"
-echo "  ArgoCD:     https://test1.ai-enhanced-devops.com"
+echo "  ArgoCD:     https://argocd.ai-enhanced-devops.com"
 echo "  Backstage:  https://backstage.ai-enhanced-devops.com"
 echo ""
 echo -e "${BLUE}ALB Hostname:${NC}"

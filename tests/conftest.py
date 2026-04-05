@@ -9,6 +9,22 @@ from kubernetes.client import CoreV1Api
 import boto3
 
 
+# Grafana demo credentials (base64 of admin:admin) used by wget in test pods.
+GRAFANA_BASIC_AUTH = "Basic YWRtaW46YWRtaW4="
+
+
+# --- Kubeconfig (loaded once per session) ---
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _kube_config() -> None:
+    """Load kubeconfig once for the entire test session.
+
+    Fails explicitly if no cluster is reachable (Rule G3: no fallbacks).
+    """
+    config.load_kube_config()
+
+
 # --- Short-name aliases for convenience ---
 # Tests can use either the long name (k8s_core_v1) or short name (k8s_core).
 
@@ -48,39 +64,31 @@ def boto_ec2() -> botocore.client.BaseClient:
 
 @pytest.fixture(scope="session")
 def k8s_core_v1() -> CoreV1Api:
-    """Load kubeconfig and return a CoreV1Api client.
-
-    Fails explicitly if no cluster is reachable (Rule G3: no fallbacks).
-    """
-    config.load_kube_config()
+    """Return a CoreV1Api client for pod/service/namespace assertions."""
     return client.CoreV1Api()
 
 
 @pytest.fixture(scope="session")
 def k8s_apps_v1() -> client.AppsV1Api:
     """Return an AppsV1Api client for deployment/daemonset assertions."""
-    config.load_kube_config()
     return client.AppsV1Api()
 
 
 @pytest.fixture(scope="session")
 def k8s_custom_objects() -> client.CustomObjectsApi:
     """Return a CustomObjectsApi client for CRD assertions."""
-    config.load_kube_config()
     return client.CustomObjectsApi()
 
 
 @pytest.fixture(scope="session")
 def k8s_rbac_v1() -> client.RbacAuthorizationV1Api:
     """Return an RbacAuthorizationV1Api client for RBAC assertions."""
-    config.load_kube_config()
     return client.RbacAuthorizationV1Api()
 
 
 @pytest.fixture(scope="session")
 def k8s_networking_v1() -> client.NetworkingV1Api:
     """Return a NetworkingV1Api client for ingress/network policy assertions."""
-    config.load_kube_config()
     return client.NetworkingV1Api()
 
 

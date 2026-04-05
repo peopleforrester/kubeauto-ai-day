@@ -118,12 +118,12 @@ spec:
                 - type: config
                   instances:
                     - name: kubeauto
-                      url: https://test1.ai-enhanced-devops.com
+                      url: https://argocd.ai-enhanced-devops.com
                       token: ${ARGOCD_AUTH_TOKEN}
             proxy:
               endpoints:
                 /argocd/api:
-                  target: https://test1.ai-enhanced-devops.com/api/v1/
+                  target: https://argocd.ai-enhanced-devops.com/api/v1/
                   headers:
                     Cookie: argocd.token=${ARGOCD_AUTH_TOKEN}
                   changeOrigin: true

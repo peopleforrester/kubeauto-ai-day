@@ -92,6 +92,23 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+          ingress:
+            enabled: true
+            ingressClassName: alb
+            annotations:
+              alb.ingress.kubernetes.io/scheme: internet-facing
+              alb.ingress.kubernetes.io/target-type: ip
+              alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+              alb.ingress.kubernetes.io/ssl-redirect: "443"
+              alb.ingress.kubernetes.io/backend-protocol: HTTP
+              alb.ingress.kubernetes.io/healthcheck-path: /api/health
+              alb.ingress.kubernetes.io/group.name: kubeauto-ingress
+              alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:598274344262:certificate/151d10d0-1941-4fbf-bfd8-0e8c3be1a8d6
+            hosts:
+              - grafana.ai-enhanced-devops.com
+            tls:
+              - hosts:
+                  - grafana.ai-enhanced-devops.com
         # AlertManager
         alertmanager:
           alertmanagerSpec:

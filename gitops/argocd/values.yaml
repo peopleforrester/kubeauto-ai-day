@@ -18,7 +18,7 @@ server:
       alb.ingress.kubernetes.io/healthcheck-path: /healthz
       alb.ingress.kubernetes.io/group.name: kubeauto-ingress
       alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:598274344262:certificate/151d10d0-1941-4fbf-bfd8-0e8c3be1a8d6
-    hostname: test1.ai-enhanced-devops.com
+    hostname: argocd.ai-enhanced-devops.com
     tls: true
 
 # Configuration parameters
@@ -37,7 +37,7 @@ configs:
     # Backstage service account for ArgoCD plugin API access
     accounts.backstage: apiKey
     # ArgoCD external URL (required for Dex callback)
-    url: "https://test1.ai-enhanced-devops.com"
+    url: "https://argocd.ai-enhanced-devops.com"
     # Dex GitHub OIDC connector
     dex.config: |
       connectors:
@@ -49,6 +49,8 @@ configs:
             clientSecret: $dex.github.clientSecret
 
   rbac:
+    # Use email claim from OIDC token for RBAC subject matching
+    scopes: '[email, groups]'
     policy.csv: |
       # Admin role for platform team
       p, role:platform-admin, applications, *, */*, allow
@@ -59,7 +61,9 @@ configs:
       p, role:platform-admin, exec, *, */*, allow
 
       # GitHub users get admin (ArgoCD 3.x subject format)
+      # Dex may return email or username depending on GitHub account settings
       g, peopleforrester, role:platform-admin
+      g, michaelrishiforrester@gmail.com, role:platform-admin
       g, WiggityWhitney, role:platform-admin
 
       # Read-only role for observers

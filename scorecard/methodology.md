@@ -89,7 +89,7 @@ alone cannot.
 
 ### What Counts as "AI-Assisted"
 
-The AI (Claude Code with Opus model) performed:
+The AI (Claude Code CLI with Claude Opus 4 model, 200K context window) performed:
 - Generating Terraform, Helm values, Kubernetes manifests
 - Writing Python test files
 - Creating ArgoCD Application manifests

@@ -55,7 +55,7 @@ Admission webhooks (Kyverno), runtime detection (Falco), RBAC, NetworkPolicies, 
 | 5 | **Immutable Audit Trail** | `commit-msg`: enforce conventional commit format with phase/component tags (`phase-3/kyverno: add require-labels policy`). GPG-signed commits via `pre-commit`. All prompt transcripts committed to `prompts/` directory. | `PostToolUse`: auto-export Claude Code transcript after every `terraform apply` or `helm upgrade`. `SessionStart`: log session start time. `SessionEnd`: log session end time and duration. | Kubernetes audit logging enabled on EKS. OpenTelemetry GenAI semantic conventions for LLM operation tracing. Correlation IDs linking Claude Code sessions to cluster events. |
 | 6 | **Automated Rollback** | Git itself — `git revert` is the cheapest rollback. Tagged commits at each phase completion for clean rollback points. `git bisect` to find the breaking commit if integration tests fail. | `PostToolUse`: after any failed `terraform apply`, auto-suggest `terraform plan -destroy` for the failed resource. After failed ArgoCD sync, suggest `argocd app rollback`. | ArgoCD GitOps revert (rollback to last healthy commit). Pre-change `VolumeSnapshots` for any PVC-backed components. ArgoCD self-heal auto-reverts manual drift. |
 | 7 | **Secrets & Credential Isolation** | `pre-commit`: `gitleaks` and `detect-secrets` scan every commit. Block any commit containing AWS keys, passwords, tokens, certificates. `.gitignore` includes `*.pem`, `*.key`, `terraform.tfstate`. | `PreToolUse`: block any `echo` or `cat` of files matching secret patterns. Block `kubectl get secret -o yaml` (force `-o jsonpath` for specific fields only). | External Secrets Operator pulls secrets from AWS Secrets Manager. Pod Identity for IAM — no long-lived credentials. Kyverno policy blocks pods with `env` referencing raw secret values (must use `secretKeyRef`). |
-| 8 | **Supply Chain Validation** | `pre-commit`: Trivy scan on all Dockerfiles. Validate image references match allowlist in `policies/allowed-images.txt`. Block `latest` tags. | `PreToolUse`: block `docker pull` from unauthorized registries. Block Helm chart installs from non-approved repositories. | Kyverno `ClusterPolicy` restricts image registries to ECR + approved CNCF project registries. Sigstore/Cosign verification at admission. Trivy Operator for continuous vulnerability scanning of running images. |
+| 8 | **Supply Chain Validation** | `pre-commit`: Trivy scan on all Dockerfiles. Validate image references match allowlist in `policies/allowed-images.txt`. Block `latest` tags. | `PreToolUse`: block `docker pull` from unauthorized registries. Block Helm chart installs from non-approved repositories. | Kyverno `ClusterPolicy` restricts image registries to ECR + approved CNCF project registries. Trivy scan via pre-commit hook. gitleaks for secret detection in image build contexts. |
 
 ### The Defense-in-Depth Principle
 
@@ -1111,7 +1111,7 @@ The scorecard now includes a guardrail coverage column:
 ### Production Hardening
 - [x] cert-manager with Let's Encrypt ClusterIssuers (staging + production)
 - [x] ALB Ingress for ArgoCD with ACM TLS certificate
-- [x] ArgoCD accessible at `https://test1.ai-enhanced-devops.com`
+- [x] ArgoCD accessible at `https://argocd.ai-enhanced-devops.com`
 - [x] GitHub OIDC via Dex (peopleforrester = platform-admin)
 - [x] Resource quotas (10 pods, 4 CPU, 8Gi in apps)
 - [x] PodDisruptionBudgets for sample-app and ArgoCD
@@ -1120,7 +1120,7 @@ The scorecard now includes a guardrail coverage column:
 
 ### Remaining Items
 - [ ] **Build actual slides** from `collateral/slide-outline.md` (PowerPoint/Google Slides)
-- [ ] **QR codes** for repo, scorecard, `https://test1.ai-enhanced-devops.com`
+- [ ] **QR codes** for repo, scorecard, `https://argocd.ai-enhanced-devops.com`
 - [ ] **Demo runbook 3x end-to-end** without intervention
 - [ ] **Practice run with timer** (target 27 min for 30-min slot)
 - [ ] **OIDC test with second account**

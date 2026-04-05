@@ -25,7 +25,7 @@ Speaker: Michael Forrester, Principal Training Architect — KodeKloud
 ## Slide 3: It Gets Worse
 
 Three data points:
-- −7.2% stability (DORA 2025)
+- −7.2% stability per 25% increase in AI adoption (DORA 2025)
 - 1% of companies "AI mature" (2025 AI at Work Report)
 - 30% of platform teams don't measure (State of Platform Engineering Vol. 4)
 

@@ -2,13 +2,15 @@
 # ABOUTME: Validates cert-manager, resource quotas, PDBs, gitleaks, and security posture.
 
 import json
+import pathlib
 import subprocess
 from typing import Any
 
 import pytest
-from kubernetes import client, config
+from kubernetes import client
 from kubernetes.client import CoreV1Api, AppsV1Api, CustomObjectsApi
 
+REPO_ROOT = str(pathlib.Path(__file__).resolve().parents[1])
 MONITORING_NS = "monitoring"
 APPS_NS = "apps"
 ARGOCD_NS = "argocd"
@@ -112,7 +114,6 @@ def test_resource_quota_enforced() -> None:
 
 def test_pdbs_exist(k8s_core: CoreV1Api) -> None:
     """PodDisruptionBudgets exist for critical platform components."""
-    config.load_kube_config()
     policy_api = client.PolicyV1Api()
 
     expected_namespaces = [ARGOCD_NS, MONITORING_NS, BACKSTAGE_NS]
@@ -157,11 +158,10 @@ def test_no_root_pods_in_apps(k8s_core: CoreV1Api) -> None:
 
 def test_gitleaks_clean() -> None:
     """gitleaks scan finds no secrets in the git-tracked repository files."""
-    repo_root = "/home/ollama/repos/Business/KodeKloud/Conferences/kubecon-2026-eu/kubeauto-ai-day"
     result = subprocess.run(
         ["gitleaks", "detect",
-         f"--source={repo_root}",
-         f"--config={repo_root}/.gitleaks.toml",
+         f"--source={REPO_ROOT}",
+         f"--config={REPO_ROOT}/.gitleaks.toml",
          "--no-banner"],
         capture_output=True, text=True, timeout=60,
     )
@@ -177,12 +177,12 @@ def test_gitleaks_clean() -> None:
 def test_security_doc_exists() -> None:
     """SECURITY.md exists with all 8 required sections."""
     result = subprocess.run(
-        ["test", "-f", "/home/ollama/repos/Business/KodeKloud/Conferences/kubecon-2026-eu/kubeauto-ai-day/docs/SECURITY.md"],
+        ["test", "-f", f"{REPO_ROOT}/docs/SECURITY.md"],
         capture_output=True, text=True, timeout=5,
     )
     assert result.returncode == 0, "docs/SECURITY.md does not exist"
 
-    with open("/home/ollama/repos/Business/KodeKloud/Conferences/kubecon-2026-eu/kubeauto-ai-day/docs/SECURITY.md") as f:
+    with open(f"{REPO_ROOT}/docs/SECURITY.md") as f:
         content = f.read()
 
     required_sections = [
@@ -204,12 +204,12 @@ def test_security_doc_exists() -> None:
 def test_cost_doc_exists() -> None:
     """COST.md exists with cost estimates."""
     result = subprocess.run(
-        ["test", "-f", "/home/ollama/repos/Business/KodeKloud/Conferences/kubecon-2026-eu/kubeauto-ai-day/docs/COST.md"],
+        ["test", "-f", f"{REPO_ROOT}/docs/COST.md"],
         capture_output=True, text=True, timeout=5,
     )
     assert result.returncode == 0, "docs/COST.md does not exist"
 
-    with open("/home/ollama/repos/Business/KodeKloud/Conferences/kubecon-2026-eu/kubeauto-ai-day/docs/COST.md") as f:
+    with open(f"{REPO_ROOT}/docs/COST.md") as f:
         content = f.read()
 
     assert "cost" in content.lower(), "COST.md doesn't appear to contain cost information"

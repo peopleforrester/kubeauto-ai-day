@@ -1,9 +1,13 @@
 # ABOUTME: Retry and wait utilities for async Kubernetes operations.
 # ABOUTME: All wait functions print progress to stderr (Rule G5: progress indicators).
 
+from __future__ import annotations
+
 import sys
 import time
 from typing import Callable, TypeVar
+
+from kubernetes.client import CoreV1Api
 
 T = TypeVar("T")
 
@@ -63,7 +67,7 @@ def wait_for_condition(
 
 
 def wait_for_pod_ready(
-    k8s_core_v1: object,
+    k8s_core_v1: CoreV1Api,
     name: str,
     namespace: str,
     timeout: int = 120,
@@ -84,7 +88,7 @@ def wait_for_pod_ready(
     """
 
     def _check() -> bool:
-        pods = k8s_core_v1.list_namespaced_pod(  # type: ignore[union-attr]
+        pods = k8s_core_v1.list_namespaced_pod(
             namespace=namespace,
             field_selector=f"metadata.name={name}",
         )
@@ -103,7 +107,7 @@ def wait_for_pod_ready(
 
 
 def wait_for_pods_by_label(
-    k8s_core_v1: object,
+    k8s_core_v1: CoreV1Api,
     label_selector: str,
     namespace: str,
     min_ready: int = 1,
@@ -126,7 +130,7 @@ def wait_for_pods_by_label(
     """
 
     def _check() -> bool:
-        pods = k8s_core_v1.list_namespaced_pod(  # type: ignore[union-attr]
+        pods = k8s_core_v1.list_namespaced_pod(
             namespace=namespace,
             label_selector=label_selector,
         )
