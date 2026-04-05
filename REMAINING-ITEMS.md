@@ -1,83 +1,98 @@
 # Remaining Items — KubeAuto Day IDP
 
-Last updated: 2026-02-22
+Last updated: 2026-04-06
 
-## Status: Platform Complete, Presentation Prep In Progress
+## Status: Talk Complete, Post-Talk Phase
 
-All 7 build phases are done. 27/27 components scored. 59 tests passing.
-Cluster is live. Collateral (blog, slides outline, social, QR codes) committed.
+All 7 build phases done. 27/27 components scored. 59 tests passing.
+KubeAuto Day Europe talk delivered March 23, 2026 in Amsterdam.
+Senior developer review remediation completed April 6, 2026.
 
 ---
 
-## Must Do Before March 23
+## Completed (Pre-Talk)
 
 ### 1. Build Actual Slides
 - Source: `collateral/slide-outline.md` (19 slides, ~27 min)
-- Format: PowerPoint or Google Slides
-- Owner: Michael (manual task)
+- Status: **DONE**
 
 ### 2. Demo Runbook 3x End-to-End
 - Source: `collateral/demo-runbook.md`
-- Run the full demo flow 3 times without intervention
-- Capture screenshot fallbacks for each demo step
-- Owner: Michael (manual task)
+- Status: **DONE**
 
 ### 3. Practice Run with Timer
 - Target: 27 minutes for 30-minute slot
-- Include demo transitions and slide pacing
-- Owner: Michael (manual task)
+- Status: **DONE**
 
 ### 4. Fix argocd DNS (Negative Cache)
-- Issue: `argocd.ai-enhanced-devops.com` returns NXDOMAIN despite wildcard
+- Issue: `argocd.ai-enhanced-devops.com` returned NXDOMAIN despite wildcard
 - Root cause: Negative DNS cache (SOA shows 3601s negative TTL)
-- Fix: Add explicit CNAME record in Namecheap for `argocd`
-- Owner: Michael (Namecheap admin panel)
-
----
-
-## Should Do
+- Fix: Added explicit CNAME record in Namecheap for `argocd`
+- Status: **DONE**
 
 ### 5. Screenshot Fallbacks for Live Demo
-- Capture screenshots of: ArgoCD dashboard, Grafana dashboard, Backstage catalog,
+- Screenshots captured for: ArgoCD dashboard, Grafana dashboard, Backstage catalog,
   Unicorn Party app, E-Commerce Frontend
-- Store in `collateral/screenshots/` for slide deck fallbacks
-- Status: Tracking, not yet captured
-
-### 6. OIDC Test with Second GitHub Account
-- Verify GitHub OIDC login with a non-admin account (WiggityWhitney)
-- Confirm RBAC scoping works as expected
-- Owner: Michael (manual task)
+- Status: **DONE**
 
 ---
 
-## Nice to Have (Not Required)
+## Post-Talk: Should Do
 
-### ~~7. Eight Guardrails Reconciliation~~ DONE (2026-02-22)
-- All three layers implemented: Layer 1 (`.pre-commit-config.yaml`, git hooks),
-  Layer 2 (`.claude/settings.json`, Claude Code hooks), Layer 3 (Kyverno, Falco, etc.)
-- Standalone docs: `docs/EIGHT-GUARDRAILS.md`, `docs/EIGHT-GUARDRAILS-RECONCILIATION.md`
-- All 6 skill files updated with "Guardrail Integration" sections
-- `docs/SECURITY.md` cross-referenced with guardrail numbers
-
-### 8. Make Repo Public
-- Currently private. Decision pending on timing.
+### 6. Make Repo Public
+- Currently private. Ready for public visibility.
 - Pre-publish checklist: run `/gh-public-check`, verify no secrets, confirm
   `.gitignore` coverage, remove any private references
+- AWS account ID (598274344262) appears in 14 files — document replacement
+  process in SETUP.md before publishing
 
-### ~~9. Git Tags for Phase Completion~~ DONE (2026-02-22)
+### 7. Publish Blog Post
+- Draft exists at `collateral/blog-post-draft.md`
+- Owner: Michael (manual task)
+
+### 8. Post Social Media Thread
+- Draft exists at `collateral/social-media-thread.md`
+- Owner: Michael (manual task)
+
+### 9. Cluster Teardown Decision
+- Running at ~$0.57/hr ($410/month)
+- Decision: Keep alive for post-talk demos or tear down?
+- Teardown guide: `docs/TEARDOWN.md`
+
+---
+
+## Post-Talk: Nice to Have
+
+### 10. Version Bumps (April 2026 drift)
+- ArgoCD 3.3.6 available (project uses 3.2+)
+- Falco Helm chart 8.0.1 available (project uses 7.x) — major version, review changelog
+- kube-prometheus-stack 82.18.0 available (project uses 82.1.0)
+- OTel Collector Helm chart 0.147.1 available (project uses 0.145.0)
+- Skip unless cluster stays alive for continued demos
+
+---
+
+## Completed (During Build)
+
+### ~~Eight Guardrails Reconciliation~~ DONE (2026-02-22)
+- All three layers implemented
+
+### ~~Git Tags for Phase Completion~~ DONE (2026-02-22)
 - 8 annotated tags created: `phase-0-complete` through `phase-7-complete`
-- Each tag points to the final commit for that phase with descriptive message
 
-### ~~10. Guardrail Column in Scorecard~~ DONE (2026-02-22)
-- Added "Guardrails" column to `spec/SCORECARD.md` mapping each component to guardrails #1-#8
-- Added Guardrail Coverage summary table showing which components implement each guardrail
+### ~~Guardrail Column in Scorecard~~ DONE (2026-02-22)
+- Added "Guardrails" column to `spec/SCORECARD.md`
+
+### ~~Senior Review Remediation~~ DONE (2026-04-06)
+- 10 items fixed: hardcoded paths, type hints, DRY violations, stale metadata
 
 ---
 
 ## Decided: Not Doing
 
-- **GitHub Actions CI**: Credit-limited for the month, skip
+- **GitHub Actions CI**: Credit-limited, skip
 - **Blog/social publishing**: Content exists, Michael handles scheduling
 - **Known quirks** (ArgoCD app-of-apps OutOfSync, Kyverno CRD OutOfSync):
-  Architectural characteristics, not bugs. No fix needed.
-- **Cluster cost optimization**: Aware of $0.57/hr, acceptable for demo window
+  Architectural characteristics, not bugs
+- **Cluster cost optimization**: Acceptable for demo window
+- **OIDC Test with Second Account**: Lower priority post-talk

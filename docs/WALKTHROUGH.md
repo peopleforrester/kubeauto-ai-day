@@ -1027,10 +1027,11 @@ The scorecard now includes a guardrail coverage column:
 | Feb 18 | Phase 7 complete (cert-manager, quotas, PDBs, gitleaks, security docs) | Done |
 | Feb 19 | Phase 8 collateral, documentation gaps, ALB Ingress, ACM TLS, OIDC | Done |
 | Feb 20 | Reconciliation — this checklist updated against actual state | Done |
-| Mar 4-10 | Build actual slides from outline, QR codes | TODO |
-| Mar 11-17 | Practice runs with timer, demo runbook 3x end-to-end | TODO |
-| Mar 18-22 | Buffer + final polish | TODO |
-| Mar 23 | KubeAuto Day Europe — Amsterdam | Target |
+| Mar 4-10 | Build actual slides from outline, QR codes | Done |
+| Mar 11-17 | Practice runs with timer, demo runbook 3x end-to-end | Done |
+| Mar 18-22 | Buffer + final polish | Done |
+| Mar 23 | KubeAuto Day Europe — Amsterdam | Delivered |
+| Apr 6 | Senior review remediation, post-talk reconciliation | Done |
 
 ---
 

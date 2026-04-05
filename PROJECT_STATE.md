@@ -1,46 +1,37 @@
 # Project State: KubeAuto AI Day IDP (KubeCon EU 2026)
 
-## Current Plan
-Senior developer review remediation complete (2026-04-06). All critical,
-high, and medium priority items resolved. Ready for public repo prep.
+## Current Status
+Platform build complete. Talk delivered March 23, 2026 in Amsterdam.
+Post-talk reconciliation and senior review remediation done April 6, 2026.
 
-## Task Checklist — Review Remediation (2026-04-06)
-
-### Critical (Fix Immediately)
-- [x] Fix hardcoded `/home/ollama/` paths in `tests/test_phase_07_hardening.py` → use `pathlib.Path`
-- [x] Extract Grafana basic auth constant from 3 test files into `conftest.py`
-
-### High Priority
-- [x] Fix namespace list inconsistency: `test_phase_01_foundation.py` now matches `conftest.py` (8 namespaces)
-- [x] Remove duplicate Falco rules in `security/falco/custom-rules.yaml`
-- [x] Fix `wait_helpers.py` type hints: `object` → `CoreV1Api`
-- [x] Deduplicate `load_kube_config()` — single autouse session fixture in conftest
-
-### Medium Priority
-- [x] Update `pyproject.toml` description
-- [x] Update `.current-phase` to `7`
-- [x] Add `.dockerignore` to `sample-app/`
-- [x] Fix `Optional` import style in `tests/helpers/kubectl_helpers.py`
-
-### Not In Scope (documented only)
-- AWS account ID parameterization (14 files) — needs SETUP.md doc, not a code fix
-- Grafana admin password — already has ESO comment, acceptable for demo
-- Recording scripts test coverage — out of scope
-- ArgoCD retry config on child apps — low risk for demo
-
-## Previous Work
-- [x] EKS-based Internal Developer Platform with AI assistance (27/27 components)
-- [x] 59 integration tests, all phases
+## What's Done
+- [x] All 7 build phases (27/27 components, 59 tests, 73.8% toil reduction)
 - [x] Eight Guardrails full implementation (all three layers)
-- [x] Demo runbook, presentation collateral
+- [x] Talk delivered at KubeAuto Day Europe 2026
+- [x] Senior developer review — all 10 remediation items fixed
+- [x] Post-talk documentation reconciliation
+- [x] Version drift audit (April 2026)
+- [x] Public repo readiness check
 
-## Progress
-- **Last completed**: Senior review remediation — all 10 items fixed
-- **Next step**: Presentation prep (slides, demo practice, timer runs)
-- **Branch**: staging
-- **Tests**: need cluster to verify (syntax check passes)
+## What's Left (Owner: Michael, manual)
+- [ ] Make repo public (`/gh-public-check` then flip visibility)
+- [ ] Publish blog post from `collateral/blog-post-draft.md`
+- [ ] Post social media thread from `collateral/social-media-thread.md`
+- [ ] Decide: keep cluster alive or tear down (`docs/TEARDOWN.md`)
+
+## Version Drift (April 2026)
+No action needed unless cluster stays alive for continued demos:
+- ArgoCD 3.3.6 available (deployed: 3.2.6)
+- Falco Helm chart 8.0.1 available (deployed: 7.x) — major version
+- kube-prometheus-stack 82.18.0 available (deployed: 82.1.0)
+- OTel Collector chart 0.147.1 available (deployed: 0.145.0)
 
 ## Key Documents
+- `REMAINING-ITEMS.md` — Full post-talk checklist
 - `spec/SCORECARD.md` — Final scorecard (27/27, 73.8% toil reduction)
-- `docs/EIGHT-GUARDRAILS-RECONCILIATION.md` — Layer-by-layer gap analysis
 - `docs/WALKTHROUGH.md` — Three-Layer architecture + Eight Guardrails mapping
+- `docs/EIGHT-GUARDRAILS-RECONCILIATION.md` — Layer-by-layer gap analysis
+
+## Branch & Test Status
+- **Branch**: staging (clean)
+- **Tests**: 59 tests, require live cluster to run
