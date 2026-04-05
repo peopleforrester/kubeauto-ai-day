@@ -1,45 +1,46 @@
 # Project State: KubeAuto AI Day IDP (KubeCon EU 2026)
 
 ## Current Plan
-Platform build complete (27/27 components, 59 tests, 73.8% toil reduction).
-Eight Guardrails reconciliation done — Layer 3 fully implemented, Layers 1-2
-documented with implementation options. Presentation prep in progress.
+Senior developer review remediation complete (2026-04-06). All critical,
+high, and medium priority items resolved. Ready for public repo prep.
 
-## Task Checklist
-- [x] EKS-based Internal Developer Platform with AI assistance
-- [x] Unicorn Party demo app (v2.0.2) with interactive experience
-- [x] ALB ingresses for Unicorn Party and E-Commerce Frontend
-- [x] Demo runbook with external URLs, known issues, failure fallbacks
-- [x] Phase 8 collateral: version accuracy, scorecard, QR codes
-- [x] PR workflow with staging → main merges
-- [x] Eight Guardrails reconciliation analysis
-- [x] Eight Guardrails full implementation (Layer 1 + Layer 2 hooks, documentation)
-- [ ] Build actual slides from `collateral/slide-outline.md`
-- [ ] Demo runbook 3x end-to-end practice
-- [ ] Practice run with timer (target 27 min)
-- [ ] Fix test1 DNS (add explicit CNAME in Namecheap)
-- [ ] Screenshot fallbacks for live demo
+## Task Checklist — Review Remediation (2026-04-06)
+
+### Critical (Fix Immediately)
+- [x] Fix hardcoded `/home/ollama/` paths in `tests/test_phase_07_hardening.py` → use `pathlib.Path`
+- [x] Extract Grafana basic auth constant from 3 test files into `conftest.py`
+
+### High Priority
+- [x] Fix namespace list inconsistency: `test_phase_01_foundation.py` now matches `conftest.py` (8 namespaces)
+- [x] Remove duplicate Falco rules in `security/falco/custom-rules.yaml`
+- [x] Fix `wait_helpers.py` type hints: `object` → `CoreV1Api`
+- [x] Deduplicate `load_kube_config()` — single autouse session fixture in conftest
+
+### Medium Priority
+- [x] Update `pyproject.toml` description
+- [x] Update `.current-phase` to `7`
+- [x] Add `.dockerignore` to `sample-app/`
+- [x] Fix `Optional` import style in `tests/helpers/kubectl_helpers.py`
+
+### Not In Scope (documented only)
+- AWS account ID parameterization (14 files) — needs SETUP.md doc, not a code fix
+- Grafana admin password — already has ESO comment, acceptable for demo
+- Recording scripts test coverage — out of scope
+- ArgoCD retry config on child apps — low risk for demo
+
+## Previous Work
+- [x] EKS-based Internal Developer Platform with AI assistance (27/27 components)
+- [x] 59 integration tests, all phases
+- [x] Eight Guardrails full implementation (all three layers)
+- [x] Demo runbook, presentation collateral
+
 ## Progress
-- **Last completed**: Eight Guardrails full implementation — all three layers active
+- **Last completed**: Senior review remediation — all 10 items fixed
 - **Next step**: Presentation prep (slides, demo practice, timer runs)
-- **Remaining items**: See `REMAINING-ITEMS.md`
+- **Branch**: staging
+- **Tests**: need cluster to verify (syntax check passes)
 
 ## Key Documents
-- `REMAINING-ITEMS.md` — Full "what's left" checklist
-- `docs/EIGHT-GUARDRAILS-RECONCILIATION.md` — Layer-by-layer gap analysis
-- `docs/WALKTHROUGH.md` — Complete Three-Layer architecture + Eight Guardrails mapping
 - `spec/SCORECARD.md` — Final scorecard (27/27, 73.8% toil reduction)
-
-## Branch & Test Status
-- **Branch**: staging
-- **Clean**: yes
-- **Tests**: passing (59 tests)
-
-## Session Notes
-- Every component built with AI-assisted development and TDD
-- Every correction cycle documented for the talk
-- All three guardrail layers implemented:
-  - Layer 3 (Kubernetes): 8/8 guardrails (Kyverno, Falco, RBAC, ESO, ArgoCD, etc.)
-  - Layer 2 (Claude Code): 7/8 guardrails (PreToolUse, PostToolUse, Stop, SessionStart)
-  - Layer 1 (Git hooks): 8/8 guardrails (gitleaks, yamllint, kubeconform, terraform, helm, trivy, image-allowlist, namespace-scope)
-- Pre-commit hooks: 8 hooks, all passing
+- `docs/EIGHT-GUARDRAILS-RECONCILIATION.md` — Layer-by-layer gap analysis
+- `docs/WALKTHROUGH.md` — Three-Layer architecture + Eight Guardrails mapping

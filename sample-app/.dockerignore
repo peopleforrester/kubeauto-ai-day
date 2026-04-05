@@ -1,0 +1,14 @@
+# ABOUTME: Docker build exclusions for the sample-app container image.
+# ABOUTME: Prevents unnecessary files from bloating the image.
+.git
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.mypy_cache
+.ruff_cache
+k8s/
+catalog-info.yaml
+README.md
+.dockerignore
+Dockerfile

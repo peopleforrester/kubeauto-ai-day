@@ -53,7 +53,7 @@ falco:
 # Mount custom rules from ConfigMap
 customRules:
   custom-rules.yaml: |
-    # Content from security/falco/custom-rules.yaml
+    # Custom rules defined inline (canonical source: gitops/apps/falco.yaml)
   eks-aware-rules.yaml: |
     # Content from security/falco/eks-aware-rules.yaml
 

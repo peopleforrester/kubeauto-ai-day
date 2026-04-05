@@ -4,14 +4,17 @@
 import subprocess
 import pytest
 
-from kubernetes import client, config
+from kubernetes import client
 from kubernetes.client import CoreV1Api
 
 
 TERRAFORM_DIR = "infrastructure/terraform"
 CLUSTER_NAME = "kubeauto-ai-day"
 REGION = "us-west-2"
-EXPECTED_NAMESPACES = ["platform", "argocd", "monitoring", "backstage", "apps", "security"]
+EXPECTED_NAMESPACES = [
+    "platform", "argocd", "monitoring", "backstage", "apps", "security",
+    "kyverno", "cert-manager",
+]
 
 
 def test_terraform_validate() -> None:
@@ -41,7 +44,6 @@ def test_terraform_plan() -> None:
 
 def test_eks_cluster_reachable() -> None:
     """EKS cluster endpoint is reachable via kubeconfig."""
-    config.load_kube_config()
     version_api = client.VersionApi()
     version = version_api.get_code()
     assert version.major is not None, "Could not get cluster version"
@@ -63,7 +65,7 @@ def test_nodes_ready(k8s_core_v1: CoreV1Api) -> None:
 
 
 def test_namespaces_exist(k8s_core_v1: CoreV1Api) -> None:
-    """All 6 platform namespaces exist."""
+    """All 8 platform namespaces exist."""
     namespaces = k8s_core_v1.list_namespace()
     ns_names = [ns.metadata.name for ns in namespaces.items]
     for expected_ns in EXPECTED_NAMESPACES:

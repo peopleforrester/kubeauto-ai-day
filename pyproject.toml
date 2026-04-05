@@ -1,7 +1,7 @@
 [project]
 name = "kubeauto-ai-day"
 version = "0.1.0"
-description = "Add your description here"
+description = "Production-grade Internal Developer Platform on EKS — reference IDP for KubeAuto Day Europe 2026"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []

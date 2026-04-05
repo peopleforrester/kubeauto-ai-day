@@ -1,10 +1,11 @@
 # ABOUTME: Wrapper functions for kubectl operations with progress output.
 # ABOUTME: Provides typed helpers for common kubectl commands used in tests.
 
+from __future__ import annotations
+
 import re
 import subprocess
 import sys
-from typing import Optional
 
 
 def strip_kubectl_noise(stdout: str) -> str:
@@ -14,7 +15,7 @@ def strip_kubectl_noise(stdout: str) -> str:
 
 def run_kubectl(
     args: list[str],
-    namespace: Optional[str] = None,
+    namespace: str | None = None,
     timeout: int = 30,
 ) -> subprocess.CompletedProcess[str]:
     """Run a kubectl command and print what is being executed (Rule G5).
@@ -48,7 +49,7 @@ def run_kubectl(
 
 def get_pods(
     namespace: str,
-    label_selector: Optional[str] = None,
+    label_selector: str | None = None,
 ) -> list[dict[str, str]]:
     """Get pods in a namespace, returning name and status phase.
 
@@ -72,7 +73,7 @@ def get_pods(
     return pods
 
 
-def apply_manifest(path: str, namespace: Optional[str] = None) -> str:
+def apply_manifest(path: str, namespace: str | None = None) -> str:
     """Apply a Kubernetes manifest file.
 
     Args:
@@ -89,7 +90,7 @@ def apply_manifest(path: str, namespace: Optional[str] = None) -> str:
 
 def delete_manifest(
     path: str,
-    namespace: Optional[str] = None,
+    namespace: str | None = None,
     ignore_not_found: bool = True,
 ) -> str:
     """Delete a Kubernetes manifest file.

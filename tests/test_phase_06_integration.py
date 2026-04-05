@@ -9,6 +9,7 @@ from typing import Any
 import pytest
 from kubernetes.client import CoreV1Api, AppsV1Api
 
+from conftest import GRAFANA_BASIC_AUTH
 from helpers.kubectl_helpers import strip_kubectl_noise
 
 MONITORING_NS = "monitoring"
@@ -182,7 +183,7 @@ def test_grafana_prometheus_datasource_healthy() -> None:
             "--image=docker.io/library/busybox:latest",
             "--namespace", MONITORING_NS,
             "--", "wget", "-q", "-O-", "--timeout=10",
-            "--header=Authorization: Basic YWRtaW46YWRtaW4=",
+            f"--header=Authorization: {GRAFANA_BASIC_AUTH}",
             "http://prometheus-grafana.monitoring.svc.cluster.local:80/api/datasources/proxy/1/api/v1/query?query=up",
         ],
         capture_output=True, text=True, timeout=30,
