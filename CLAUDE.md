@@ -56,16 +56,18 @@ Output `<promise>PHASEX_DONE</promise>` (X = phase number) ONLY when ALL test cr
 
 See `.claude/skills/` for component-specific patterns. Read the relevant skill file BEFORE generating config for that component.
 
-## Technology Versions
+## Technology Versions (deployed)
 
-- EKS: 1.34+
-- ArgoCD: 3.2+ (annotation-based tracking default)
-- Kyverno: 1.17+ (CEL policies stable)
-- Backstage: 1.46+ (new backend system, createBackend() API only)
-- Falco: CNCF Graduated (eBPF driver default)
-- OTel Collector: 0.140+
-- Grafana: 12.x via kube-prometheus-stack
-- cert-manager: 1.19+
-- Terraform EKS module: ~>21.0
+These are the versions deployed on the demo cluster. Latest available noted where drifted.
+
+- EKS: 1.34
+- ArgoCD: 3.2.6 deployed (3.3.6 available; Helm chart 9.x)
+- Kyverno: 1.17.1 (current; Helm chart 3.7.0)
+- Backstage: 1.46+ (Helm chart 2.6.3, image 1.9.1; 1.49.3 available)
+- Falco: CNCF Graduated, eBPF driver (Helm chart 7.x deployed; 8.0.1 available — major version)
+- OTel Collector: 0.145.0 deployed (0.149.0 available; 0.x, no GA)
+- Grafana: 12.x via kube-prometheus-stack 82.1.0 (82.18.0 available)
+- cert-manager: 1.19+ (1.20.1 available)
+- Terraform EKS module: ~>21.0 (21.17.0 latest)
 - Instance type: m7i.xlarge
 - Pod Identity primary, IRSA fallback for specific addons
