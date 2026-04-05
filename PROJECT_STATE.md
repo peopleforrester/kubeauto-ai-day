@@ -1,37 +1,32 @@
 # Project State: KubeAuto AI Day IDP (KubeCon EU 2026)
 
 ## Current Status
-Platform build complete. Talk delivered March 23, 2026 in Amsterdam.
-Post-talk reconciliation and senior review remediation done April 6, 2026.
+Project complete. Talk delivered March 23, 2026. Repo public. Cluster torn down.
+Blog post and social thread finalized and ready to publish.
 
 ## What's Done
 - [x] All 7 build phases (27/27 components, 59 tests, 73.8% toil reduction)
 - [x] Eight Guardrails full implementation (all three layers)
-- [x] Talk delivered at KubeAuto Day Europe 2026
+- [x] Talk delivered at KubeAuto Day Europe 2026, Amsterdam
 - [x] Senior developer review — all 10 remediation items fixed
 - [x] Post-talk documentation reconciliation
 - [x] Version drift audit (April 2026)
-- [x] Public repo readiness check
+- [x] Repo public at github.com/peopleforrester/kubeauto-ai-day
+- [x] Blog post finalized (`collateral/blog-post-draft.md`)
+- [x] Social media thread finalized (`collateral/social-media-thread.md`)
+- [x] Cluster torn down
 
 ## What's Left (Owner: Michael, manual)
-- [ ] Make repo public (`/gh-public-check` then flip visibility)
-- [ ] Publish blog post from `collateral/blog-post-draft.md`
-- [ ] Post social media thread from `collateral/social-media-thread.md`
-- [ ] Decide: keep cluster alive or tear down (`docs/TEARDOWN.md`)
-
-## Version Drift (April 2026)
-No action needed unless cluster stays alive for continued demos:
-- ArgoCD 3.3.6 available (deployed: 3.2.6)
-- Falco Helm chart 8.0.1 available (deployed: 7.x) — major version
-- kube-prometheus-stack 82.18.0 available (deployed: 82.1.0)
-- OTel Collector chart 0.147.1 available (deployed: 0.145.0)
+- [ ] Publish blog post (copy to dev.to or KodeKloud blog)
+- [ ] Post social media thread (LinkedIn, X, Bluesky)
 
 ## Key Documents
-- `REMAINING-ITEMS.md` — Full post-talk checklist
+- `REMAINING-ITEMS.md` — Full checklist with status
 - `spec/SCORECARD.md` — Final scorecard (27/27, 73.8% toil reduction)
+- `collateral/blog-post-draft.md` — Ready-to-publish blog post
+- `collateral/social-media-thread.md` — Ready-to-publish 6-post thread
 - `docs/WALKTHROUGH.md` — Three-Layer architecture + Eight Guardrails mapping
-- `docs/EIGHT-GUARDRAILS-RECONCILIATION.md` — Layer-by-layer gap analysis
 
 ## Branch & Test Status
 - **Branch**: staging (clean)
-- **Tests**: 59 tests, require live cluster to run
+- **Tests**: 59 tests, require live cluster (cluster torn down)

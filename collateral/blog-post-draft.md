@@ -1,5 +1,7 @@
 # I Built an IDP with AI in 3 Hours. Here's What Actually Happened.
 
+*Presented at KubeAuto Day Europe 2026, Amsterdam — March 23, 2026*
+
 ## The Promise
 
 Every AI vendor will tell you their tool can build your infrastructure in
@@ -11,27 +13,29 @@ I wanted to find out: does AI-assisted platform building genuinely reduce
 toil, or does it just convert "writing YAML" toil into "reviewing and
 debugging AI YAML" toil?
 
+So I built a production-grade Internal Developer Platform on EKS from
+scratch, scored every component honestly, and presented the results at
+KubeAuto Day Europe 2026 in Amsterdam. This is the full writeup.
+
 ## The Setup
 
-I built a production-grade Internal Developer Platform on EKS from scratch,
-with AI doing the heavy lifting. Every component was test-driven, every
-decision recorded, and every correction cycle documented honestly.
+AI did the heavy lifting. Every component was test-driven, every decision
+recorded, and every correction cycle documented.
 
 **The platform:**
 - EKS 1.34 on AWS (VPC, IAM, managed node groups)
-- ArgoCD 3.3 for GitOps (app-of-apps pattern, 27 managed Applications)
+- ArgoCD 3.2.6 for GitOps (app-of-apps pattern, 27 managed Applications)
 - Kyverno 1.17 for policy enforcement (6 policies, enforce mode in apps namespace)
 - Falco 0.43 for runtime security (eBPF driver, 5 custom rules)
 - ESO for secret management (AWS Secrets Manager integration)
-- Prometheus + Grafana + OTel for observability
+- Prometheus + Grafana + OTel for full observability
 - Backstage for developer portal (2 software templates)
-- cert-manager for TLS
-- ResourceQuotas, PDBs, RBAC, NetworkPolicies
+- cert-manager for TLS, ResourceQuotas, PDBs, RBAC, NetworkPolicies
 
 **The methodology:**
 - 27 planned components across 7 build phases
-- Test-driven development: write failing test → implement → verify
-- No mocks, no stubs — all tests hit live infrastructure
+- Test-driven development: write failing test, implement, verify
+- No mocks, no stubs — all 59 tests hit live infrastructure
 - Per-component scoring on a 6-dimension scorecard
 - Honest recording of every correction cycle
 
@@ -77,9 +81,8 @@ takes time because the writing itself is the bottleneck; AI removes that.
 
 **Version currency (the #1 problem):**
 The AI repeatedly used outdated versions. Falco chart 7.2.1 when 8.0.0 was
-current. cert-manager v1.19.1 when v1.19.3 was available. ArgoCD skill file
-referenced chart 7.x when 9.x was needed. Kyverno webhook config was wrong
-for chart 3.7.0.
+current. ArgoCD skill file referenced chart 7.x when 9.x was needed. Kyverno
+webhook config was wrong for chart 3.7.0.
 
 This is the most dangerous failure mode: the AI generates plausible-looking
 config that uses an old API, and you don't notice until deployment fails.
@@ -98,7 +101,7 @@ not `v1beta1`. OTel Collector chart 0.145 requires explicit `image.repository`
 **Helm chart internals:**
 The Falco chart's template computes the Falcosidekick URL as
 `<release-name>-falcosidekick`. Setting the URL manually in values didn't
-work because the template override. You had to use `falcosidekick.fullfqdn`.
+work because the template overrides it. You had to use `falcosidekick.fullfqdn`.
 AI doesn't read chart templates — it guesses from values files.
 
 ## The Five Components Where Toil Shifted
@@ -106,11 +109,11 @@ AI doesn't read chart templates — it guesses from values files.
 For 5 of 27 components, AI "partially shifted" toil rather than purely
 reducing it:
 
-1. **EKS Cluster** — Module v21 variable renames
-2. **Kyverno Install** — Webhook config format wrong for chart version
-3. **Falco Install** — Wrong chart version in skill file
-4. **ESO** — API version v1beta1 → v1
-5. **OTel Collector** — Breaking image change
+1. **EKS Cluster** — Module v21 variable renames (3 correction cycles)
+2. **Kyverno Install** — Webhook config format wrong for chart version (3 cycles)
+3. **Falco Install** — Wrong chart version in skill file (2 cycles)
+4. **ESO** — API version v1beta1 to v1 (2 cycles)
+5. **OTel Collector** — Breaking image change (3 cycles)
 
 The pattern: these are all cases where the AI's training data was stale.
 It generated confident, syntactically-correct YAML that used the wrong
@@ -118,11 +121,50 @@ version of something. Debugging "why does this correct-looking config not
 work" is a different kind of toil than writing config from scratch, but
 it's still toil.
 
+## The Three-Layer Guardrail Architecture
+
+One of the key findings was that AI effectiveness depends heavily on
+constraints. We implemented three layers of guardrails:
+
+**Layer 1: Git Hooks** (deterministic, <1s, no bypass)
+gitleaks, yamllint, kubeconform, terraform validate, helm lint, trivy,
+image-allowlist, namespace-scope checks.
+
+**Layer 2: IDE Hooks** (~80% deterministic, 1-30s)
+PreToolUse blocks, PostToolUse audit, Stop hooks, SessionStart context
+loading.
+
+**Layer 3: Kubernetes** (deterministic, 1-5s, no bypass)
+Kyverno admission policies, Falco runtime detection, RBAC, NetworkPolicies,
+ResourceQuotas, ArgoCD GitOps reconciliation.
+
+The principle: catch problems at the cheapest possible point. A git hook
+that blocks a bad commit costs nothing. A Falco alert after deployment
+costs incident response time.
+
+## What 73.8% Doesn't Tell You
+
+Three honest caveats I shared on stage:
+
+1. **60+ hours of invisible investment came first** — skill files, hooks,
+   state persistence, project configuration, CI/CD setup, studying context
+   windows. The 3-hour build stood on months of preparation.
+
+2. **30 years of experience caught the errors** — I spotted the module v20
+   vs v21 variable rename in seconds. A junior engineer might not catch it
+   for days. AI makes experienced engineers faster; it's risky for those
+   who can't spot wrong output.
+
+3. **1 data point against METR's sixteen** — rigorous per-component scoring,
+   but tiny sample size. This is evidence, not proof. Run your own scorecard.
+
+Every impressive number has a denominator. Now you know mine.
+
 ## Practical Advice for Teams
 
 **1. Skill files are essential.**
-The `.claude/skills/` files with component patterns, chart versions, and
-known pitfalls were the single biggest factor in reducing correction cycles.
+The `.claude/skills/` directory with component patterns, chart versions, and
+known pitfalls was the single biggest factor in reducing correction cycles.
 Without them, I estimate corrections would have doubled.
 
 **2. Version-pin everything in your prompts.**
@@ -148,15 +190,17 @@ The template is in the repo.
 
 The full repository, scorecard, and methodology are open source:
 
-- **Repository**: github.com/peopleforrester/kubeauto-ai-day
+- **Repository**: [github.com/peopleforrester/kubeauto-ai-day](https://github.com/peopleforrester/kubeauto-ai-day)
 - **Scorecard Template**: `scorecard/SCORECARD-TEMPLATE.md`
-- **Architecture**: `docs/ARCHITECTURE.md`
-- **All ADRs**: `docs/adr/`
+- **Scoring Methodology**: `scorecard/methodology.md`
+- **Architecture Decision Records**: `docs/adr/` (9 ADRs covering every major choice)
+- **Three-Layer Guardrails**: `docs/EIGHT-GUARDRAILS.md`
 
 Build your own IDP. Score it honestly. Share the results. The industry needs
 more data points, not more demos.
 
 ---
 
-*Michael Forrester is a Platform Engineer at KodeKloud. This platform was
-built for KubeAuto Day Europe 2026.*
+*Michael Forrester is Principal Training Architect at KodeKloud. This
+platform was built for and presented at KubeAuto Day Europe 2026 in
+Amsterdam on March 23, 2026.*
