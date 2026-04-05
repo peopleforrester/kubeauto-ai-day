@@ -39,25 +39,22 @@ Senior developer review remediation completed April 6, 2026.
 
 ## Post-Talk: Should Do
 
-### 6. Make Repo Public
-- Currently private. Ready for public visibility.
-- Pre-publish checklist: run `/gh-public-check`, verify no secrets, confirm
-  `.gitignore` coverage, remove any private references
-- AWS account ID (598274344262) appears in 14 files — document replacement
-  process in SETUP.md before publishing
+### ~~6. Make Repo Public~~ DONE
+- Repo is public at github.com/peopleforrester/kubeauto-ai-day
+- AWS account ID (598274344262) appears in 14 files — readers should
+  find-and-replace per SETUP.md when forking
 
 ### 7. Publish Blog Post
-- Draft exists at `collateral/blog-post-draft.md`
-- Owner: Michael (manual task)
+- Final draft at `collateral/blog-post-draft.md` — ready to publish
+- Owner: Michael (manual task — copy to dev.to or KodeKloud blog)
 
 ### 8. Post Social Media Thread
-- Draft exists at `collateral/social-media-thread.md`
-- Owner: Michael (manual task)
+- Final draft at `collateral/social-media-thread.md` — 6-post thread ready
+- Owner: Michael (manual task — post to LinkedIn, X, Bluesky)
 
-### 9. Cluster Teardown Decision
-- Running at ~$0.57/hr ($410/month)
-- Decision: Keep alive for post-talk demos or tear down?
-- Teardown guide: `docs/TEARDOWN.md`
+### ~~9. Cluster Teardown~~ DONE
+- Cluster torn down. Demo infrastructure no longer running.
+- Teardown guide archived at `docs/TEARDOWN.md`
 
 ---
 
