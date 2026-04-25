@@ -62,9 +62,10 @@ configs:
 
       # GitHub users get admin (ArgoCD 3.x subject format)
       # Dex may return email or username depending on GitHub account settings
+      # Forkers: replace these subjects with your own GitHub usernames or
+      # email claims before applying — see docs/SETUP.md "Substitutions".
       g, peopleforrester, role:platform-admin
-      g, michaelrishiforrester@gmail.com, role:platform-admin
-      g, WiggityWhitney, role:platform-admin
+      g, <YOUR_GITHUB_EMAIL_OR_USERNAME>, role:platform-admin
 
       # Read-only role for observers
       p, role:readonly, applications, get, */*, allow

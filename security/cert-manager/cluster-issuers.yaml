@@ -7,7 +7,7 @@ metadata:
 spec:
   acme:
     server: https://acme-staging-v02.api.letsencrypt.org/directory
-    email: michael@kubeauto.dev
+    email: <YOUR_EMAIL>  # forkers: replace before applying — see docs/SETUP.md
     privateKeySecretRef:
       name: letsencrypt-staging-key
     solvers:
@@ -22,7 +22,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: michael@kubeauto.dev
+    email: <YOUR_EMAIL>  # forkers: replace before applying — see docs/SETUP.md
     privateKeySecretRef:
       name: letsencrypt-production-key
     solvers:

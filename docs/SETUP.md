@@ -34,6 +34,30 @@ Install the following on your workstation:
 | argocd CLI | ArgoCD management (port-forward alternative) |
 | k9s | Terminal UI for Kubernetes |
 
+## Substitutions Before First Apply
+
+This repo is a public reference IDP. A handful of values are intentionally
+left as placeholders so that forkers do not pick up demo identifiers, AWS
+account IDs, or personal email addresses by accident.
+
+Replace every placeholder below before running `terraform apply` or pushing
+manifests through ArgoCD.
+
+| Placeholder | Files | What to replace it with |
+|---|---|---|
+| `<YOUR_EMAIL>` | `security/cert-manager/cluster-issuers.yaml` | The email Let's Encrypt should use for renewal notifications and rate-limit attribution. |
+| `<YOUR_GITHUB_EMAIL_OR_USERNAME>` | `gitops/argocd/values.yaml` | A GitHub username (or email claim Dex returns) that should be granted `platform-admin` in ArgoCD. Repeat the line per admin. |
+| `<YOUR_AWS_ACCOUNT_ID>` | `gitops/manifests/**/deployment.yaml`, `gitops/manifests/**/ingress.yaml`, `gitops/apps/backstage.yaml`, `gitops/apps/prometheus.yaml`, `gitops/argocd/values.yaml`, `sample-app/k8s/deployment.yaml` | Your 12-digit AWS account ID. The committed value `598274344262` is the demo account; rebuilds against any other account require updating these references. |
+| `<YOUR_ACM_CERT_ARN>` | Same files as `<YOUR_AWS_ACCOUNT_ID>` (ALB ingresses) | The ACM certificate ARN in the same region for your domain. |
+| `<YOUR_GITHUB_PAT>` | `docs/SETUP.md` snippet referenced from the Backstage section | A fine-grained PAT scoped to read your fork. |
+
+A quick way to find every remaining placeholder before applying:
+
+```bash
+grep -RIn '<YOUR_' gitops/ security/ infrastructure/ sample-app/ || \
+  echo "All placeholders replaced."
+```
+
 ## Pre-Flight Checklist
 
 Run this checklist before starting. Every item is required.

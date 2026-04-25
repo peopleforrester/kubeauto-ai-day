@@ -91,3 +91,45 @@ def test_teardown_script_success_banner_renders_dollar_zero_correctly() -> None:
         "teardown.sh contains an unescaped $0 in the success banner; the "
         "rendered output reads as the script path, not '$0/hr'."
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 3 — PII removal for public readiness
+# ---------------------------------------------------------------------------
+
+
+# Tracked files that historically held personal email addresses.
+PII_PATHS = [
+    "security/cert-manager/cluster-issuers.yaml",
+    "gitops/argocd/values.yaml",
+]
+
+PII_LITERALS = [
+    "michael@kubeauto.dev",
+    "michaelrishiforrester@gmail.com",
+]
+
+
+@pytest.mark.parametrize("relpath", PII_PATHS)
+def test_no_personal_email_in_committed_manifests(relpath: str) -> None:
+    """Personal emails must not appear in committed cluster-config manifests."""
+    text = (REPO_ROOT / relpath).read_text()
+    for needle in PII_LITERALS:
+        assert needle not in text, (
+            f"{relpath} still contains personal email literal {needle!r}; "
+            "use a placeholder and document substitution in docs/SETUP.md."
+        )
+
+
+def test_setup_doc_lists_substitutions() -> None:
+    """SETUP.md must include a substitutions section listing forker placeholders."""
+    setup = (REPO_ROOT / "docs" / "SETUP.md").read_text()
+    assert "Substitutions" in setup or "substitutions" in setup, (
+        "docs/SETUP.md is missing a 'Substitutions' section that lists every "
+        "placeholder a forker must replace before applying manifests."
+    )
+    # Spot-check that the well-known placeholders are mentioned.
+    for placeholder in ("<YOUR_EMAIL>", "<YOUR_AWS_ACCOUNT_ID>"):
+        assert placeholder in setup, (
+            f"docs/SETUP.md substitutions section must reference {placeholder}."
+        )
