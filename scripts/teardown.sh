@@ -215,7 +215,7 @@ TOTAL_ELAPSED=$((SECONDS))
 echo ""
 if [[ $ISSUES -eq 0 ]]; then
     echo -e "${GREEN}╔══════════════════════════════════════════════════╗${NC}"
-    echo -e "${GREEN}║  TEARDOWN COMPLETE — $0 recurring charges       ║${NC}"
+    echo -e "${GREEN}║  TEARDOWN COMPLETE — \$0/hr recurring charges    ║${NC}"
     echo -e "${GREEN}╚══════════════════════════════════════════════════╝${NC}"
 else
     echo -e "${YELLOW}╔══════════════════════════════════════════════════╗${NC}"

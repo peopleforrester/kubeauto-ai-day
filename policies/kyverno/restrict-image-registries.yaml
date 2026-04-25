@@ -29,4 +29,4 @@ spec:
         pattern:
           spec:
             containers:
-              - image: "ghcr.io/* | docker.io/library/* | registry.k8s.io/* | *.dkr.ecr.*.amazonaws.com/* | docker.io/library/*:*"
+              - image: "ghcr.io/* | docker.io/library/* | registry.k8s.io/* | *.dkr.ecr.*.amazonaws.com/*"

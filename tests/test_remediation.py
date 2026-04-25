@@ -47,3 +47,47 @@ def test_marker_does_not_blow_up() -> None:
     # When --strict-markers is on, an unregistered marker raises at collection.
     # If this test even runs (under -m requires_cluster), the marker is fine.
     assert True
+
+
+# ---------------------------------------------------------------------------
+# Phase 2 — critical hygiene
+# ---------------------------------------------------------------------------
+
+
+def test_falco_custom_rules_zombie_file_absent() -> None:
+    """The duplicate Falco rules file must not exist on disk.
+
+    Authoritative source for custom Falco rules is gitops/apps/falco.yaml's
+    customRules block (commit 27e5876 deleted the standalone file). A copy
+    in security/falco/custom-rules.yaml drifts from truth — fail if present.
+    """
+    zombie = REPO_ROOT / "security" / "falco" / "custom-rules.yaml"
+    assert not zombie.exists(), (
+        f"{zombie} reappeared on disk. Delete it; rules live in "
+        "gitops/apps/falco.yaml."
+    )
+
+
+def test_kyverno_image_registries_no_duplicate() -> None:
+    """The restrict-image-registries pattern must not duplicate docker.io/library."""
+    policy = (
+        REPO_ROOT / "policies" / "kyverno" / "restrict-image-registries.yaml"
+    ).read_text()
+    pattern_line = next(
+        (line for line in policy.splitlines() if "image:" in line and "ghcr.io" in line),
+        None,
+    )
+    assert pattern_line is not None, "expected image: pattern line not found"
+    assert pattern_line.count("docker.io/library/*") == 1, (
+        f"duplicated docker.io/library/* in pattern: {pattern_line.strip()}"
+    )
+
+
+def test_teardown_script_success_banner_renders_dollar_zero_correctly() -> None:
+    """teardown.sh banner must render '$0' as a literal, not the script path."""
+    script = (REPO_ROOT / "scripts" / "teardown.sh").read_text()
+    bad = "TEARDOWN COMPLETE — $0 recurring charges"
+    assert bad not in script, (
+        "teardown.sh contains an unescaped $0 in the success banner; the "
+        "rendered output reads as the script path, not '$0/hr'."
+    )
