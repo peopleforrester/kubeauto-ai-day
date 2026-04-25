@@ -8,6 +8,9 @@ from kubernetes import client
 from kubernetes.client import CoreV1Api
 
 
+pytestmark = pytest.mark.requires_cluster
+
+
 TERRAFORM_DIR = "infrastructure/terraform"
 CLUSTER_NAME = "kubeauto-ai-day"
 REGION = "us-west-2"

@@ -8,6 +8,10 @@ from typing import Any
 import pytest
 from kubernetes.client import CoreV1Api, AppsV1Api
 
+
+pytestmark = pytest.mark.requires_cluster
+
+
 BACKSTAGE_NS = "backstage"
 APPS_NS = "apps"
 

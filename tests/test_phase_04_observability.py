@@ -12,6 +12,10 @@ from kubernetes.client import CoreV1Api
 from conftest import GRAFANA_BASIC_AUTH
 from helpers.kubectl_helpers import strip_kubectl_noise
 
+
+pytestmark = pytest.mark.requires_cluster
+
+
 MONITORING_NS = "monitoring"
 APPS_NS = "apps"
 

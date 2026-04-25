@@ -10,6 +10,9 @@ dependencies = []
 testpaths = ["tests"]
 pythonpath = ["tests"]
 timeout = 120
+markers = [
+    "requires_cluster: test needs a live EKS cluster reachable via kubeconfig",
+]
 
 [dependency-groups]
 dev = [

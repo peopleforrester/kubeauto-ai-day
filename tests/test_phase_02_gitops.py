@@ -7,6 +7,9 @@ import pytest
 from kubernetes.client import CoreV1Api, CustomObjectsApi
 
 
+pytestmark = pytest.mark.requires_cluster
+
+
 ARGOCD_NAMESPACE = "argocd"
 ARGOCD_GROUP = "argoproj.io"
 ARGOCD_VERSION = "v1alpha1"

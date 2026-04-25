@@ -22,6 +22,7 @@ docs/*
 !docs/WALKTHROUGH.md
 !docs/EIGHT-GUARDRAILS.md
 !docs/EIGHT-GUARDRAILS-RECONCILIATION.md
+!docs/REMEDIATION-PLAN.md
 
 # Environment and secrets
 .env

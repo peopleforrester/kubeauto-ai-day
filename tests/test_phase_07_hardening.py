@@ -10,6 +10,10 @@ import pytest
 from kubernetes import client
 from kubernetes.client import CoreV1Api, AppsV1Api, CustomObjectsApi
 
+
+pytestmark = pytest.mark.requires_cluster
+
+
 REPO_ROOT = str(pathlib.Path(__file__).resolve().parents[1])
 MONITORING_NS = "monitoring"
 APPS_NS = "apps"

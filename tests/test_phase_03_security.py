@@ -11,6 +11,9 @@ from kubernetes import client
 from kubernetes.client import CoreV1Api, CustomObjectsApi, RbacAuthorizationV1Api
 
 
+pytestmark = pytest.mark.requires_cluster
+
+
 APPS_NS = "apps"
 SECURITY_NS = "security"
 PLATFORM_NS = "platform"

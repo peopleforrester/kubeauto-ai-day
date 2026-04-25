@@ -13,16 +13,27 @@ import boto3
 GRAFANA_BASIC_AUTH = "Basic YWRtaW46YWRtaW4="
 
 
-# --- Kubeconfig (loaded once per session) ---
+# --- Kubeconfig (loaded only for tests marked requires_cluster) ---
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def _kube_config() -> None:
     """Load kubeconfig once for the entire test session.
 
     Fails explicitly if no cluster is reachable (Rule G3: no fallbacks).
     """
     config.load_kube_config()
+
+
+@pytest.fixture(autouse=True)
+def _autoload_kube_config_for_marked_tests(request: pytest.FixtureRequest) -> None:
+    """Load kubeconfig only for tests marked @pytest.mark.requires_cluster.
+
+    Static-file tests (and anything else that does not need the cluster) run
+    without touching kubeconfig, so the suite is partially runnable post-teardown.
+    """
+    if request.node.get_closest_marker("requires_cluster"):
+        request.getfixturevalue("_kube_config")
 
 
 # --- Short-name aliases for convenience ---
