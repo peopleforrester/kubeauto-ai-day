@@ -41,13 +41,14 @@ spec:
             enabled: false
         # Grafana configuration
         grafana:
-          # WARNING: Demo-only default password. For production, replace with:
-          #   admin:
-          #     existingSecret: grafana-admin-credentials
-          #     userKey: admin-user
-          #     passwordKey: admin-password
-          # and create an ExternalSecret to sync from AWS Secrets Manager.
-          adminPassword: "admin"
+          # Admin credentials are sourced from a Secret synced by the
+          # External Secrets Operator. The matching ExternalSecret lives at
+          # security/eso/grafana-admin-external-secret.yaml and pulls from
+          # AWS Secrets Manager key `kubeauto/grafana-admin`.
+          admin:
+            existingSecret: grafana-admin-credentials
+            userKey: admin-user
+            passwordKey: admin-password
           # Sidecar for dashboard provisioning from ConfigMaps
           sidecar:
             dashboards:

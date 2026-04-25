@@ -6,7 +6,7 @@ Kubernetes security resources organized by concern. All deployed via ArgoCD.
 
 ```
 rbac/
-  cluster-roles.yaml     # platform-admin, app-deployer, app-viewer ClusterRoles
+  cluster-roles.yaml     # demo-cluster-admin, app-deployer, app-viewer ClusterRoles
   role-bindings.yaml     # Namespace-scoped RoleBindings (apps, monitoring)
 
 network-policies/

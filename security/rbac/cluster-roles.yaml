@@ -1,14 +1,16 @@
 # ABOUTME: ClusterRoles for IDP platform RBAC model.
-# ABOUTME: Defines platform-admin, app-developer, and app-viewer roles.
+# ABOUTME: Defines demo-cluster-admin, app-developer, and app-viewer roles.
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: platform-admin
+  name: demo-cluster-admin
   labels:
     app.kubernetes.io/part-of: kubeauto-idp
-# NOTE: Intentional cluster-admin equivalent for demo platform.
-# In production, scope down to specific API groups and resources.
+# NOTE: Intentional cluster-admin equivalent for the demo platform — *:* on *:*.
+# Named demo-cluster-admin (not platform-admin) so readers cribbing the
+# manifest do not adopt a misleading mental model. For production, bind
+# scoped roles like app-developer instead.
 # See ADR-007 for auth strategy rationale.
 rules:
   - apiGroups: ["*"]

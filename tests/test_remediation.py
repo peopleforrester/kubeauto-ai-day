@@ -133,3 +133,72 @@ def test_setup_doc_lists_substitutions() -> None:
         assert placeholder in setup, (
             f"docs/SETUP.md substitutions section must reference {placeholder}."
         )
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 — security hardening (static)
+# ---------------------------------------------------------------------------
+
+
+def test_grafana_password_not_plaintext() -> None:
+    """Prometheus/Grafana values must not embed a plaintext admin password.
+
+    The repo's stated narrative is 'all secrets via External Secrets Operator';
+    leaving adminPassword: "admin" undermines that. The ExternalSecret should
+    be the source of the credential.
+    """
+    text = (REPO_ROOT / "gitops" / "apps" / "prometheus.yaml").read_text()
+    assert 'adminPassword: "admin"' not in text, (
+        "gitops/apps/prometheus.yaml still contains a plaintext "
+        '`adminPassword: "admin"`; wire Grafana credentials through ESO.'
+    )
+    assert "existingSecret" in text, (
+        "gitops/apps/prometheus.yaml must use admin.existingSecret to pull "
+        "Grafana credentials from a Secret synced by ESO."
+    )
+
+
+def test_grafana_admin_external_secret_exists() -> None:
+    """An ExternalSecret manifest must exist that materialises the Grafana Secret."""
+    eso = (
+        REPO_ROOT / "security" / "eso" / "grafana-admin-external-secret.yaml"
+    )
+    assert eso.is_file(), (
+        f"missing {eso}: expected an ExternalSecret that creates "
+        "`grafana-admin-credentials` in monitoring namespace."
+    )
+    text = eso.read_text()
+    assert "kind: ExternalSecret" in text
+    assert "grafana-admin-credentials" in text
+    assert "namespace: monitoring" in text
+
+
+def test_cluster_role_renamed_to_demo_cluster_admin() -> None:
+    """ClusterRole that grants *:* on *:* must be named demo-cluster-admin.
+
+    'platform-admin' is a misleading name for a role that is identical to
+    cluster-admin — readers cribbing the manifest could inherit the wrong
+    mental model.
+    """
+    text = (REPO_ROOT / "security" / "rbac" / "cluster-roles.yaml").read_text()
+    assert "name: demo-cluster-admin" in text, (
+        "expected ClusterRole renamed to `demo-cluster-admin`"
+    )
+    assert "name: platform-admin" not in text, (
+        "stale `platform-admin` ClusterRole name still present"
+    )
+
+
+def test_security_doc_documents_argocd_tls_tradeoff() -> None:
+    """SECURITY.md must explain the ArgoCD --insecure trade-off explicitly."""
+    text = (REPO_ROOT / "docs" / "SECURITY.md").read_text()
+    assert "ArgoCD TLS" in text or "argocd" in text.lower(), (
+        "docs/SECURITY.md should mention ArgoCD"
+    )
+    # The explicit trade-off discussion must be present.
+    needles = ("server.insecure", "ALB")
+    for needle in needles:
+        assert needle in text, (
+            f"docs/SECURITY.md is missing '{needle}' — readers need to "
+            "understand why server.insecure is set and what the trade-off is."
+        )

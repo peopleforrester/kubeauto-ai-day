@@ -53,7 +53,7 @@ monitoring, security, platform, backstage, cert-manager.
 
 | Role | Scope | Permissions |
 |------|-------|-------------|
-| `platform-admin` | ClusterRole | Full access (cluster-admin equivalent — intentional for demo; scope down for production) |
+| `demo-cluster-admin` | ClusterRole | Full access (cluster-admin equivalent — intentional for demo; scope down for production) |
 | `developer-view` | ClusterRole | Read-only across all namespaces |
 | `apps-deployer` | Role (apps) | Create/update deployments, services, configmaps |
 
@@ -62,9 +62,11 @@ resources outside their bound namespace.
 
 **ArgoCD RBAC:** Dex/GitHub OIDC users mapped via explicit RBAC bindings.
 Default policy is deny-all — unapproved GitHub users who authenticate get zero
-permissions. Named users (`peopleforrester`, `WiggityWhitney`) are mapped to
-`platform-admin`. The `backstage` service account has `backstage-readonly` for
-API access. Local admin account is disabled.
+permissions. The `role:platform-admin` ArgoCD policy role (a string identifier
+inside `policy.csv`, distinct from the Kubernetes ClusterRole) is granted to
+the named GitHub OIDC subjects in `gitops/argocd/values.yaml`. The `backstage`
+service account has `backstage-readonly` for API access. Local admin account
+is disabled.
 
 ## 4. NetworkPolicy Model — Guardrail #2
 
@@ -127,6 +129,20 @@ choice for the demo environment, not a security oversight:
 | ArgoCD repo-server | `server.insecure: true` | ALB terminates TLS at the load balancer; ArgoCD serves plain HTTP internally |
 | Backstage ArgoCD plugin | `argocd.appLocatorMethods[].instances[].url` (HTTP) | Internal cluster-local service URL, no external exposure |
 | OTel Collector | `tls.insecure: true` on exporters | Prometheus remote write target is cluster-internal |
+
+**ArgoCD TLS termination trade-off in detail.** With `server.insecure: true`,
+the ALB is configured `backend-protocol: HTTP` and traffic between the ALB
+target and the `argocd-server` pod travels in cleartext over the VPC. That is
+acceptable for a single-tenant demo cluster but is *not* the right choice for
+a shared production cluster — anyone with packet capture in the VPC sees the
+full ArgoCD session, including bearer tokens. Production readers should
+either:
+
+1. Enable end-to-end TLS by removing the `--insecure` flag, switching the
+   ALB to `backend-protocol: HTTPS`, and giving `argocd-server` a cert from
+   cert-manager; or
+2. Front the cluster with a service mesh (Istio/Linkerd) and let mTLS handle
+   pod-to-pod encryption transparently.
 
 **Production recommendation:** For production deployments, enable mTLS
 between services using a service mesh (e.g., Istio, Linkerd) or configure

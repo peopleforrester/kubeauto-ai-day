@@ -14,7 +14,7 @@
 - Falcosidekick forwarding to Prometheus
 - External Secrets Operator installed via ArgoCD
 - ExternalSecret pulling from AWS Secrets Manager via Pod Identity
-- RBAC: platform-admin (cluster-admin), app-developer (apps NS only), app-viewer (read-only)
+- RBAC: demo-cluster-admin (cluster-admin equivalent), app-developer (apps NS only), app-viewer (read-only)
 - Default-deny NetworkPolicies in apps namespace
 
 **Test Criteria (tests/test_phase_03_security.py):**
