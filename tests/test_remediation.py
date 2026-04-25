@@ -202,3 +202,76 @@ def test_security_doc_documents_argocd_tls_tradeoff() -> None:
             f"docs/SECURITY.md is missing '{needle}' — readers need to "
             "understand why server.insecure is set and what the trade-off is."
         )
+
+
+# ---------------------------------------------------------------------------
+# Phase 5 — version reconciliation
+# ---------------------------------------------------------------------------
+
+
+# Keys are component names, values are the deployed app version that must
+# match across README.md, CLAUDE.md, VERSION-MAP.md, and (where applicable)
+# the rebuild.sh script and Application manifests. VERSION-MAP.md is the
+# single source of truth — these expected values are read from it.
+def _read_version_map() -> dict[str, str]:
+    """Parse the deployed-versions table from docs/VERSION-MAP.md."""
+    text = (REPO_ROOT / "docs" / "VERSION-MAP.md").read_text()
+    versions: dict[str, str] = {}
+    for line in text.splitlines():
+        if not line.startswith("| "):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) < 4:
+            continue
+        component, _chart, chart_version, app_version = cells[:4]
+        if component in {"Component", "-----------"} or "---" in component:
+            continue
+        versions[component] = f"chart={chart_version};app={app_version}"
+    return versions
+
+
+def test_version_map_parses() -> None:
+    """The VERSION-MAP table must be parseable and include the key components."""
+    versions = _read_version_map()
+    for component in ("ArgoCD", "Kyverno", "Falco", "Backstage"):
+        assert component in versions, f"{component} missing from VERSION-MAP.md"
+
+
+def test_readme_argocd_matches_version_map() -> None:
+    """README.md ArgoCD version must match docs/VERSION-MAP.md."""
+    versions = _read_version_map()
+    argocd_app = versions["ArgoCD"].split(";app=")[1]
+    readme = (REPO_ROOT / "README.md").read_text()
+    assert f"| GitOps | ArgoCD | {argocd_app} |" in readme, (
+        f"README.md GitOps row must report ArgoCD {argocd_app} (per VERSION-MAP.md)"
+    )
+
+
+def test_claude_md_argocd_matches_version_map() -> None:
+    """Project CLAUDE.md must list the same ArgoCD app version as VERSION-MAP.md."""
+    versions = _read_version_map()
+    argocd_app = versions["ArgoCD"].split(";app=")[1]
+    claude = (REPO_ROOT / "CLAUDE.md").read_text()
+    assert f"ArgoCD: {argocd_app}" in claude, (
+        f"CLAUDE.md must say 'ArgoCD: {argocd_app}' (per VERSION-MAP.md)"
+    )
+
+
+def test_rebuild_script_argocd_chart_matches_version_map() -> None:
+    """scripts/rebuild.sh ARGOCD_CHART_VERSION must match docs/VERSION-MAP.md."""
+    versions = _read_version_map()
+    argocd_chart = versions["ArgoCD"].split(";")[0].removeprefix("chart=")
+    script = (REPO_ROOT / "scripts" / "rebuild.sh").read_text()
+    assert f'ARGOCD_CHART_VERSION="{argocd_chart}"' in script, (
+        f"scripts/rebuild.sh must pin ARGOCD_CHART_VERSION={argocd_chart}"
+    )
+
+
+def test_falco_app_chart_matches_version_map() -> None:
+    """gitops/apps/falco.yaml chart targetRevision must match VERSION-MAP.md."""
+    versions = _read_version_map()
+    falco_chart = versions["Falco"].split(";")[0].removeprefix("chart=")
+    app = (REPO_ROOT / "gitops" / "apps" / "falco.yaml").read_text()
+    assert f'targetRevision: "{falco_chart}"' in app, (
+        f"gitops/apps/falco.yaml must pin Falco chart {falco_chart}"
+    )

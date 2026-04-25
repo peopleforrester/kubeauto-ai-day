@@ -114,16 +114,17 @@ skill file BEFORE generating any config for that component.
 
 ## Technology Versions (deployed)
 
-These are the versions deployed on the demo cluster. Latest available noted where drifted.
+`docs/VERSION-MAP.md` is the single source of truth for component versions.
+The list below mirrors that file — keep it in sync if either changes.
 
 - EKS: 1.34
-- ArgoCD: 3.2.6 deployed (3.3.6 available; Helm chart 9.x)
-- Kyverno: 1.17.1 (current; Helm chart 3.7.0)
-- Backstage: 1.46+ (Helm chart 2.6.3, image 1.9.1; 1.49.3 available)
-- Falco: CNCF Graduated, eBPF driver (Helm chart 7.x deployed; 8.0.1 available — major version)
-- OTel Collector: 0.145.0 deployed (0.149.0 available; 0.x, no GA)
-- Grafana: 12.x via kube-prometheus-stack 82.1.0 (82.18.0 available)
-- cert-manager: 1.19+ (1.20.1 available)
-- Terraform EKS module: ~>21.0 (21.17.0 latest)
+- ArgoCD: 3.3.0 (Helm chart 9.4.2)
+- Kyverno: 1.17.0 (Helm chart 3.7.0)
+- Backstage: 1.9.1 (Helm chart 2.6.3 — chart appVersion 1.46+ wraps image 1.9.1)
+- Falco: 0.43.0 / Helm chart 8.0.0 (CNCF Graduated, eBPF driver)
+- OTel Collector: 0.145.0
+- Grafana: 12.3.3 / Prometheus 3.9.1 via kube-prometheus-stack 82.1.0
+- cert-manager: 1.19.3
+- Terraform EKS module: ~> 21.0
 - Instance type: m7i.xlarge
 - Pod Identity primary, IRSA fallback for specific addons
