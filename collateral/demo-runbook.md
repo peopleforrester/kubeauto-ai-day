@@ -286,5 +286,5 @@ infrastructure — no mocks."
 | Service | Credentials |
 |---------|-------------|
 | Grafana | admin / admin |
-| ArgoCD | GitHub OIDC (peopleforrester, WiggityWhitney) |
-| Backstage | GitHub OIDC (peopleforrester, WiggityWhitney) |
+| ArgoCD | GitHub OIDC (peopleforrester) |
+| Backstage | GitHub OIDC (peopleforrester) |

@@ -577,7 +577,6 @@ data:
       children: []
       members:
         - peopleforrester
-        - wiggitywhitney
     ---
     apiVersion: backstage.io/v1alpha1
     kind: Group
@@ -612,16 +611,6 @@ data:
       name: peopleforrester
       annotations:
         github.com/user-login: peopleforrester
-    spec:
-      memberOf:
-        - platform-team
-    ---
-    apiVersion: backstage.io/v1alpha1
-    kind: User
-    metadata:
-      name: wiggitywhitney
-      annotations:
-        github.com/user-login: WiggityWhitney
     spec:
       memberOf:
         - platform-team

@@ -16,15 +16,15 @@ the build phase.
 
 ## Decision
 
-Use `kubeauto.michaelrishiforrester.com` as the build-time domain. Michael controls
-the DNS for `michaelrishiforrester.com` and can create the necessary Route53
-hosted zone and records.
+Use `kubeauto.<personal-domain>` as the build-time domain — a domain the build
+operator already controls and has a Route53 hosted zone for. The original build
+used the author's personal domain; forks should substitute their own.
 
 Platform ingress subdomains:
-- `argocd.kubeauto.michaelrishiforrester.com`
-- `backstage.kubeauto.michaelrishiforrester.com`
-- `grafana.kubeauto.michaelrishiforrester.com`
-- `app.kubeauto.michaelrishiforrester.com`
+- `argocd.kubeauto.<personal-domain>`
+- `backstage.kubeauto.<personal-domain>`
+- `grafana.kubeauto.<personal-domain>`
+- `app.kubeauto.<personal-domain>`
 
 If KodeKloud provides a subdomain (e.g., `kubeauto.kodekloud.com`), update the
 ingress annotations and cert-manager config at that time. This is a

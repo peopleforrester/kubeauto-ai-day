@@ -121,6 +121,35 @@ def test_no_personal_email_in_committed_manifests(relpath: str) -> None:
         )
 
 
+# Tracked files that historically held a third-party GitHub handle or a
+# personal domain. The May-2026 security sweep extends PII coverage past the
+# initial email scope to catch:
+#   - WiggityWhitney (a collaborator's GitHub handle wired as an ACL subject)
+#   - michaelrishiforrester.com (personal domain used as the demo apex)
+PII_PATHS_EXTENDED = [
+    "backstage/k8s/catalog-configmap.yaml",
+    "collateral/demo-runbook.md",
+    "docs/adr/ADR-000-domain-name.md",
+]
+
+PII_LITERALS_EXTENDED = [
+    "WiggityWhitney",
+    "wiggitywhitney",
+    "michaelrishiforrester.com",
+]
+
+
+@pytest.mark.parametrize("relpath", PII_PATHS_EXTENDED)
+def test_no_third_party_pii_in_tracked_assets(relpath: str) -> None:
+    """Personal handles and personal domains must not appear in public reference assets."""
+    text = (REPO_ROOT / relpath).read_text()
+    for needle in PII_LITERALS_EXTENDED:
+        assert needle not in text, (
+            f"{relpath} contains personal/third-party identifier {needle!r}; "
+            "scrub or replace with a placeholder before the repo goes wider."
+        )
+
+
 def test_setup_doc_lists_substitutions() -> None:
     """SETUP.md must include a substitutions section listing forker placeholders."""
     setup = (REPO_ROOT / "docs" / "SETUP.md").read_text()

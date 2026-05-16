@@ -559,8 +559,8 @@
 | 103h 6m 44s | ❯ Is that true for Argo as well?                                                      · Metamorphosing… (0s · ↑ 0 toke |
 | 103h 6m 51s | ❯ Is that true for Argo as well? |
 | 103h 6m 54s | ❯ Can you add Wiggity Whitney to the whole thing? |
-| 103h 7m 10s | ❯ Can you add WiggityWhitney from github as an authed user? to the whole thing? ❯ Press up to edit queued messages      |
-| 103h 7m 10s | ❯ Can you add WiggityWhitney from github as an authed user? to the whole thing? |
+| 103h 7m 10s | ❯ Can you add <collaborator-handle> from github as an authed user? to the whole thing? ❯ Press up to edit queued messages      |
+| 103h 7m 10s | ❯ Can you add <collaborator-handle> from github as an authed user? to the whole thing? |
 | 103h 7m 54s | ❯ Also, can we make sure that anything that we learned about the restrictions on backstages off the process is put into  |
 | 103h 8m 3s | ❯ Also, can we make sure that anything that we learned about the restrictions on backstages off the process is put into  |
 | 103h 12m 50s | ❯ Also, can we make sure that anything that we learned about the restrictions on backstages off the process is put into  |
@@ -2412,14 +2412,14 @@
 - **[99h 43m 11s]** C&& git commit -m "Fix Backstage auth: replace guest login with GitHub OAuth sign-in
 - **[99h 45m 14s]** && git commit -m "Fix Backstage auth: replace guest login with GitHub OAuth sign-in
 - **[99h 47m 2s]** git commit -m "Fix Backstage auth: replace guest login with GitHub OAuth sign-in
-- **[103h 7m 56s]** ● Bash(git add backstage/k8s/catalog-configmap.yaml gitops/argocd/values.yaml && git commit -m "Add WiggityWhitney as platform-admin to Backstage and ArgoCD                                           
+- **[103h 7m 56s]** ● Bash(git add backstage/k8s/catalog-configmap.yaml gitops/argocd/values.yaml && git commit -m "Add <collaborator-handle> as platform-admin to Backstage and ArgoCD                                           
 - **[103h 13m 7s]** Bash(git add docs/SECURITY.md && git commit -m "Document auth architecture for Backstage and ArgoCD in SECURITY.md                                                         - Detailed Backstage two-ga
 - **[103h 31m 54s]** ● Bash(git add docs/SECURITY.md && git commit -m "Document auth architecture for Backstage and ArgoCD in SECURITY.md
-- **[103h 33m 13s]** 5m● Bash(git add backstage/k8s/catalog-configmap.yaml gitops/argocd/values.yaml && git commit -m "Add WiggityWhitney as platform-admin to Backstage and ArgoCD
-- **[103h 33m 52s]** 1Cgit commit -m "Add WiggityWhitney as platform-admin to Backstage and ArgoCD
-- **[103h 41m 33s]** backstage/k8s/catalog-configmap.yaml gitops/argocd/values.yaml && git commit -m "Add WiggityWhitney as platform-admin to Backstage and ArgoCD
+- **[103h 33m 13s]** 5m● Bash(git add backstage/k8s/catalog-configmap.yaml gitops/argocd/values.yaml && git commit -m "Add <collaborator-handle> as platform-admin to Backstage and ArgoCD
+- **[103h 33m 52s]** 1Cgit commit -m "Add <collaborator-handle> as platform-admin to Backstage and ArgoCD
+- **[103h 41m 33s]** backstage/k8s/catalog-configmap.yaml gitops/argocd/values.yaml && git commit -m "Add <collaborator-handle> as platform-admin to Backstage and ArgoCD
 - **[103h 45m 23s]** 9mBash(git add gitops/apps/backstage.yaml && git commit -m "Fix Backstage auth: replace guest login with GitHub OAuth sign-in
-- **[103h 55m 19s]** nfigmap.yaml gitops/argocd/values.yaml && git commit -m "Add WiggityWhitney as platform-admin to Backstage and ArgoCD
+- **[103h 55m 19s]** nfigmap.yaml gitops/argocd/values.yaml && git commit -m "Add <collaborator-handle> as platform-admin to Backstage and ArgoCD
 - **[103h 55m 45s]** 9mBash(git add docs/SECURITY.md && git commit -m "Document auth architecture for Backstage and ArgoCD in SECURITY.md
 - **[104h 2m 31s]** ● Bash(git commit -m "Add LGTM observability stack and demo applications                                                                                  Deploy Grafana Tempo (traces), Loki (logs), 
 - **[104h 2m 35s]** ●     [staging 8099077] Add LGTM observability stack and demo applications      21 files changed, 731 insertions(+)      create mode 100644 gitops/apps/ecom-api.yaml                                
