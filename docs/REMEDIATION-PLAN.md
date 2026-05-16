@@ -78,17 +78,16 @@ harvesting and confuse forkers (Let's Encrypt rate limits attach to the
 configured email).
 
 Changes:
-- `security/cert-manager/cluster-issuers.yaml`: replace
-  `michael@kubeauto.dev` with `<YOUR_EMAIL>` placeholder.
-- `gitops/argocd/values.yaml`: replace `michaelrishiforrester@gmail.com`
-  with `<YOUR_GITHUB_EMAIL_OR_USERNAME>` placeholder; keep a single named
-  admin (the GitHub org-level handle) as an example.
+- `security/cert-manager/cluster-issuers.yaml`: replace the hardcoded
+  cert-manager contact email with a `<YOUR_EMAIL>` placeholder.
+- `gitops/argocd/values.yaml`: replace the personal Gmail admin subject
+  with `<YOUR_GITHUB_EMAIL_OR_USERNAME>`; keep one named org-level handle
+  as an example.
 - `docs/SETUP.md`: add a "Substitutions before first apply" table listing
   every placeholder a forker must change.
 
 Exit condition:
-- No tracked file contains `michael@kubeauto.dev` or
-  `michaelrishiforrester@gmail.com`.
+- No tracked file contains a personal email literal.
 - `docs/SETUP.md` documents every placeholder.
 
 ### Phase 4 — Security hardening (static)

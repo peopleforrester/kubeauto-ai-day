@@ -105,7 +105,6 @@ PII_PATHS = [
 ]
 
 PII_LITERALS = [
-    "michael@kubeauto.dev",
     "michaelrishiforrester@gmail.com",
 ]
 

@@ -10,6 +10,11 @@ The repo serves three purposes:
 2. An open-source reference IDP (Apache 2.0)
 3. Evidence for the AI Platform Building Scorecard
 
+This document covers Phases 0–7 (the KubeAuto talk scope, complete as of
+March 2026). Forward-looking phases 8–16 (Agent Gateway, workload identity,
+human SSO, secrets vault, supply chain, service mesh, progressive delivery)
+are tracked in [`ROADMAP.md`](ROADMAP.md).
+
 ## Repository Structure
 
 ```
