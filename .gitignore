@@ -99,3 +99,5 @@ recordings/clips/
 *.tmp
 *.bak
 *.orig
+
+.claude-history/
