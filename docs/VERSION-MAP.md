@@ -120,6 +120,34 @@ Chart 7.x = ArgoCD 3.0. Chart 9.x = ArgoCD 3.2–3.3.
 
 ## Version Audit History
 
+**Audit date: May 28, 2026** — 30-day post-remediation re-check
+
+No regressions detected. All 21 static-file remediation tests pass.
+The five specific post-remediation invariants confirmed:
+  - cert-manager/cluster-issuers.yaml uses `<YOUR_EMAIL>` placeholder ✓
+  - gitops/argocd/values.yaml uses `<YOUR_GITHUB_EMAIL_OR_USERNAME>` placeholder ✓
+  - security/falco/custom-rules.yaml absent ✓
+  - prometheus.yaml uses admin.existingSecret (Grafana ESO-wired) ✓
+  - security/rbac/cluster-roles.yaml defines demo-cluster-admin ✓
+
+New upstream releases since April 26, 2026 audit (⚠️ = security-relevant):
+
+| Component | Deployed | Available | Priority |
+|-----------|----------|-----------|----------|
+| cert-manager ⚠️ | 1.19.3 | **1.20.1** | Recommend: TLS infra minor bump |
+| Falco ⚠️ | 0.43.0 / chart 8.0.0 | chart **8.0.1** | Recommend: security monitoring patch |
+| kube-prometheus-stack | 82.1.0 | 82.18.0 | Low: monitor stability |
+| OTel Collector | 0.145.0 | 0.149.0 | Low: pre-GA series, no breaking change |
+| ArgoCD | 3.3.0 / chart 9.4.2 | 3.3.6 | Low: patch release |
+| Kyverno | 1.17.0 / chart 3.7.0 | 1.17.1 | Low: patch release |
+| Backstage | image 1.9.1 / chart 2.6.3 | image 1.49.3 | Deferred: large image drift, test for breaking changes before upgrade |
+| ESO | 1.3.2 | no new release | — |
+
+Cluster is torn down; cert-manager and Falco upgrades are backlog items for
+the next cluster rebuild (see REMAINING-ITEMS.md §10).
+
+---
+
 **Audit date: February 18, 2026**
 
 Found 2 stale versions in deployed components:
